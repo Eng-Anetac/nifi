@@ -14,25 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.nifi.processors.aws.v2;
+package org.apache.nifi.processors.aws.ec2;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.ProcessContext;
-import software.amazon.awssdk.core.SdkClient;
+import org.apache.nifi.processors.aws.v2.AbstractAwsProcessor;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.Ec2ClientBuilder;
 
-public class AwsClientCache<T extends SdkClient> {
-
-    private final Cache<AwsClientDetails, T> clientCache = Caffeine.newBuilder().build();
-
-    public T getOrCreateClient(final ProcessContext context, final AwsClientDetails clientDetails, final AwsClientProvider<T> provider, FlowFile flowFile) {
-        return clientCache.get(clientDetails, ignored -> provider.createClient(context, flowFile));
-    }
-
-    public void clearCache() {
-        clientCache.invalidateAll();
-        clientCache.cleanUp();
+public abstract class AbstractEC2Processor extends AbstractAwsProcessor<Ec2Client, Ec2ClientBuilder> {
+    @Override
+    protected Ec2ClientBuilder createClientBuilder(ProcessContext context) {
+        return Ec2Client.builder();
     }
 
 }
