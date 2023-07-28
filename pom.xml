@@ -746,6 +746,7 @@
                         <fork>true</fork>
                         <showDeprecation>${maven.compiler.showDeprecation}</showDeprecation>
                         <showWarnings>true</showWarnings>
+                        <useIncrementalCompilation>false</useIncrementalCompilation>
                     </configuration>
                 </plugin>
                 <plugin>
