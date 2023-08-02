@@ -384,7 +384,7 @@ language governing permissions and limitations under the License. -->
             <version>1.23.0-ANETAC</version>
             <type>nar</type>
         </dependency>
-	<dependency>
+        <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-mongodb-client-service-api-nar</artifactId>
             <version>1.23.0-ANETAC</version>
