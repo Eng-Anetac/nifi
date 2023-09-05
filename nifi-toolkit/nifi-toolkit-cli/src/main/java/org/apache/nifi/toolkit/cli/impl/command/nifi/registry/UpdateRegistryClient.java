@@ -29,6 +29,8 @@ import org.apache.nifi.toolkit.cli.impl.result.VoidResult;
 import org.apache.nifi.web.api.entity.FlowRegistryClientEntity;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -51,6 +53,7 @@ public class UpdateRegistryClient extends AbstractNiFiCommand<VoidResult> {
         addOption(CommandOption.REGISTRY_CLIENT_NAME.createOption());
         addOption(CommandOption.REGISTRY_CLIENT_URL.createOption());
         addOption(CommandOption.REGISTRY_CLIENT_DESC.createOption());
+        addOption(CommandOption.SSL_CONTEXT_SERVICE_ID.createOption());
     }
 
     @Override
@@ -69,6 +72,7 @@ public class UpdateRegistryClient extends AbstractNiFiCommand<VoidResult> {
         final String name = getArg(properties, CommandOption.REGISTRY_CLIENT_NAME);
         final String url = getArg(properties, CommandOption.REGISTRY_CLIENT_URL);
         final String desc = getArg(properties, CommandOption.REGISTRY_CLIENT_DESC);
+        final String sslServiceId = getArg(properties, CommandOption.SSL_CONTEXT_SERVICE_ID);
 
         if (StringUtils.isBlank(name) && StringUtils.isBlank(url) && StringUtils.isBlank(desc)) {
             throw new CommandException("Name, url, and desc were all blank, nothing to update");
@@ -78,12 +82,22 @@ public class UpdateRegistryClient extends AbstractNiFiCommand<VoidResult> {
             existingRegClient.getComponent().setName(name);
         }
 
-//        if (StringUtils.isNotBlank(url)) {
-//            existingRegClient.getComponent().setUri(url);
-//        }
+        if (StringUtils.isNotBlank(url)) {
+            existingRegClient.getComponent().setUri(url);
+        }
 
         if (StringUtils.isNotBlank(desc)) {
             existingRegClient.getComponent().setDescription(desc);
+        }
+
+        if (StringUtils.isNotBlank(sslServiceId)) {
+            final Map<String, String> updatedProperties = new HashMap<>();
+            if (existingRegClient.getComponent().getProperties() != null) {
+                updatedProperties.putAll(existingRegClient.getComponent().getProperties());
+            }
+
+            updatedProperties.put("ssl-context-service", sslServiceId);
+            existingRegClient.getComponent().setProperties(updatedProperties);
         }
 
         final String clientId = getContext().getSession().getNiFiClientID();
