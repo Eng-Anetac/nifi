@@ -240,6 +240,18 @@ limitations under the License.
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
+            <artifactId>nifi-aws-nar</artifactId>
+            <version>1.23.0-ANETAC</version>
+            <type>nar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.nifi</groupId>
+            <artifactId>nifi-aws-service-api-nar</artifactId>
+            <version>1.23.0-ANETAC</version>
+            <type>nar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-kerberos-credentials-service-nar</artifactId>
             <type>nar</type>
         </dependency>
