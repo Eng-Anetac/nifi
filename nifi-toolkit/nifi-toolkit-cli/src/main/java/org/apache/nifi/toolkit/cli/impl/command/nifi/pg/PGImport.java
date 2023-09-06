@@ -66,6 +66,7 @@ public class PGImport extends AbstractNiFiCommand<StringResult> {
         addOption(CommandOption.POS_X.createOption());
         addOption(CommandOption.POS_Y.createOption());
         addOption(CommandOption.KEEP_EXISTING_PARAMETER_CONTEXT.createOption());
+        addOption(CommandOption.PG_NAME.createOption());
     }
 
     @Override
@@ -75,6 +76,7 @@ public class PGImport extends AbstractNiFiCommand<StringResult> {
         final String bucketId = getRequiredArg(properties, CommandOption.BUCKET_ID);
         final String flowId = getRequiredArg(properties, CommandOption.FLOW_ID);
         final Integer flowVersion = getRequiredIntArg(properties, CommandOption.FLOW_VERSION);
+        final String name = getArg(properties, CommandOption.PG_NAME);
 
         final String posXStr = getArg(properties, CommandOption.POS_X);
         final String posYStr = getArg(properties, CommandOption.POS_Y);
@@ -143,6 +145,9 @@ public class PGImport extends AbstractNiFiCommand<StringResult> {
         final ProcessGroupDTO pgDto = new ProcessGroupDTO();
         pgDto.setVersionControlInformation(versionControlInfo);
         pgDto.setPosition(posDto);
+        if(StringUtils.isNotBlank(name)) {
+            pgDto.setName(name);
+        }
 
         final ProcessGroupEntity pgEntity = new ProcessGroupEntity();
         pgEntity.setComponent(pgDto);
@@ -150,6 +155,11 @@ public class PGImport extends AbstractNiFiCommand<StringResult> {
 
         final ProcessGroupClient pgClient = client.getProcessGroupClient();
         final ProcessGroupEntity createdEntity = pgClient.createProcessGroup(parentPgId, pgEntity, Boolean.parseBoolean(keepExistingPC));
+        if(StringUtils.isNotBlank(name)) {
+            createdEntity.getComponent().setName(name);
+            pgClient.updateProcessGroup(createdEntity);
+        }
+
         return new StringResult(createdEntity.getId(), getContext().isInteractive());
     }
 
