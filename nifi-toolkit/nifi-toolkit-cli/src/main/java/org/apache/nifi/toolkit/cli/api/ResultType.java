@@ -19,6 +19,7 @@ package org.apache.nifi.toolkit.cli.api;
 public enum ResultType {
 
     SIMPLE,
-    JSON;
+    JSON,
+    JSON_BRIEF;
 
 }
