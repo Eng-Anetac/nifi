@@ -42,6 +42,8 @@ public abstract class AbstractWritableResult<T> implements WritableResult<T> {
     public void write(final PrintStream output) throws IOException {
         if (resultType == ResultType.JSON) {
             writeJsonResult(output);
+        } else if (resultType == ResultType.JSON_BRIEF) {
+            writeBriefJsonResult(output);
         } else {
             writeSimpleResult(output);
         }
@@ -54,4 +56,7 @@ public abstract class AbstractWritableResult<T> implements WritableResult<T> {
         JacksonUtils.write(getResult(), output);
     }
 
+    protected void writeBriefJsonResult(PrintStream output) throws IOException {
+        JacksonUtils.writeBrief(getResult(), output);
+    }
 }
