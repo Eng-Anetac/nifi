@@ -1041,7 +1041,6 @@
                 <module>nifi-nar-bundles/nifi-aws-bundle</module>
                 <module>nifi-nar-bundles/nifi-azure-bundle</module>
                 <module>nifi-nar-bundles/nifi-standard-bundle</module>
-                <module>nifi-nar-bundles/nifi-standard-bundle</module>
                 <module>nifi-nar-bundles/nifi-standard-services</module>
                 <module>nifi-nar-bundles/nifi-update-attribute-bundle</module>
             </modules>
