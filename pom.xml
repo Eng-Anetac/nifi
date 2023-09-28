@@ -1030,22 +1030,6 @@
     </build>
     <profiles>
         <profile>
-            <!-- modules for C2 -->
-            <id>c2-modules</id>
-            <modules>
-                <module>nifi-api</module>
-                <module>nifi-assembly</module>
-                <module>nifi-bootstrap</module>
-                <module>nifi-commons</module>
-                <module>nifi-toolkit</module>
-                <module>nifi-nar-bundles/nifi-aws-bundle</module>
-                <module>nifi-nar-bundles/nifi-azure-bundle</module>
-                <module>nifi-nar-bundles/nifi-standard-bundle</module>
-                <module>nifi-nar-bundles/nifi-standard-services</module>
-                <module>nifi-nar-bundles/nifi-update-attribute-bundle</module>
-            </modules>
-        </profile>
-        <profile>
             <!-- Performs execution of Integration Tests using the Maven
                 FailSafe Plugin. The view of integration tests in this context are those
                 tests interfacing with external sources and services requiring additional
