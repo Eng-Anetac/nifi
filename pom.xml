@@ -22,28 +22,7 @@
     <version>1.23.0-ANETAC</version>
     <packaging>pom</packaging>
     <description>Apache NiFi is an easy to use, powerful, and reliable system to process and distribute data.</description>
-    <modules>
-        <module>nifi-commons</module>
-        <module>nifi-api</module>
-        <module>nifi-framework-api</module>
-        <module>nifi-server-api</module>
-        <module>nifi-bootstrap</module>
-        <module>nifi-mock</module>
-        <module>nifi-nar-bundles</module>
-        <module>nifi-assembly</module>
-        <module>nifi-docs</module>
-        <module>nifi-maven-archetypes</module>
-        <module>nifi-external</module>
-        <module>nifi-docker</module>
-        <module>nifi-system-tests</module>
-        <module>minifi</module>
-        <module>nifi-stateless</module>
-        <module>nifi-registry</module>
-        <module>nifi-toolkit</module>
-        <module>nifi-manifest</module>
-        <module>c2</module>
-        <module>nifi-h2</module>
-    </modules>
+
     <url>https://nifi.apache.org</url>
     <organization>
         <name>Apache NiFi Project</name>
@@ -1029,6 +1008,82 @@
         </plugins>
     </build>
     <profiles>
+        <profile>
+            <id>all-modules</id>
+            <modules>
+                <module>nifi-commons</module>
+                <module>nifi-api</module>
+                <module>nifi-framework-api</module>
+                <module>nifi-server-api</module>
+                <module>nifi-bootstrap</module>
+                <module>nifi-mock</module>
+                <module>nifi-nar-bundles</module>
+                <module>nifi-assembly</module>
+                <module>nifi-docs</module>
+                <module>nifi-maven-archetypes</module>
+                <module>nifi-external</module>
+                <module>nifi-docker</module>
+                <module>nifi-system-tests</module>
+                <module>minifi</module>
+                <module>nifi-stateless</module>
+                <module>nifi-registry</module>
+                <module>nifi-toolkit</module>
+                <module>nifi-manifest</module>
+                <module>c2</module>
+                <module>nifi-h2</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>edge-modules</id>
+            <modules>
+                <module>nifi-commons</module>
+                <module>nifi-api</module>
+                <module>nifi-framework-api</module>
+                <module>nifi-server-api</module>
+                <module>nifi-bootstrap</module>
+                <module>nifi-nar-bundles</module>
+                <module>nifi-assembly</module>
+                <module>nifi-maven-archetypes</module>
+                <module>minifi</module>
+                <module>nifi-stateless</module>
+                <module>nifi-toolkit</module>
+                <module>nifi-manifest</module>
+                <module>c2</module>
+                <module>nifi-h2</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>c2-modules</id>
+            <modules>
+                <module>nifi-commons</module>
+                <module>nifi-api</module>
+                <module>nifi-framework-api</module>
+                <module>nifi-server-api</module>
+                <module>nifi-bootstrap</module>
+                <module>nifi-nar-bundles/nifi-standard-services</module>
+                <module>nifi-nar-bundles/nifi-update-attribute-bundle</module>
+                <module>nifi-nar-bundles/nifi-standard-bundle</module>
+                <module>nifi-nar-bundles/nifi-aws-bundle</module>
+                <module>nifi-nar-bundles/nifi-azure-bundle</module>
+                <module>nifi-nar-bundles/nifi-flow-registry-client-bundle</module>
+                <module>nifi-nar-bundles/nifi-framework-bundle</module>
+                <module>nifi-nar-bundles/nifi-html-bundle</module>
+                <module>nifi-nar-bundles/nifi-jms-bundle</module>
+                <module>nifi-nar-bundles/nifi-jolt-record-bundle</module>
+                <module>nifi-nar-bundles/nifi-jslt-bundle</module>
+                <module>nifi-nar-bundles/nifi-metrics-reporting-bundle</module>
+                <module>nifi-nar-bundles/nifi-site-to-site-reporting-bundle</module>
+                <module>nifi-nar-bundles/nifi-provenance-repository-bundle</module>
+                <module>nifi-nar-bundles/nifi-registry-bundle</module>
+                <module>nifi-nar-bundles/nifi-prometheus-bundle</module>
+                <module>nifi-assembly</module>
+                <module>nifi-maven-archetypes</module>
+                <module>nifi-toolkit</module>
+                <module>nifi-manifest</module>
+                <module>c2</module>
+                <module>nifi-h2</module>
+            </modules>
+        </profile>
         <profile>
             <!-- Performs execution of Integration Tests using the Maven
                 FailSafe Plugin. The view of integration tests in this context are those
