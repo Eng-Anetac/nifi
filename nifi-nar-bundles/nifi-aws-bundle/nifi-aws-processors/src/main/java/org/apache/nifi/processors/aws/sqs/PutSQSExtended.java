@@ -181,6 +181,22 @@ public class PutSQSExtended extends AbstractAWSCredentialsProviderProcessor<Amaz
                     REGION, DELAY, TIMEOUT, ENDPOINT_OVERRIDE, PROXY_HOST, PROXY_HOST_PORT, PROXY_USERNAME,
                     PROXY_PASSWORD, BUCKET));
 
+    @Override
+    protected List<PropertyDescriptor> getSupportedPropertyDescriptors() {
+        return properties;
+    }
+
+    @Override
+    protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String propertyDescriptorName) {
+        return new PropertyDescriptor.Builder()
+                .name(propertyDescriptorName)
+                .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+                .required(false)
+                .dynamic(true)
+                .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+                .build();
+    }
+
     private AmazonS3Client s3 = null;
     @Override
     protected AmazonSQSClient createClient(ProcessContext context, AWSCredentialsProvider credentialsProvider, ClientConfiguration config) {
@@ -198,10 +214,11 @@ public class PutSQSExtended extends AbstractAWSCredentialsProviderProcessor<Amaz
             return;
         }
         final long startNanos = System.nanoTime();
+        final AmazonSQSClient sqs = getSQSClient(context, flowFile.getAttributes());
         final String bucket = context.getProperty(BUCKET).getValue();
         ExtendedClientConfiguration extendedClientConfig = new ExtendedClientConfiguration()
                 .withLargePayloadSupportEnabled(s3, bucket);
-        final AmazonSQS sqsExtended = new AmazonSQSExtendedClient(getSQSClient(context, flowFile.getAttributes()), extendedClientConfig);
+        final AmazonSQS sqsExtended = new AmazonSQSExtendedClient(sqs, extendedClientConfig);
         String queueUrl = context.getProperty(QUEUE_URL).evaluateAttributeExpressions(flowFile).getValue();
 
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -231,7 +248,11 @@ public class PutSQSExtended extends AbstractAWSCredentialsProviderProcessor<Amaz
 
     @Override
     protected AmazonSQSClient createClient(ProcessContext context, AWSCredentials credentials, ClientConfiguration config) {
-        return null;
+        if (s3 == null) {
+            s3 = new AmazonS3Client(credentials, config);
+        }
+        AmazonSQSClient simpleClient = new AmazonSQSClient(credentials, config);
+        return simpleClient;
     }
 
     protected AmazonSQSClient getSQSClient(final ProcessContext context, final Map<String, String> attributes) {
