@@ -22,7 +22,26 @@
     <version>1.23.0-ANETAC</version>
     <packaging>pom</packaging>
     <description>Apache NiFi is an easy to use, powerful, and reliable system to process and distribute data.</description>
-
+    <modules>
+        <module>nifi-commons</module>
+        <module>nifi-api</module>
+        <module>nifi-framework-api</module>
+        <module>nifi-server-api</module>
+        <module>nifi-bootstrap</module>
+        <module>nifi-mock</module>
+        <module>nifi-nar-bundles</module>
+        <module>nifi-assembly</module>
+        <module>nifi-docs</module>
+        <module>nifi-maven-archetypes</module>
+        <module>nifi-external</module>
+        <module>nifi-system-tests</module>
+        <module>minifi</module>
+        <module>nifi-stateless</module>
+        <module>nifi-toolkit</module>
+        <module>nifi-manifest</module>
+        <module>c2</module>
+        <module>nifi-h2</module>
+    </modules>
     <url>https://nifi.apache.org</url>
     <organization>
         <name>Apache NiFi Project</name>
