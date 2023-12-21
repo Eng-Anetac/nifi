@@ -360,7 +360,7 @@ public class EnumerateAccountRights extends AbstractProcessor {
 
         //Look up SIDs for DNs in memberOf
         final Object[] parentGroups = record.getAsArray(memberOfFieldName);
-        if(parentGroups != null && parentGroups.length > 0) {
+        /*if(parentGroups != null && parentGroups.length > 0) {
             List<String> parentNames = new ArrayList<>();
             for (Object parentName : parentGroups) {
                     if(parentName == null || parentName.toString().isEmpty()) {
@@ -406,7 +406,7 @@ public class EnumerateAccountRights extends AbstractProcessor {
             }
         } else {
             getLogger().debug("{} field is empty ({})", memberOfFieldName, record.getAsString(memberOfFieldName));
-        }
+        }*/
 
         //convert rightsArray to a Set
         getLogger().debug("Found {} permissions", rightsArray.size());
