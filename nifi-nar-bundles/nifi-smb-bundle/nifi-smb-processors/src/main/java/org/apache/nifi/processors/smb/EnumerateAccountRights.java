@@ -383,7 +383,7 @@ public class EnumerateAccountRights extends AbstractProcessor {
                 } else if (rpce.getErrorCode() == SystemErrorCode.ERROR_SOME_NOT_MAPPED) {
                     getLogger().info("Could not find SIDs for some of the parent groups {}", parentNames);
                 } else {
-                    getLogger().error("Could not establish smb connection while looking up SIDs for {}. Error {}", parentNames, new Object[]{ioe});
+                    getLogger().error("Could not establish smb connection while looking up SIDs for {}. Error {}", parentNames, new Object[]{rpce});
                 }
             } catch (IOException ioe) {
                 getLogger().error("Could not establish smb connection while looking up SIDs for {}. Error {}", parentNames, new Object[]{ioe});
