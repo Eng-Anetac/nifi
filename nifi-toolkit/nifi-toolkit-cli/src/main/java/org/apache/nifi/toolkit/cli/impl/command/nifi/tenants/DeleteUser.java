@@ -23,17 +23,19 @@ import org.apache.nifi.toolkit.cli.impl.client.nifi.NiFiClientException;
 import org.apache.nifi.toolkit.cli.impl.client.nifi.TenantsClient;
 import org.apache.nifi.toolkit.cli.impl.command.CommandOption;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.AbstractNiFiCommand;
-import org.apache.nifi.toolkit.cli.impl.result.StringResult;
-import org.apache.nifi.web.api.dto.UserDTO;
+import org.apache.nifi.toolkit.cli.impl.result.VoidResult;
 import org.apache.nifi.web.api.entity.UserEntity;
 
 import java.io.IOException;
 import java.util.Properties;
 
-public class DeleteUser extends AbstractNiFiCommand<StringResult> {
+/**
+ * Command to delete a Nifi user.
+ */
+public class DeleteUser extends AbstractNiFiCommand<VoidResult> {
 
         public DeleteUser() {
-            super("delete-user", StringResult.class);
+            super("delete-user", VoidResult.class);
         }
 
         @Override
@@ -47,7 +49,7 @@ public class DeleteUser extends AbstractNiFiCommand<StringResult> {
         }
 
         @Override
-        public StringResult doExecute(final NiFiClient client, final Properties properties)
+        public VoidResult doExecute(final NiFiClient client, final Properties properties)
                 throws NiFiClientException, IOException, MissingOptionException {
 
             final String userId = getRequiredArg(properties, CommandOption.USER_ID);
@@ -57,6 +59,6 @@ public class DeleteUser extends AbstractNiFiCommand<StringResult> {
             }
             final TenantsClient tenantsClient = client.getTenantsClient();
             tenantsClient.deleteUser(userEntity);
-            return new StringResult(userId, getContext().isInteractive());
+            return new VoidResult();
         }
 }

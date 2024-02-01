@@ -24,15 +24,18 @@ import org.apache.nifi.registry.client.TenantsClient;
 import org.apache.nifi.toolkit.cli.api.Context;
 import org.apache.nifi.toolkit.cli.impl.command.CommandOption;
 import org.apache.nifi.toolkit.cli.impl.command.registry.AbstractNiFiRegistryCommand;
-import org.apache.nifi.toolkit.cli.impl.result.StringResult;
+import org.apache.nifi.toolkit.cli.impl.result.VoidResult;
 
 import java.io.IOException;
 import java.util.Properties;
 
-public class DeleteUser extends AbstractNiFiRegistryCommand<StringResult> {
+/**
+ * Command to delete a Nifi Registry user.
+ */
+public class DeleteUser extends AbstractNiFiRegistryCommand<VoidResult> {
 
         public DeleteUser() {
-            super("delete-user", StringResult.class);
+            super("delete-user", VoidResult.class);
         }
 
         @Override
@@ -46,7 +49,7 @@ public class DeleteUser extends AbstractNiFiRegistryCommand<StringResult> {
         }
 
         @Override
-        public StringResult doExecute(final NiFiRegistryClient client, final Properties properties)
+        public VoidResult doExecute(final NiFiRegistryClient client, final Properties properties)
                 throws IOException, NiFiRegistryException, ParseException {
 
             final TenantsClient tenantsClient = client.getTenantsClient();
@@ -59,7 +62,7 @@ public class DeleteUser extends AbstractNiFiRegistryCommand<StringResult> {
 
             tenantsClient.deleteUser(userId);
 
-            return new StringResult(userId, getContext().isInteractive());
+            return new VoidResult();
         }
 
 }
