@@ -99,6 +99,7 @@ The following are available commands:
  nifi pg-get-param-context
  nifi pg-set-param-context
  nifi pg-replace
+ nifi pg-delete
  nifi get-services
  nifi get-service
  nifi create-service
@@ -112,6 +113,7 @@ The following are available commands:
  nifi stop-reporting-tasks
  nifi list-users
  nifi create-user
+ nifi delete-user
  nifi list-user-groups
  nifi create-user-group
  nifi update-user-group
@@ -166,6 +168,7 @@ The following are available commands:
  registry list-extensions
  registry list-users
  registry create-user
+ registry delete-user
  registry update-user
  registry list-user-groups
  registry create-user-group
@@ -316,7 +319,7 @@ Typing "nifi " and then a tab will show the sub-commands for NiFi:
  delete-param-context    get-services            pg-get-services         update-user-group
  disable-services        import-param-context    pg-get-vars             upload-template
  disconnect-node         list-param-contexts     pg-get-version          delete-reporting-task
- download-template       list-reg-clients        pg-import
+ download-template       list-reg-clients        pg-import               delete-user
 
 Arguments that represent a path to a file, such as `-p` or when setting a properties file in the session, will auto-complete the path being typed:
 

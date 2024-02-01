@@ -49,6 +49,7 @@ import org.apache.nifi.toolkit.cli.impl.command.registry.policy.GetAccessPolicy;
 import org.apache.nifi.toolkit.cli.impl.command.registry.tenant.CreateUser;
 import org.apache.nifi.toolkit.cli.impl.command.registry.tenant.CreateUserGroup;
 import org.apache.nifi.toolkit.cli.impl.command.registry.policy.CreateOrUpdateAccessPolicy;
+import org.apache.nifi.toolkit.cli.impl.command.registry.tenant.DeleteUser;
 import org.apache.nifi.toolkit.cli.impl.command.registry.tenant.ListUserGroups;
 import org.apache.nifi.toolkit.cli.impl.command.registry.tenant.ListUsers;
 import org.apache.nifi.toolkit.cli.impl.command.registry.tenant.UpdateUser;
@@ -96,6 +97,7 @@ public class NiFiRegistryCommandGroup extends AbstractCommandGroup {
         commandList.add(new ListExtensions());
         commandList.add(new ListUsers());
         commandList.add(new CreateUser());
+        commandList.add(new DeleteUser());
         commandList.add(new UpdateUser());
         commandList.add(new ListUserGroups());
         commandList.add(new CreateUserGroup());

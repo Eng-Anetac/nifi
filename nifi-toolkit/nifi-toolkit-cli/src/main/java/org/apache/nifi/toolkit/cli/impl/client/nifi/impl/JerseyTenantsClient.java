@@ -55,6 +55,20 @@ public class JerseyTenantsClient extends AbstractJerseyClient implements Tenants
     }
 
     @Override
+    public UserEntity getUser(String userId) throws NiFiClientException, IOException {
+        if (StringUtils.isBlank(userId)) {
+            throw new IllegalArgumentException("User id cannot be null");
+        }
+
+        return executeAction("Error retrieving user", () -> {
+            final WebTarget target = tenantsTarget
+                    .path("users/{id}")
+                    .resolveTemplate("id", userId);
+            return getRequestBuilder(target).get(UserEntity.class);
+        });
+    }
+
+    @Override
     public UserEntity createUser(final UserEntity userEntity) throws NiFiClientException, IOException {
         if (userEntity == null) {
             throw new IllegalArgumentException("User entity cannot be null");
@@ -67,6 +81,21 @@ public class JerseyTenantsClient extends AbstractJerseyClient implements Tenants
                     Entity.entity(userEntity, MediaType.APPLICATION_JSON),
                     UserEntity.class
             );
+        });
+    }
+
+    @Override
+    public UserEntity deleteUser(final UserEntity userEntity) throws NiFiClientException, IOException {
+        if (StringUtils.isBlank(userEntity.getId())) {
+            throw new IllegalArgumentException("User id cannot be null");
+        }
+
+        return executeAction("Error deleting user", () -> {
+            final WebTarget target = tenantsTarget
+                    .path("users/{id}")
+                    .queryParam("version", userEntity.getRevision().getVersion())
+                    .resolveTemplate("id", userEntity.getId());
+            return getRequestBuilder(target).delete(UserEntity.class);
         });
     }
 
