@@ -27,7 +27,11 @@ public interface TenantsClient {
 
     UsersEntity getUsers() throws NiFiClientException, IOException;
 
+    UserEntity getUser(String userId) throws NiFiClientException, IOException;
+
     UserEntity createUser(UserEntity userEntity) throws NiFiClientException, IOException;
+
+    UserEntity deleteUser(UserEntity userEntity) throws NiFiClientException, IOException;
 
     UserGroupEntity getUserGroup(String userGroupId) throws NiFiClientException, IOException;
 

@@ -90,6 +90,7 @@ import org.apache.nifi.toolkit.cli.impl.command.nifi.templates.ListTemplates;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.templates.UploadTemplate;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.tenants.CreateUser;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.tenants.CreateUserGroup;
+import org.apache.nifi.toolkit.cli.impl.command.nifi.tenants.DeleteUser;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.tenants.ListUserGroups;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.tenants.ListUsers;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.tenants.UpdateUserGroup;
@@ -156,6 +157,7 @@ public class NiFiCommandGroup extends AbstractCommandGroup {
         commands.add(new StopReportingTasks());
         commands.add(new ListUsers());
         commands.add(new CreateUser());
+        commands.add(new DeleteUser());
         commands.add(new ListUserGroups());
         commands.add(new CreateUserGroup());
         commands.add(new UpdateUserGroup());
