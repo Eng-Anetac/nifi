@@ -99,6 +99,7 @@ The following are available commands:
  nifi pg-get-param-context
  nifi pg-set-param-context
  nifi pg-replace
+ nifi pg-delete
  nifi get-services
  nifi get-service
  nifi create-service
