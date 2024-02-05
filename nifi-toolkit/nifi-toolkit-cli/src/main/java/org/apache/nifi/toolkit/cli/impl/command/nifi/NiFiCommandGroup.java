@@ -62,6 +62,7 @@ import org.apache.nifi.toolkit.cli.impl.command.nifi.params.SetParamProviderProp
 import org.apache.nifi.toolkit.cli.impl.command.nifi.pg.PGChangeVersion;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.pg.PGCreate;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.pg.PGCreateControllerService;
+import org.apache.nifi.toolkit.cli.impl.command.nifi.pg.PGDelete;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.pg.PGDisableControllerServices;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.pg.PGEnableControllerServices;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.pg.PGGetAllVersions;
@@ -90,6 +91,7 @@ import org.apache.nifi.toolkit.cli.impl.command.nifi.templates.ListTemplates;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.templates.UploadTemplate;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.tenants.CreateUser;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.tenants.CreateUserGroup;
+import org.apache.nifi.toolkit.cli.impl.command.nifi.tenants.DeleteUser;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.tenants.ListUserGroups;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.tenants.ListUsers;
 import org.apache.nifi.toolkit.cli.impl.command.nifi.tenants.UpdateUserGroup;
@@ -143,6 +145,7 @@ public class NiFiCommandGroup extends AbstractCommandGroup {
         commands.add(new PGGetParamContext());
         commands.add(new PGSetParamContext());
         commands.add(new PGReplace());
+        commands.add(new PGDelete());
         commands.add(new GetControllerServices());
         commands.add(new GetControllerService());
         commands.add(new CreateControllerService());
@@ -156,6 +159,7 @@ public class NiFiCommandGroup extends AbstractCommandGroup {
         commands.add(new StopReportingTasks());
         commands.add(new ListUsers());
         commands.add(new CreateUser());
+        commands.add(new DeleteUser());
         commands.add(new ListUserGroups());
         commands.add(new CreateUserGroup());
         commands.add(new UpdateUserGroup());
