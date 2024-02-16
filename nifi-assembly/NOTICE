@@ -1253,11 +1253,6 @@ The following binary components are provided under the Apache Software License v
         Metadata-Extractor
         Copyright 2002-2015 Drew Noakes
 
-    (ASLv2) Couchbase Java SDK
-      The following NOTICE information applies:
-        Couchbase Java SDK
-        Copyright 2014 Couchbase, Inc.
-
     (ASLv2) Hazelcast
       The following NOTICE information applies:
         Core Hazelcast Module 4.0.1
