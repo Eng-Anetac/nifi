@@ -422,12 +422,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-ambari-nar</artifactId>
-            <version>1.23.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-rethinkdb-nar</artifactId>
             <version>1.23.0-ANETAC</version>
             <type>nar</type>
