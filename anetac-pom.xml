@@ -22,7 +22,26 @@
     <version>1.23.0-ANETAC</version>
     <packaging>pom</packaging>
     <description>Apache NiFi is an easy to use, powerful, and reliable system to process and distribute data.</description>
-
+    <modules>
+        <module>nifi-commons</module>
+        <module>nifi-api</module>
+        <module>nifi-framework-api</module>
+        <module>nifi-server-api</module>
+        <module>nifi-bootstrap</module>
+        <module>nifi-mock</module>
+        <module>nifi-nar-bundles</module>
+        <module>nifi-assembly</module>
+        <module>nifi-docs</module>
+        <module>nifi-maven-archetypes</module>
+        <module>nifi-system-tests</module>
+        <module>minifi</module>
+        <module>nifi-stateless</module>
+        <module>nifi-toolkit</module>
+        <module>nifi-manifest</module>
+        <module>c2</module>
+        <module>nifi-h2</module>
+    </modules>
+>>>>>>> 94fa8760e0 (ANE-1217: remove nifi-external module)
     <url>https://nifi.apache.org</url>
     <organization>
         <name>Apache NiFi Project</name>
@@ -100,7 +119,6 @@
         <org.bouncycastle.version>1.75</org.bouncycastle.version>
         <testcontainers.version>1.18.3</testcontainers.version>
         <org.slf4j.version>2.0.7</org.slf4j.version>
-        <ranger.version>2.4.0</ranger.version>
         <jetty.version>9.4.51.v20230217</jetty.version>
         <jackson.bom.version>2.15.2</jackson.bom.version>
         <avro.version>1.11.2</avro.version>
@@ -1021,7 +1039,6 @@
                 <module>nifi-assembly</module>
                 <module>nifi-docs</module>
                 <module>nifi-maven-archetypes</module>
-                <module>nifi-external</module>
                 <module>nifi-docker</module>
                 <module>nifi-system-tests</module>
                 <module>minifi</module>

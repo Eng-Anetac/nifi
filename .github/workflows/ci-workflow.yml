@@ -47,8 +47,6 @@ env:
     -pl -:minifi-integration-tests
     -pl -:minifi-assembly
     -pl -:nifi-assembly
-    -pl -:nifi-kafka-connector-assembly
-    -pl -:nifi-kafka-connector-tests
     -pl -:nifi-toolkit-encrypt-config
     -pl -:nifi-toolkit-admin
     -pl -:nifi-toolkit-tls
@@ -71,7 +69,6 @@ env:
     -D dir-only
     -D disableXmlReport
   MAVEN_BUILD_PROFILES: >-
-    -P include-grpc
     -P skip-nifi-bin-assembly
   MAVEN_PROJECTS: >-
     -pl -minifi/minifi-assembly
@@ -117,7 +114,6 @@ jobs:
           --no-transfer-progress
           --fail-fast
           -P contrib-check
-          -P include-grpc
 
   ubuntu-build-en:
     timeout-minutes: 120
