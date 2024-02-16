@@ -41,7 +41,6 @@
         <module>nifi-hl7-bundle</module>
         <module>nifi-ccda-bundle</module>
         <module>nifi-language-translation-bundle</module>
-        <module>nifi-mongodb-bundle</module>
         <module>nifi-flume-bundle</module>
         <module>nifi-hbase-bundle</module>
         <module>nifi-ambari-bundle</module>
@@ -254,12 +253,6 @@
             <dependency>
                 <groupId>org.apache.nifi</groupId>
                 <artifactId>nifi-security-kerberos-api</artifactId>
-                <version>1.23.0-ANETAC</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.nifi</groupId>
-                <artifactId>nifi-mongodb-client-service-api</artifactId>
                 <version>1.23.0-ANETAC</version>
                 <scope>provided</scope>
             </dependency>
