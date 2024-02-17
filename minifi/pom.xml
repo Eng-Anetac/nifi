@@ -377,11 +377,6 @@ limitations under the License.
             </dependency>
             <dependency>
                 <groupId>org.apache.nifi</groupId>
-                <artifactId>nifi-hadoop-utils</artifactId>
-                <version>1.23.0-ANETAC</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.nifi</groupId>
                 <artifactId>nifi-mock</artifactId>
                 <version>1.23.0-ANETAC</version>
                 <scope>test</scope>
