@@ -39,8 +39,6 @@
         <module>nifi-aws-bundle</module>
         <module>nifi-enrich-bundle</module>
         <module>nifi-language-translation-bundle</module>
-        <module>nifi-asana-bundle</module>
-        <module>nifi-media-bundle</module>
         <module>nifi-avro-bundle</module>
         <module>nifi-azure-bundle</module>
         <module>nifi-ldap-iaa-providers-bundle</module>
@@ -48,23 +46,8 @@
         <module>nifi-single-user-iaa-providers-bundle</module>
         <module>nifi-beats-bundle</module>
         <module>nifi-evtx-bundle</module>
-
-        <module>nifi-atlas-bundle</module>
-        <module>nifi-airtable-bundle</module>
-        <module>nifi-shopify-bundle</module>
-        <module>nifi-box-bundle</module>
-        <module>nifi-dropbox-bundle</module>
         <module>nifi-geohash-bundle</module>
-        <module>nifi-snowflake-bundle</module>
         <module>nifi-salesforce-bundle</module>
-        <module>nifi-rocksdb-bundle</module>
-        <module>nifi-zendesk-bundle</module>
-        <module>nifi-hubspot-bundle</module>
-        <module>nifi-workday-bundle</module>
-        <module>nifi-hazelcast-bundle</module>
-        <module>nifi-accumulo-bundle</module>
-        <module>nifi-spark-bundle</module>
-
         <module>nifi-html-bundle</module>
         <module>nifi-scripting-bundle</module>
         <module>nifi-elasticsearch-bundle</module>
@@ -74,7 +57,6 @@
         <module>nifi-site-to-site-reporting-bundle</module>
         <module>nifi-slack-bundle</module>
         <module>nifi-smb-bundle</module>
-        <module>nifi-snmp-bundle</module>
         <module>nifi-datadog-bundle</module>
         <module>nifi-windows-event-log-bundle</module>
         <module>nifi-ignite-bundle</module>
@@ -104,7 +86,6 @@
         <module>nifi-stateless-processor-bundle</module>
         <module>nifi-flow-registry-client-bundle</module>
         <module>nifi-jslt-bundle</module>
-        <module>nifi-iotdb-bundle</module>
         <module>nifi-cipher-bundle</module>
         <module>nifi-compress-bundle</module>
     </modules>
