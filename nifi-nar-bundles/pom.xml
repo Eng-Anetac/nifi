@@ -27,15 +27,11 @@
     </properties>
     <modules>
         <module>nifi-framework-bundle</module>
-        <module>nifi-hadoop-bundle</module>
-        <module>nifi-hadoop-libraries-bundle</module>
         <module>nifi-jetty-bundle</module>
         <module>nifi-provenance-repository-bundle</module>
         <module>nifi-standard-bundle</module>
         <module>nifi-standard-services</module>
         <module>nifi-update-attribute-bundle</module>
-        <module>nifi-kafka-bundle</module>
-        <module>nifi-confluent-platform-bundle</module>
         <module>nifi-aws-bundle</module>
         <module>nifi-enrich-bundle</module>
         <module>nifi-language-translation-bundle</module>
@@ -47,7 +43,6 @@
         <module>nifi-beats-bundle</module>
         <module>nifi-evtx-bundle</module>
         <module>nifi-geohash-bundle</module>
-        <module>nifi-salesforce-bundle</module>
         <module>nifi-html-bundle</module>
         <module>nifi-scripting-bundle</module>
         <module>nifi-elasticsearch-bundle</module>
