@@ -494,12 +494,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-amqp-nar</artifactId>
-            <version>1.23.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-splunk-nar</artifactId>
             <version>1.23.0-ANETAC</version>
             <type>nar</type>
@@ -537,12 +531,6 @@ language governing permissions and limitations under the License. -->
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-record-serialization-services-nar</artifactId>
-            <version>1.23.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-mqtt-nar</artifactId>
             <version>1.23.0-ANETAC</version>
             <type>nar</type>
         </dependency>
@@ -669,18 +657,6 @@ language governing permissions and limitations under the License. -->
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-hwx-schema-registry-nar</artifactId>
-            <version>1.23.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-redis-service-api-nar</artifactId>
-            <version>1.23.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-redis-nar</artifactId>
             <version>1.23.0-ANETAC</version>
             <type>nar</type>
         </dependency>
@@ -1379,23 +1355,6 @@ language governing permissions and limitations under the License. -->
                 <dependency>
                     <groupId>org.apache.nifi</groupId>
                     <artifactId>nifi-asn1-nar</artifactId>
-                    <version>1.23.0-ANETAC</version>
-                    <type>nar</type>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>include-riemann</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-                <property>
-                    <name>allProfiles</name>
-                </property>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.nifi</groupId>
-                    <artifactId>nifi-riemann-nar</artifactId>
                     <version>1.23.0-ANETAC</version>
                     <type>nar</type>
                 </dependency>
