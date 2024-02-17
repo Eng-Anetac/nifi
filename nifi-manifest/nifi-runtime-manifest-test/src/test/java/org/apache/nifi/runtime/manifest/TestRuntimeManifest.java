@@ -17,23 +17,14 @@
 package org.apache.nifi.runtime.manifest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.nifi.annotation.behavior.InputRequirement;
 import org.apache.nifi.c2.protocol.component.api.BuildInfo;
 import org.apache.nifi.c2.protocol.component.api.Bundle;
 import org.apache.nifi.c2.protocol.component.api.ComponentManifest;
 import org.apache.nifi.c2.protocol.component.api.ProcessorDefinition;
-import org.apache.nifi.c2.protocol.component.api.PropertyDependency;
 import org.apache.nifi.c2.protocol.component.api.PropertyDescriptor;
-import org.apache.nifi.c2.protocol.component.api.PropertyResourceDefinition;
-import org.apache.nifi.c2.protocol.component.api.Relationship;
 import org.apache.nifi.c2.protocol.component.api.ReportingTaskDefinition;
-import org.apache.nifi.c2.protocol.component.api.Restriction;
 import org.apache.nifi.c2.protocol.component.api.RuntimeManifest;
 import org.apache.nifi.c2.protocol.component.api.SchedulingDefaults;
-import org.apache.nifi.components.RequiredPermission;
-import org.apache.nifi.components.resource.ResourceCardinality;
-import org.apache.nifi.components.resource.ResourceType;
-import org.apache.nifi.components.state.Scope;
 import org.apache.nifi.scheduling.SchedulingStrategy;
 import org.junit.jupiter.api.Test;
 
@@ -42,12 +33,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TestRuntimeManifest {
