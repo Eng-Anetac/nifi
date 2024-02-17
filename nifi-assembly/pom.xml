@@ -290,30 +290,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-kafka-1-0-nar</artifactId>
-            <version>1.23.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-kafka-2-0-nar</artifactId>
-            <version>1.23.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-kafka-2-6-nar</artifactId>
-            <version>1.23.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-confluent-platform-nar</artifactId>
-            <version>1.23.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-http-context-map-nar</artifactId>
             <version>1.23.0-ANETAC</version>
             <type>nar</type>
