@@ -38,8 +38,6 @@
         <module>nifi-confluent-platform-bundle</module>
         <module>nifi-aws-bundle</module>
         <module>nifi-enrich-bundle</module>
-        <module>nifi-hl7-bundle</module>
-        <module>nifi-ccda-bundle</module>
         <module>nifi-language-translation-bundle</module>
         <module>nifi-asana-bundle</module>
         <module>nifi-media-bundle</module>
