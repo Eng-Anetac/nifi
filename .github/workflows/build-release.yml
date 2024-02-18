@@ -82,23 +82,11 @@ jobs:
         run: |
           mvn clean install -DskipTests
 
-      - name: Create Tag
-        if: steps.cache_nifi_toolkit.outputs.cache-hit != 'true' || steps.cache_nifi_assembly.outputs.cache-hit != 'true' || steps.cache_minifi_assembly.outputs.cache-hit != 'true'
-        run: |
-          git config --local user.email "anetac-prod-action-bot@anetac.com"
-          git config --local user.name "GitHub Action"
-          git tag "v${{ github.run_number }}"
-
-      - name: Push Tag
-        if: env.BUILD_AND_RELEASE == 'true'
-        run: |
-          git push origin "v${{ github.run_number }}"
-
       - name: Create Release
         if: steps.cache_nifi_toolkit.outputs.cache-hit != 'true' || steps.cache_nifi_assembly.outputs.cache-hit != 'true' || steps.cache_minifi_assembly.outputs.cache-hit != 'true'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "v${{ github.run_number }}-java17"
+          tag_name: "1.23.0-ANETAC"
           files: |
             nifi-assembly/target/nifi-*-bin.zip
             nifi-toolkit/nifi-toolkit-assembly/target/nifi-toolkit-*-bin.zip
