@@ -54,7 +54,7 @@ jobs:
       - name: get last commit hash
         id: get_nifi_commit_hash
         run: |
-          echo "nifi_commit_hash=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "nifi_commit_hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: cache Nifi Toolkit
         uses: actions/cache@v2
