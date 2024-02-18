@@ -65,12 +65,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-hbase-client-service-api</artifactId>
-            <version>1.23.0-ANETAC</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-oauth2-provider-api</artifactId>
             <version>1.23.0-ANETAC</version>
             <scope>compile</scope>
