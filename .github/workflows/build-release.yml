@@ -19,7 +19,6 @@ on:
     branches:
       - 'dev'
       - 'main'
-      - 'ANE-1217'
 
 env:
   DEFAULT_MAVEN_OPTS: >-
