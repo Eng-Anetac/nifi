@@ -19,6 +19,7 @@ on:
     branches:
       - 'dev'
       - 'main'
+  workflow_dispatch:
 
 env:
   DEFAULT_MAVEN_OPTS: >-
