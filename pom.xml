@@ -1164,6 +1164,11 @@
                                     <goal>check</goal>
                                 </goals>
                                 <phase>validate</phase>
+                                <configuration>
+                                    <excludes>
+                                        <excludes>.github/**</excludes>
+                                    </excludes>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -1176,7 +1181,7 @@
                                 <phase>validate</phase>
                                 <configuration>
                                     <inputEncoding>UTF-8</inputEncoding>
-                                    <excludes>**/generated-sources/**/*</excludes>
+                                    <excludes>**/generated-sources/**/*,.github/**</excludes>
                                     <sourceDirectories>
                                         <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
                                         <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
