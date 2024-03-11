@@ -22,8 +22,8 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
   AWS_DOMAIN_OWNER: ${{ secrets.AWS_DOMAIN_OWNER }}
-  MAVEN_COMMAND: ./mvnw --settings .github/workflows/maven-settings.xml
-  MAVEN_COMMAND_WINDOWS: ./mvnw.cmd --settings .github/workflows/maven-settings.xml
+  MAVEN_COMMAND: ./mvnw
+  MAVEN_COMMAND_WINDOWS: ./mvnw.cmd
   DEFAULT_MAVEN_OPTS: >-
     -Xmx3g
     -XX:ReservedCodeCacheSize=1g
