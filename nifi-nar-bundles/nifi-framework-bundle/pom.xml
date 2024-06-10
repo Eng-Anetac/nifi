@@ -425,7 +425,7 @@
             <dependency>
                 <groupId>org.springframework.security.kerberos</groupId>
                 <artifactId>spring-security-kerberos-core</artifactId>
-                <version>1.0.1.RELEASE</version>
+                <version>2.1.0</version>
             </dependency>
             <!-- Override xmlsec from spring-security-saml2-service-provider -->
             <dependency>
