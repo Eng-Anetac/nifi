@@ -27,11 +27,12 @@ import java.net.URL;
 
 import org.apache.nifi.minifi.c2.api.ConfigurationProviderException;
 import org.apache.nifi.minifi.c2.api.cache.WriteableConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class S3WritableConfiguration implements WriteableConfiguration {
-
   private final AmazonS3 s3;
-  private final S3Object s3Object;
+  private S3Object s3Object;
   private final String version;
 
   /**
@@ -74,11 +75,13 @@ public class S3WritableConfiguration implements WriteableConfiguration {
 
   @Override
   public OutputStream getOutputStream() throws ConfigurationProviderException {
+    s3Object = s3.getObject(s3Object.getBucketName(), s3Object.getKey());
     return new S3OutputStream(s3Object.getBucketName(), s3Object.getKey(), s3);
   }
 
   @Override
   public InputStream getInputStream() throws ConfigurationProviderException {
+    s3Object = s3.getObject(s3Object.getBucketName(), s3Object.getKey());
     return s3Object.getObjectContent();
   }
 
