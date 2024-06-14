@@ -27,8 +27,6 @@ import java.net.URL;
 
 import org.apache.nifi.minifi.c2.api.ConfigurationProviderException;
 import org.apache.nifi.minifi.c2.api.cache.WriteableConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class S3WritableConfiguration implements WriteableConfiguration {
   private final AmazonS3 s3;
