@@ -63,7 +63,6 @@ jobs:
           path: nifi-toolkit/nifi-toolkit-assembly/target/nifi-toolkit-*-bin.zip
           key: nifi-toolkit-java17-${{ steps.get_nifi_commit_hash.outputs.nifi_commit_hash }}
 
-
       - name: cache Nifi Assembly
         uses: actions/cache@v2
         id: cache-nifi-assembly
@@ -78,6 +77,13 @@ jobs:
           path: minifi/minifi-assembly/target/minifi-*-bin.zip
           key: minifi-assembly-java17-${{ steps.get_nifi_commit_hash.outputs.nifi_commit_hash }}
 
+      - name: Cache Minifi C2 Assembly
+        uses: actions/cache@v2
+        id: cache-minifi-c2-assembly
+        with:
+          path: minifi/minifi-c2/minifi-c2-assembly/target/minifi-c2-*-bin.zip
+          key: minifi-c2-assembly-java17-${{ steps.get_nifi_commit_hash.outputs.nifi_commit_hash }}
+
       - name: Build with Maven
         run: |
           mvn clean install -DskipTests
@@ -91,6 +97,7 @@ jobs:
             nifi-assembly/target/nifi-*-bin.zip
             nifi-toolkit/nifi-toolkit-assembly/target/nifi-toolkit-*-bin.zip
             minifi/minifi-assembly/target/minifi-*-bin.zip
+            minifi/minifi-c2/minifi-c2-assembly/target/minifi-c2-*-bin.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
