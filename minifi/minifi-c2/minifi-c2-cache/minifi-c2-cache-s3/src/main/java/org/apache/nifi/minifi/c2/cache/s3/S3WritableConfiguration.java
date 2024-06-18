@@ -30,8 +30,9 @@ import org.apache.nifi.minifi.c2.api.cache.WriteableConfiguration;
 
 public class S3WritableConfiguration implements WriteableConfiguration {
   private final AmazonS3 s3;
-  private S3Object s3Object;
   private final String version;
+  private final String bucketName;
+  private final String objectKey;
 
   /**
    * Creates a new S3 writable configuration.
@@ -42,7 +43,8 @@ public class S3WritableConfiguration implements WriteableConfiguration {
   public S3WritableConfiguration(AmazonS3 s3, S3ObjectSummary s3ObjectSummary, String version) {
 
     this.s3 = s3;
-    this.s3Object = s3.getObject(s3ObjectSummary.getBucketName(), s3ObjectSummary.getKey());
+    this.bucketName = s3ObjectSummary.getBucketName();
+    this.objectKey = s3ObjectSummary.getKey();
     this.version = version;
 
   }
@@ -54,9 +56,9 @@ public class S3WritableConfiguration implements WriteableConfiguration {
    * @param version The version of the configuration.
    */
   public S3WritableConfiguration(AmazonS3 s3, S3Object s3Object, String version) {
-
     this.s3 = s3;
-    this.s3Object = s3Object;
+    this.bucketName = s3Object.getBucketName();
+    this.objectKey = s3Object.getKey();
     this.version = version;
 
   }
@@ -68,34 +70,34 @@ public class S3WritableConfiguration implements WriteableConfiguration {
 
   @Override
   public boolean exists() {
-    return s3.doesObjectExist(s3Object.getBucketName(), s3Object.getKey());
+    return s3.doesObjectExist(bucketName, objectKey);
   }
 
   @Override
   public OutputStream getOutputStream() throws ConfigurationProviderException {
-    s3Object = s3.getObject(s3Object.getBucketName(), s3Object.getKey());
+    S3Object s3Object = s3.getObject(bucketName, objectKey);
     return new S3OutputStream(s3Object.getBucketName(), s3Object.getKey(), s3);
   }
 
   @Override
   public InputStream getInputStream() throws ConfigurationProviderException {
-    s3Object = s3.getObject(s3Object.getBucketName(), s3Object.getKey());
+    S3Object s3Object = s3.getObject(bucketName, objectKey);
     return s3Object.getObjectContent();
   }
 
   @Override
   public URL getURL() throws ConfigurationProviderException {
-    return s3.getUrl(s3Object.getBucketName(), s3Object.getKey());
+    return s3.getUrl(bucketName, objectKey);
   }
 
   @Override
   public String getName() {
-    return s3Object.getKey();
+    return objectKey;
   }
 
   @Override
   public String toString() {
-    return "FileSystemWritableConfiguration{objectKey=" + s3Object.getKey()
+    return "FileSystemWritableConfiguration{objectKey=" + objectKey
       + ", version='" + version + "'}";
   }
 
