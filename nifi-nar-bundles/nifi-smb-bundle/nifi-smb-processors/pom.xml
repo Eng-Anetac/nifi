@@ -19,11 +19,7 @@
     <parent>
         <groupId>org.apache.nifi</groupId>
         <artifactId>nifi-smb-bundle</artifactId>
-<<<<<<< HEAD
         <version>1.27.0</version>
-=======
-        <version>1.23.0-ANETAC</version>
->>>>>>> 55c4541131 (Remove EnumerateAccountPermissions processor)
     </parent>
 
     <artifactId>nifi-smb-processors</artifactId>
@@ -33,11 +29,7 @@
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-smb-client-api</artifactId>
-<<<<<<< HEAD
             <version>1.27.0</version>
-=======
-            <version>1.23.0-ANETAC</version>
->>>>>>> 55c4541131 (Remove EnumerateAccountPermissions processor)
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -55,34 +47,18 @@
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-utils</artifactId>
-<<<<<<< HEAD
             <version>1.27.0</version>
-=======
-            <version>1.23.0-ANETAC</version>
->>>>>>> 55c4541131 (Remove EnumerateAccountPermissions processor)
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-smb-smbj-common</artifactId>
-<<<<<<< HEAD
             <version>1.27.0</version>
-=======
-            <version>1.23.0-ANETAC</version>
->>>>>>> 55c4541131 (Remove EnumerateAccountPermissions processor)
         </dependency>
         <dependency>
             <groupId>com.hierynomus</groupId>
             <artifactId>smbj</artifactId>
         </dependency>
         <dependency>
-<<<<<<< HEAD
-=======
-            <groupId>com.rapid7.client</groupId>
-            <artifactId>dcerpc</artifactId>
-            <version>0.12.1</version>
-        </dependency>
-        <dependency>
->>>>>>> 55c4541131 (Remove EnumerateAccountPermissions processor)
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
         </dependency>
@@ -93,11 +69,7 @@
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-mock</artifactId>
-<<<<<<< HEAD
             <version>1.27.0</version>
-=======
-            <version>1.23.0-ANETAC</version>
->>>>>>> 55c4541131 (Remove EnumerateAccountPermissions processor)
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -113,11 +85,7 @@
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-smb-smbj-client</artifactId>
-<<<<<<< HEAD
             <version>1.27.0</version>
-=======
-            <version>1.23.0-ANETAC</version>
->>>>>>> 55c4541131 (Remove EnumerateAccountPermissions processor)
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -125,12 +93,9 @@
             <artifactId>nifi-distributed-cache-client-service-api</artifactId>
             <scope>test</scope>
         </dependency>
-<<<<<<< HEAD
-=======
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
->>>>>>> 55c4541131 (Remove EnumerateAccountPermissions processor)
     </dependencies>
 </project>

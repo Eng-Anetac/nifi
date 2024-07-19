@@ -28,7 +28,6 @@
     <modules>
         <module>nifi-framework-bundle</module>
         <module>nifi-standard-shared-bundle</module>
-        <module>nifi-hadoop-bundle</module>
         <module>nifi-hadoop-libraries-bundle</module>
         <module>nifi-jetty-bundle</module>
         <module>nifi-provenance-repository-bundle</module>
@@ -64,10 +63,7 @@
         <module>nifi-amqp-bundle</module>
         <module>nifi-splunk-bundle</module>
         <module>nifi-jms-bundle</module>
-        <module>nifi-beats-bundle</module>
-        <!--module>nifi-cassandra-bundle</module-->
         <module>nifi-spring-bundle</module>
-        <!--module>nifi-hive-bundle</module-->
         <module>nifi-site-to-site-reporting-bundle</module>
         <module>nifi-mqtt-bundle</module>
         <module>nifi-evtx-bundle</module>
@@ -120,8 +116,6 @@
         <module>nifi-workday-bundle</module>
         <module>nifi-box-bundle</module>
         <module>nifi-flow-registry-client-bundle</module>
-        <module>nifi-shopify-bundle</module>
-        <module>nifi-iceberg-bundle</module>
         <module>nifi-jslt-bundle</module>
         <module>nifi-iotdb-bundle</module>
         <module>nifi-cipher-bundle</module>
@@ -313,11 +307,6 @@
             <dependency>
                 <groupId>org.apache.nifi</groupId>
                 <artifactId>nifi-proxy-configuration-api</artifactId>
-                <version>1.27.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.nifi</groupId>
-                <artifactId>nifi-cassandra-services-api</artifactId>
                 <version>1.27.0</version>
             </dependency>
             <dependency>
