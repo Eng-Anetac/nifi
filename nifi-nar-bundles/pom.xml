@@ -48,10 +48,7 @@
         <module>nifi-elasticsearch-bundle</module>
         <module>nifi-splunk-bundle</module>
         <module>nifi-jms-bundle</module>
-        <module>nifi-beats-bundle</module>
-        <module>nifi-cassandra-bundle</module>
         <module>nifi-spring-bundle</module>
-        <module>nifi-hive-bundle</module>
         <module>nifi-site-to-site-reporting-bundle</module>
         <module>nifi-slack-bundle</module>
         <module>nifi-smb-bundle</module>
@@ -82,8 +79,6 @@
         <module>nifi-hashicorp-vault-bundle</module>
         <module>nifi-stateless-processor-bundle</module>
         <module>nifi-flow-registry-client-bundle</module>
-        <module>nifi-shopify-bundle</module>
-        <module>nifi-iceberg-bundle</module>
         <module>nifi-jslt-bundle</module>
         <module>nifi-cipher-bundle</module>
         <module>nifi-compress-bundle</module>
@@ -255,11 +250,6 @@
                 <groupId>org.apache.nifi</groupId>
                 <artifactId>nifi-proxy-configuration-api</artifactId>
                 <version>1.23.0-ANETAC</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.nifi</groupId>
-                <artifactId>nifi-cassandra-services-api</artifactId>
-                <version>1.23.0-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.nifi</groupId>
