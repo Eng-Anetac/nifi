@@ -112,7 +112,7 @@
         <okio.version>3.9.0</okio.version>
         <org.apache.commons.cli.version>1.7.0</org.apache.commons.cli.version>
         <org.apache.commons.codec.version>1.17.0</org.apache.commons.codec.version>
-        <org.apache.commons.compress.version>1.26.2</org.apache.commons.compress.version>
+        <org.apache.commons.compress.version>1.26.0</org.apache.commons.compress.version>
         <com.github.luben.zstd-jni.version>1.5.6-3</com.github.luben.zstd-jni.version>
         <org.apache.commons.lang3.version>3.14.0</org.apache.commons.lang3.version>
         <org.apache.commons.net.version>3.10.0</org.apache.commons.net.version>
@@ -149,7 +149,7 @@
         <spring.version>5.3.37</spring.version>
         <spring.security.version>5.8.13</spring.security.version>
         <swagger.annotations.version>1.6.14</swagger.annotations.version>
-        <h2.version>2.2.224</h2.version>
+        <h2.version>2.3.230</h2.version>
         <zookeeper.version>3.9.2</zookeeper.version>
         <caffeine.version>2.9.3</caffeine.version>
     </properties>
