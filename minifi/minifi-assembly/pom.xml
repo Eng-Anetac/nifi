@@ -241,13 +241,13 @@ limitations under the License.
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-aws-nar</artifactId>
-            <version>1.23.0-ANETAC</version>
+            <version>1.27.0-ANETAC</version>
             <type>nar</type>
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-aws-service-api-nar</artifactId>
-            <version>1.23.0-ANETAC</version>
+            <version>1.27.0-ANETAC</version>
             <type>nar</type>
         </dependency>
         <dependency>

@@ -92,7 +92,7 @@ jobs:
         if: steps.cache_nifi_toolkit.outputs.cache-hit != 'true' || steps.cache_nifi_assembly.outputs.cache-hit != 'true' || steps.cache_minifi_assembly.outputs.cache-hit != 'true'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "1.23.0-ANETAC"
+          tag_name: "1.27.0-ANETAC"
           files: |
             nifi-assembly/target/nifi-*-bin.zip
             nifi-toolkit/nifi-toolkit-assembly/target/nifi-toolkit-*-bin.zip
