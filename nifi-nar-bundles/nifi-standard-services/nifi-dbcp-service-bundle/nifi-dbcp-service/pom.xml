@@ -94,11 +94,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
-            <artifactId>derby</artifactId>
-            <version>${derby.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.derby</groupId>
             <artifactId>derbynet</artifactId>
             <version>${derby.version}</version>
             <scope>test</scope>
