@@ -84,12 +84,19 @@ jobs:
           path: minifi/minifi-c2/minifi-c2-assembly/target/minifi-c2-*-bin.zip
           key: minifi-c2-assembly-java17-${{ steps.get_nifi_commit_hash.outputs.nifi_commit_hash }}
 
+      - name: Cache Nifi Registry Assembly
+        uses: actions/cache@v2
+        id: cache-nifi-registry-assembly
+        with:
+          path: nifi-registry/nifi-registry-assembly/target/nifi-registry-*-bin.zip
+          key: nifi-registry-assembly-java17-${{ steps.get_nifi_commit_hash.outputs.nifi_commit_hash }}
+
       - name: Build with Maven
         run: |
           mvn clean install -DskipTests
 
       - name: Create Release
-        if: steps.cache_nifi_toolkit.outputs.cache-hit != 'true' || steps.cache_nifi_assembly.outputs.cache-hit != 'true' || steps.cache_minifi_assembly.outputs.cache-hit != 'true'
+        if: steps.cache-nifi-registry-assembly.outputs.cache-hit != 'true' || steps.cache-minifi-assembly.outputs.cache-hit != 'true' || steps.cache-nifi-toolkit-assembly.outputs.cache-hit != 'true' || steps.cache-nifi-assembly.outputs.cache-hit != 'true' || steps.cache-minifi-c2-assembly.outputs.cache-hit != 'true'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: "1.23.0-ANETAC"
@@ -98,6 +105,7 @@ jobs:
             nifi-toolkit/nifi-toolkit-assembly/target/nifi-toolkit-*-bin.zip
             minifi/minifi-assembly/target/minifi-*-bin.zip
             minifi/minifi-c2/minifi-c2-assembly/target/minifi-c2-*-bin.zip
+            nifi-registry/nifi-registry-assembly/target/nifi-registry-*-bin.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
