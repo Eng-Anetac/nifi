@@ -56,8 +56,6 @@ org.apache.nifi.processors.standard.GenerateTableFetch
 org.apache.nifi.processors.standard.GetFile
 org.apache.nifi.processors.standard.GetFTP
 org.apache.nifi.processors.standard.GetHTTP
-org.apache.nifi.processors.standard.GetJMSQueue
-org.apache.nifi.processors.standard.GetJMSTopic
 org.apache.nifi.processors.standard.GetSFTP
 org.apache.nifi.processors.standard.HandleHttpRequest
 org.apache.nifi.processors.standard.HandleHttpResponse
@@ -99,7 +97,6 @@ org.apache.nifi.processors.standard.PutDistributedMapCache
 org.apache.nifi.processors.standard.PutEmail
 org.apache.nifi.processors.standard.PutFile
 org.apache.nifi.processors.standard.PutFTP
-org.apache.nifi.processors.standard.PutJMS
 org.apache.nifi.processors.standard.PutRecord
 org.apache.nifi.processors.standard.PutSFTP
 org.apache.nifi.processors.standard.PutSQL

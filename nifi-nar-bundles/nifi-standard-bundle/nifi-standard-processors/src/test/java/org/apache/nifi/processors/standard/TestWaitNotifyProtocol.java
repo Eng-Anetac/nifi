@@ -16,7 +16,6 @@
  */
 package org.apache.nifi.processors.standard;
 
-import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.nifi.distributed.cache.client.AtomicCacheEntry;
 import org.apache.nifi.distributed.cache.client.AtomicDistributedMapCacheClient;
 import org.apache.nifi.distributed.cache.client.exception.DeserializationException;
@@ -25,6 +24,7 @@ import org.apache.nifi.processors.standard.util.FlowFileAttributesSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
+import java.io.ByteArrayOutputStream;
 
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
