@@ -332,10 +332,10 @@ class TestRuntimeManifest {
 
     private ComponentManifest getComponentManifest(final List<Bundle> bundles, final String artifactId) {
         final Bundle bundle = bundles.stream().filter(b -> b.getArtifact().equals(artifactId)).findFirst().orElse(null);
-        assertNotNull(bundle);
+        assertNotNull(bundle, "Bundle not found for artifact " + artifactId);
 
         final ComponentManifest componentManifest = bundle.getComponentManifest();
-        assertNotNull(componentManifest);
+        assertNotNull(componentManifest, "Component manifest not found for " + bundle.toString() + " artifact " + artifactId);
         return componentManifest;
     }
 }
