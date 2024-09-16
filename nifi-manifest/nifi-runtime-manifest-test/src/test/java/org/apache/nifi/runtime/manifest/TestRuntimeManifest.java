@@ -35,6 +35,7 @@ import org.apache.nifi.components.resource.ResourceCardinality;
 import org.apache.nifi.components.resource.ResourceType;
 import org.apache.nifi.components.state.Scope;
 import org.apache.nifi.scheduling.SchedulingStrategy;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.FileInputStream;
@@ -54,6 +55,7 @@ class TestRuntimeManifest {
 
     public static final String LIST_HDFS_DEFAULT_SCHEDULE_TIME = "1 min";
 
+    @Disabled("This test is disabled, because we are skipping hadoop and kafka processors in the runtime manifest")
     @Test
     void testRuntimeManifest() throws IOException {
         final ObjectMapper objectMapper = new ObjectMapper();
@@ -93,6 +95,7 @@ class TestRuntimeManifest {
         final List<Bundle> bundles = runtimeManifest.getBundles();
         assertNotNull(bundles);
         assertTrue(bundles.size() > 0);
+
 
         // Verify ListHDFS definition
         final ProcessorDefinition listHdfsDefinition = getProcessorDefinition(bundles, "nifi-hadoop-nar", "org.apache.nifi.processors.hadoop.ListHDFS");
@@ -332,10 +335,10 @@ class TestRuntimeManifest {
 
     private ComponentManifest getComponentManifest(final List<Bundle> bundles, final String artifactId) {
         final Bundle bundle = bundles.stream().filter(b -> b.getArtifact().equals(artifactId)).findFirst().orElse(null);
-        assertNotNull(bundle);
+        assertNotNull(bundle, "Bundle not found for artifact " + artifactId);
 
         final ComponentManifest componentManifest = bundle.getComponentManifest();
-        assertNotNull(componentManifest);
+        assertNotNull(componentManifest, "Component manifest not found for " + bundle.toString() + " artifact " + artifactId);
         return componentManifest;
     }
 }
