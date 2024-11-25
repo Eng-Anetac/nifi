@@ -203,7 +203,7 @@ public class QueryDNS extends AbstractEnrichProcessor {
             }
         }
     }
-    
+
     @OnScheduled
     public void onScheduled(ProcessContext context) {
         try {
@@ -213,7 +213,6 @@ public class QueryDNS extends AbstractEnrichProcessor {
             throw new ProcessException("Failed to initialize the JNDI DNS resolver server", e);
         }
     }
-
 
     protected void initializeResolver(final ProcessContext context ) {
 
