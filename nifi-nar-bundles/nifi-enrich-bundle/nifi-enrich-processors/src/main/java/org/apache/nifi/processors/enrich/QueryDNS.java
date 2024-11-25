@@ -189,24 +189,21 @@ public class QueryDNS extends AbstractEnrichProcessor {
                     recordNumber++;
                 }
             }
-        } catch (NamingException e) {
-            context.yield();
-            throw new ProcessException("Unexpected NamingException while processing records. Please review your configuration.", e);
-
-        }
-
-        // Finally prepare to send the data down the pipeline
-        if (found) {
-            // Sending the resulting flowfile (with attributes) to REL_FOUND
-            session.transfer(flowFile, REL_FOUND);
-        } else {
-            // NXDOMAIN received, accepting the fate but forwarding
-            // to REL_NOT_FOUND
-            session.transfer(flowFile, REL_NOT_FOUND);
+        } catch (Exception e) {
+            getLogger().error("Failed to perform DNS lookup for query {}", new Object[]{queryInput}, e);
+        } finally {
+            // Finally prepare to send the data down the pipeline
+            if (found) {
+                // Sending the resulting flowfile (with attributes) to REL_FOUND
+                session.transfer(flowFile, REL_FOUND);
+            } else {
+                // NXDOMAIN received, accepting the fate but forwarding
+                // to REL_NOT_FOUND
+                session.transfer(flowFile, REL_NOT_FOUND);
+            }
         }
     }
-
-
+    
     @OnScheduled
     public void onScheduled(ProcessContext context) {
         try {
