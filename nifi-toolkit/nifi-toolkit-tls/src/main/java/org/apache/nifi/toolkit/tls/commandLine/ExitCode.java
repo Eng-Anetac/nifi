@@ -84,5 +84,15 @@ public enum ExitCode {
     /**
      * Unable to migrate flow content
      */
-    ERROR_MIGRATING_FLOW
+    ERROR_MIGRATING_FLOW,
+
+    /**
+     * Unable to rename field
+     */
+    ERROR_RENAMING_FIELD,
+
+    /**
+     * Unable to decrypt flow
+     */
+    ERROR_DECRYPTING_FLOW
 }

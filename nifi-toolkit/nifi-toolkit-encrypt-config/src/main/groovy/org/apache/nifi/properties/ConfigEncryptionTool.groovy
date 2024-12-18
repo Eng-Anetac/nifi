@@ -107,6 +107,10 @@ class ConfigEncryptionTool {
     private boolean handlingFlowXml = false
     private boolean ignorePropertiesFiles = false
     private boolean translatingCli = false
+    private boolean renamingField = false
+    private boolean decryptingFlow = false
+    private String oldName
+    private String newName
 
     private static final String HELP_ARG = "help"
     private static final String VERBOSE_ARG = "verbose"
@@ -132,6 +136,8 @@ class ConfigEncryptionTool {
     private static final String NEW_FLOW_ALGORITHM_ARG = "newFlowAlgorithm"
     private static final String NEW_FLOW_PROVIDER_ARG = "newFlowProvider"
     private static final String TRANSLATE_CLI_ARG = "translateCli"
+    private static final String RENAME_FIELD_ARG = "renameField"
+    private static final String DECRYPT_FLOW = "decrypFlow"
 
     private static final StandardProtectionSchemeResolver PROTECTION_SCHEME_RESOLVER = new StandardProtectionSchemeResolver()
     private static final String PROTECTION_SCHEME_DESC = String.format("Selects the protection scheme for encrypted properties. Default is AES_GCM. Valid values: %s", PROTECTION_SCHEME_RESOLVER.supportedProtectionSchemes)
@@ -264,6 +270,8 @@ class ConfigEncryptionTool {
         options.addOption(Option.builder("A").longOpt(NEW_FLOW_ALGORITHM_ARG).hasArg(true).argName("algorithm").desc("The algorithm to use to encrypt the sensitive processor properties in flow.xml.gz").build())
         options.addOption(Option.builder("P").longOpt(NEW_FLOW_PROVIDER_ARG).hasArg(true).argName("algorithm").desc("The security provider to use to encrypt the sensitive processor properties in flow.xml.gz").build())
         options.addOption(Option.builder("c").longOpt(TRANSLATE_CLI_ARG).hasArg(false).desc("Translates the nifi.properties file to a format suitable for the NiFi CLI tool").build())
+        options.addOption(Option.builder("R").longOpt(RENAME_FIELD_ARG).hasArg(true).desc("Renames a field in flow.json.gz/flow.xml.gz").build())
+        options.addOption(Option.builder("D").longOpt(DECRYPT_FLOW).hasArg(false).desc("Decrypts flow.json.gz/flow.xml.gz").build())
         options
     }
 
@@ -323,6 +331,8 @@ class ConfigEncryptionTool {
                 boolean ignoreFlagPresent = commandLine.hasOption(DO_NOT_ENCRYPT_NIFI_PROPERTIES_ARG)
                 if (isVerbose && !ignoreFlagPresent) {
                     logger.info("Handling encryption of nifi.properties")
+                } else if (isVerbose) {
+                    logger.info("Ignoring nifi.properties")
                 }
                 niFiPropertiesPath = commandLine.getOptionValue(NIFI_PROPERTIES_ARG)
                 outputNiFiPropertiesPath = commandLine.getOptionValue(OUTPUT_NIFI_PROPERTIES_ARG, niFiPropertiesPath)
@@ -384,8 +394,34 @@ class ConfigEncryptionTool {
                     }
                 }
             }
+            if(commandLine.hasOption(DECRYPT_FLOW)) {
+                flowXmlPath = commandLine.getOptionValue(FLOW_XML_ARG);
+                outputFlowXmlPath = commandLine.getOptionValue(OUTPUT_FLOW_XML_ARG, flowXmlPath)
+                if(isVerbose) {
+                    logger.info("Decrypting ${flowXmlPath} and writing to ${outputFlowXmlPath}")
+                }
+                if (flowXmlPath == outputFlowXmlPath) {
+                    logger.warn("The source flow.xml.gz and destination flow.xml.gz are identical [${outputFlowXmlPath}] so the original will be overwritten")
+                }
+                decryptingFlow = true
+            } else if(commandLine.hasOption(RENAME_FIELD_ARG)) {
+                String[] renameFields = commandLine.getOptionValues(RENAME_FIELD_ARG)
+                if(renameFields.length != 2) {
+                    printUsageAndThrow("The -R/--renameField argument must be followed by 2 arguments", ExitCode.INVALID_ARGS)
+                }
+                oldName = renameFields[0]
+                newName = renameFields[1]
 
-            if (commandLine.hasOption(FLOW_XML_ARG)) {
+                flowXmlPath = commandLine.getOptionValue(FLOW_XML_ARG);
+                outputFlowXmlPath = commandLine.getOptionValue(OUTPUT_FLOW_XML_ARG, flowXmlPath)
+                if(isVerbose) {
+                    logger.info("Renaming field '${oldName}' to '${newName}' in ${flowXmlPath} and writing to ${outputFlowXmlPath}")
+                }
+                if (flowXmlPath == outputFlowXmlPath) {
+                    logger.warn("The source flow.xml.gz and destination flow.xml.gz are identical [${outputFlowXmlPath}] so the original will be overwritten")
+                }
+                renamingField = true
+            } else if (commandLine.hasOption(FLOW_XML_ARG)) {
                 if (isVerbose) {
                     logger.info("Handling encryption of flow.xml.gz")
                 }
@@ -596,7 +632,7 @@ class ConfigEncryptionTool {
     }
 
     private static NiFiPropertiesLoader getNiFiPropertiesLoader(final String keyHex) {
-        keyHex == null ? new NiFiPropertiesLoader() : NiFiPropertiesLoader.withKey(keyHex)
+        new NiFiPropertiesLoader()
     }
 
     /**
@@ -605,12 +641,12 @@ class ConfigEncryptionTool {
      * @return the NiFiProperties instance
      * @throw IOException if the nifi.properties file cannot be read
      */
-    private NiFiProperties loadNiFiProperties(String existingKeyHex = keyHex) throws IOException {
+    private NiFiProperties loadNiFiProperties(String existingKeyHex) throws IOException {
         File niFiPropertiesFile
         if (niFiPropertiesPath && (niFiPropertiesFile = new File(niFiPropertiesPath)).exists()) {
             NiFiProperties properties
             try {
-                properties = getNiFiPropertiesLoader(existingKeyHex).load(niFiPropertiesFile)
+                properties = getNiFiPropertiesLoader().load(niFiPropertiesFile)
                 logger.info("Loaded NiFiProperties instance with ${properties.size()} properties")
                 return properties
             } catch (RuntimeException e) {
@@ -706,6 +742,40 @@ class ConfigEncryptionTool {
     }
 
     /**
+     * This is a pretty crude method that changes all instances of a given token to the new value.
+     * The purpose of this method is to rename encrypted parameter in parameter context without revealing the value.
+     * @param flowXmlContent
+     * @param fieldName
+     * @param newFieldName
+     */
+    private void renameTokenInFlowXmlContent(InputStream flowXmlContent, String fieldName, String newFieldName) {
+        File tempFlowXmlFile = new File(getTemporaryFlowXmlFile(outputFlowXmlPath).toString())
+        final OutputStream flowOutputStream = getFlowOutputStream(tempFlowXmlFile, flowXmlContent instanceof GZIPInputStream)
+
+        NiFiProperties inputProperties = NiFiProperties.createBasicNiFiProperties(niFiPropertiesPath)
+        final PropertyEncryptor inputEncryptor = PropertyEncryptorFactory.getPropertyEncryptor(inputProperties)
+        final PropertyEncryptor outputEncryptor = PropertyEncryptorFactory.getPropertyEncryptor(inputProperties)
+        final FlowEncryptor flowEncryptor = new StandardFlowEncryptor()
+        flowEncryptor.renameFieldInFlow(flowXmlContent, flowOutputStream, inputEncryptor, outputEncryptor, fieldName, newFieldName)
+        // Move temporary file to the final path (this may overwrite the original file)
+        Files.move(tempFlowXmlFile.toPath(), Paths.get(outputFlowXmlPath), StandardCopyOption.ATOMIC_MOVE)
+        logger.info("Renamed field '${fieldName}' to '${newFieldName}' in ${outputFlowXmlPath}")
+    }
+
+    private decryptFlowXmlContent(InputStream flowXmlContent) {
+        File tempFlowXmlFile = new File(getTemporaryFlowXmlFile(outputFlowXmlPath).toString())
+        final OutputStream flowOutputStream = getFlowOutputStream(tempFlowXmlFile, flowXmlContent instanceof GZIPInputStream)
+
+        NiFiProperties inputProperties = NiFiProperties.createBasicNiFiProperties(niFiPropertiesPath)
+        final PropertyEncryptor inputEncryptor = PropertyEncryptorFactory.getPropertyEncryptor(inputProperties)
+        final FlowEncryptor flowEncryptor = new StandardFlowEncryptor()
+        flowEncryptor.decryptFlow(flowXmlContent, flowOutputStream, inputEncryptor)
+        // Move temporary file to the final path (this may overwrite the original file)
+        Files.move(tempFlowXmlFile.toPath(), Paths.get(outputFlowXmlPath), StandardCopyOption.ATOMIC_MOVE)
+        logger.info("Decrypted flow.xml.gz and wrote to ${outputFlowXmlPath}")
+    }
+
+    /**
      * Scans XML content and decrypts each encrypted element, then re-encrypts it with the new key, and returns the final XML content.
      *
      * @param flowXmlContent the original flow.xml.gz as an input stream
@@ -723,17 +793,20 @@ class ConfigEncryptionTool {
                 (NiFiProperties.SENSITIVE_PROPS_KEY): existingFlowPassword,
                 (NiFiProperties.SENSITIVE_PROPS_ALGORITHM): existingAlgorithm
         ])
-
-        NiFiProperties outputProperties = NiFiProperties.createBasicNiFiProperties("", [
-                (NiFiProperties.SENSITIVE_PROPS_KEY): newFlowPassword,
-                (NiFiProperties.SENSITIVE_PROPS_ALGORITHM): newAlgorithm
-        ])
-
         final PropertyEncryptor inputEncryptor = PropertyEncryptorFactory.getPropertyEncryptor(inputProperties)
-        final PropertyEncryptor outputEncryptor = PropertyEncryptorFactory.getPropertyEncryptor(outputProperties)
-
         final FlowEncryptor flowEncryptor = new StandardFlowEncryptor()
-        flowEncryptor.processFlow(flowXmlContent, flowOutputStream, inputEncryptor, outputEncryptor)
+        logger.info("Migrating flow from algorithm ${existingAlgorithm} to ${newAlgorithm}")
+        if(newAlgorithm.equalsIgnoreCase("plaintext")) {
+            flowEncryptor.decryptFlow(flowXmlContent, flowOutputStream, inputEncryptor)
+            Files.copy(tempFlowXmlFile.toPath(), Paths.get(outputFlowXmlPath))
+        } else {
+            NiFiProperties outputProperties = NiFiProperties.createBasicNiFiProperties("", [
+                    (NiFiProperties.SENSITIVE_PROPS_KEY): newFlowPassword,
+                    (NiFiProperties.SENSITIVE_PROPS_ALGORITHM): newAlgorithm
+            ])
+            final PropertyEncryptor outputEncryptor = PropertyEncryptorFactory.getPropertyEncryptor(outputProperties)
+            flowEncryptor.processFlow(flowXmlContent, flowOutputStream, inputEncryptor, outputEncryptor)
+        }
 
         // Overwrite the original flow file with the migrated flow file
         Files.move(tempFlowXmlFile.toPath(), Paths.get(outputFlowXmlPath), StandardCopyOption.ATOMIC_MOVE)
@@ -1366,6 +1439,26 @@ class ConfigEncryptionTool {
             try {
                 tool.parse(args)
 
+                if(tool.renamingField) {
+                    try {
+                        tool.flowXmlInputStream = tool.loadFlowXml(flowXmlPath)
+                        tool.renameToken(tool.oldName, tool.newName)
+                    } catch (Exception e) {
+                        System.exit(ExitCode.ERROR_RENAMING_FIELD.ordinal())
+                    }
+                    System.exit(ExitCode.SUCCESS.ordinal())
+                }
+
+                if(tool.decryptingFlow) {
+                    try {
+                        tool.flowXmlInputStream = tool.loadFlowXml(flowXmlPath)
+                        tool.decryptFlow()
+                    } catch (Exception e) {
+                        System.exit(ExitCode.ERROR_DECRYPTING_FLOW.ordinal())
+                    }
+                    System.exit(ExitCode.SUCCESS.ordinal())
+                }
+
                 // Handle the translate CLI case
                 if (tool.translatingCli) {
                     if (tool.bootstrapConfPath) {
@@ -1473,6 +1566,8 @@ class ConfigEncryptionTool {
 
                     tool.niFiProperties = tool.encryptSensitiveProperties(tool.niFiProperties)
                 }
+
+
             } catch (CommandLineParseException e) {
                 if (e.exitCode == ExitCode.HELP) {
                     System.exit(ExitCode.HELP.ordinal())
@@ -1517,7 +1612,34 @@ class ConfigEncryptionTool {
         System.exit(ExitCode.SUCCESS.ordinal())
     }
 
+    void renameToken(String oldName, String newName) {
+        logger.info("Renaming field ${oldName} to ${newName} in ${flowXmlPath}")
+        try {
+            renameTokenInFlowXmlContent(flowXmlInputStream, oldName, newName)
+        } catch (Exception e) {
+            logger.error("Encountered an error: ${e.getLocalizedMessage()}")
+            if (isVerbose) {
+                logger.error("Exception: ", e)
+            }
+            printUsageAndThrow("Encountered an error renaming field", ExitCode.ERROR_RENAMING_FIELD)
+        }
+    }
+
+    void decryptFlow() {
+        logger.info("Decrypting flow ${flowXmlPath} into ${outputFlowXmlPath}")
+        try {
+            decryptFlowXmlContent(flowXmlInputStream)
+        } catch (Exception e) {
+            logger.error("Encountered an error: ${e.getLocalizedMessage()}")
+            if (isVerbose) {
+                logger.error("Exception: ", e)
+            }
+            printUsageAndThrow("Encountered an error decrypting flow", ExitCode.ERROR_DECRYPTING_FLOW)
+        }
+    }
+
     void handleFlowXml(boolean existingNiFiPropertiesAreEncrypted = false) {
+        logger.info("Migrating flow.xml file at ${flowXmlPath}. This could take a while if the flow XML is very large.")
         String existingFlowPassword = existingFlowPropertiesPassword ?: getExistingFlowPassword()
 
         // If the new password was not provided in the arguments, read from the console. If that is empty, use the same value (essentially a copy no-op)
@@ -1533,7 +1655,7 @@ class ConfigEncryptionTool {
         String newAlgorithm = newFlowAlgorithm ?: existingAlgorithm
 
         try {
-            logger.info("Migrating flow.xml file at ${flowXmlPath}. This could take a while if the flow XML is very large.")
+
             migrateFlowXmlContent(flowXmlInputStream, existingFlowPassword, newFlowPassword, existingAlgorithm, newAlgorithm)
         } catch (Exception e) {
             logger.error("Encountered an error: ${e.getLocalizedMessage()}")

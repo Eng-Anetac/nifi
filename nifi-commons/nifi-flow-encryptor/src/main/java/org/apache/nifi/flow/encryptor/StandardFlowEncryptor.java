@@ -16,6 +16,10 @@
  */
 package org.apache.nifi.flow.encryptor;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.nifi.encrypt.PropertyEncryptor;
 
 import java.io.BufferedInputStream;
@@ -48,6 +52,35 @@ public class StandardFlowEncryptor implements FlowEncryptor {
             bufferedInputStream.reset();
             final FlowEncryptor flowEncryptor = (firstByte == XML_DECLARATION) ? new XmlFlowEncryptor() : new JsonFlowEncryptor();
             flowEncryptor.processFlow(bufferedInputStream, outputStream, inputEncryptor, outputEncryptor);
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @Override
+    public void decryptFlow(InputStream inputStream, OutputStream outputStream, PropertyEncryptor inputEncryptor) {
+        final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+        bufferedInputStream.mark(1);
+        try {
+            final int firstByte = bufferedInputStream.read();
+            bufferedInputStream.reset();
+            final FlowEncryptor flowEncryptor = (firstByte == XML_DECLARATION) ? new XmlFlowEncryptor() : new JsonFlowEncryptor();
+            flowEncryptor.decryptFlow(bufferedInputStream, outputStream, inputEncryptor);
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @Override
+    public void renameFieldInFlow(InputStream inputStream, OutputStream outputStream, PropertyEncryptor inputEncryptor,
+                                  PropertyEncryptor outputEncryptor, String fieldName, String newFieldName) {
+        final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+        bufferedInputStream.mark(1);
+        try {
+            final int firstByte = bufferedInputStream.read();
+            bufferedInputStream.reset();
+            final FlowEncryptor flowEncryptor = (firstByte == XML_DECLARATION) ? new XmlFlowEncryptor() : new JsonFlowEncryptor();
+            flowEncryptor.renameFieldInFlow(bufferedInputStream, outputStream, inputEncryptor, outputEncryptor, fieldName, newFieldName);
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
