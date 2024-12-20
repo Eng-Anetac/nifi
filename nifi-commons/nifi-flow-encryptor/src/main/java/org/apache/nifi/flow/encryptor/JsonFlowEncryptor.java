@@ -44,6 +44,104 @@ public class JsonFlowEncryptor extends AbstractFlowEncryptor {
         }
     }
 
+    @Override
+    public void decryptFlow(InputStream inputStream, OutputStream outputStream, PropertyEncryptor inputEncryptor) {
+        final JsonFactory factory = new JsonFactory();
+        try (final JsonGenerator generator = factory.createGenerator(outputStream)){
+            try (final JsonParser parser = factory.createParser(inputStream)) {
+                parser.setCodec(new ObjectMapper());
+                processJsonByTokens(parser, generator, inputEncryptor, null);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed Decrypting Flow Configuration", e);
+        }
+    }
+
+    @Override
+    public void renameFieldInFlow(InputStream inputStream, OutputStream outputStream, PropertyEncryptor inputEncryptor,
+                                  PropertyEncryptor outputEncryptor, String fieldName, String newFieldName) {
+        final JsonFactory factory = new JsonFactory();
+        try (final JsonGenerator generator = factory.createGenerator(outputStream)){
+            try (final JsonParser parser = factory.createParser(inputStream)) {
+                parser.setCodec(new ObjectMapper());
+                renameToken(parser, generator, inputEncryptor, outputEncryptor, fieldName, newFieldName);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed Renaming field in JSON Flow", e);
+        }
+    }
+
+    private void renameToken(final JsonParser parser, final JsonGenerator generator,
+                             final PropertyEncryptor inputEncryptor, final PropertyEncryptor outputEncryptor,
+                             String fieldName, String newFieldName) throws IOException {
+        JsonToken token = parser.nextToken();
+        while (token != null) {
+            switch (token) {
+                case NOT_AVAILABLE:
+                    break;
+                case START_OBJECT:
+                    generator.writeStartObject();
+                    break;
+                case END_OBJECT:
+                    generator.writeEndObject();
+                    break;
+                case START_ARRAY:
+                    generator.writeStartArray();
+                    break;
+                case END_ARRAY:
+                    generator.writeEndArray();
+                    break;
+                case FIELD_NAME:
+                    generator.writeFieldName(parser.getValueAsString());
+                    break;
+                case VALUE_EMBEDDED_OBJECT:
+                    generator.writeEmbeddedObject(parser.getEmbeddedObject());
+                    break;
+                case VALUE_STRING:
+                    final String value = parser.getValueAsString();
+                    final Matcher matcher = ENCRYPTED_PATTERN.matcher(value);
+                    if (matcher.matches()) {
+                        if(outputEncryptor != null) {
+                            String decryptedVal = getOutputDecrypted(matcher.group(FIRST_GROUP), inputEncryptor);
+                            if(decryptedVal.equals(fieldName)) {
+                                generator.writeString(String.format(ENCRYPTED_FORMAT,inputEncryptor.encrypt(newFieldName)));
+                            } else {
+                                generator.writeString(getOutputEncrypted(matcher.group(FIRST_GROUP), inputEncryptor, outputEncryptor));
+                            }
+
+                        } else {
+                            generator.writeString(getOutputDecrypted(matcher.group(FIRST_GROUP), inputEncryptor));
+                        }
+                    } else {
+                        if(fieldName.equals(value)) {
+                            generator.writeString(newFieldName);
+                        } else {
+                            generator.writeString(value);
+                        }
+                    }
+                    break;
+                case VALUE_NUMBER_INT:
+                    generator.writeNumber(parser.getIntValue());
+                    break;
+                case VALUE_NUMBER_FLOAT:
+                    generator.writeRawValue(parser.getValueAsString());
+                    break;
+                case VALUE_TRUE:
+                    generator.writeBoolean(true);
+                    break;
+                case VALUE_FALSE:
+                    generator.writeBoolean(false);
+                    break;
+                case VALUE_NULL:
+                    generator.writeNull();
+                    break;
+                default:
+                    throw new IllegalStateException(String.format("Token unrecognized [%s]", token));
+            }
+            token = parser.nextToken();
+        }
+    }
+
     private void processJsonByTokens(final JsonParser parser, final JsonGenerator generator,
                                      final PropertyEncryptor inputEncryptor, final PropertyEncryptor outputEncryptor) throws IOException {
         JsonToken token = parser.nextToken();
@@ -73,7 +171,11 @@ public class JsonFlowEncryptor extends AbstractFlowEncryptor {
                     final String value = parser.getValueAsString();
                     final Matcher matcher = ENCRYPTED_PATTERN.matcher(value);
                     if (matcher.matches()) {
-                        generator.writeString(getOutputEncrypted(matcher.group(FIRST_GROUP), inputEncryptor, outputEncryptor));
+                        if(outputEncryptor != null) {
+                            generator.writeString(getOutputEncrypted(matcher.group(FIRST_GROUP), inputEncryptor, outputEncryptor));
+                        } else {
+                            generator.writeString(getOutputDecrypted(matcher.group(FIRST_GROUP), inputEncryptor));
+                        }
                     } else {
                         generator.writeString(value);
                     }

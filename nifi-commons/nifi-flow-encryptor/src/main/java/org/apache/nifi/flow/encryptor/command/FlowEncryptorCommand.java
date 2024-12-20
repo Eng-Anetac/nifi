@@ -132,7 +132,11 @@ class FlowEncryptorCommand implements Runnable {
                 final PropertyEncryptor inputEncryptor = getPropertyEncryptor(inputPropertiesKey, inputAlgorithm);
 
                 final FlowEncryptor flowEncryptor = new StandardFlowEncryptor();
-                flowEncryptor.processFlow(flowInputStream, flowOutputStream, inputEncryptor, outputEncryptor);
+                if(outputEncryptor == null) {
+                    flowEncryptor.decryptFlow(flowInputStream, flowOutputStream, inputEncryptor);
+                } else {
+                    flowEncryptor.processFlow(flowInputStream, flowOutputStream, inputEncryptor, outputEncryptor);
+                }
             }
 
             final Path flowConfigurationPath = flowConfigurationFile.toPath();

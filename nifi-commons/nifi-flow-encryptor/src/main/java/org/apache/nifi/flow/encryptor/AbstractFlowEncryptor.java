@@ -32,4 +32,9 @@ public abstract class AbstractFlowEncryptor implements FlowEncryptor {
         final String outputEncrypted = outputEncryptor.encrypt(inputDecrypted);
         return String.format(ENCRYPTED_FORMAT, outputEncrypted);
     }
+
+    protected String getOutputDecrypted(final String inputEncrypted, final PropertyEncryptor inputEncryptor) {
+        final String inputDecrypted = inputEncryptor.decrypt(inputEncrypted);
+        return inputDecrypted;
+    }
 }

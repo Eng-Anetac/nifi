@@ -34,4 +34,9 @@ public interface FlowEncryptor {
      * @param outputEncryptor Property Encryptor for Output Configuration
      */
     void processFlow(InputStream inputStream, OutputStream outputStream, PropertyEncryptor inputEncryptor, PropertyEncryptor outputEncryptor);
+
+    void decryptFlow(InputStream inputStream, OutputStream outputStream, PropertyEncryptor inputEncryptor);
+
+    public void renameFieldInFlow(InputStream inputStream, OutputStream outputStream, PropertyEncryptor inputEncryptor,
+                                  PropertyEncryptor outputEncryptor, String fieldName, String newFieldName);
 }

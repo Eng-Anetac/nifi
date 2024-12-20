@@ -39,6 +39,56 @@ public class XmlFlowEncryptor extends AbstractFlowEncryptor {
     private static final XMLEventReaderProvider eventReaderProvider = new StandardXMLEventReaderProvider();
 
     @Override
+    public void renameFieldInFlow(InputStream inputStream, OutputStream outputStream, PropertyEncryptor inputEncryptor, PropertyEncryptor outputEncryptor, String fieldName, String newFieldName) {
+        final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+        final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
+
+        try {
+            final XMLEventReader reader = eventReaderProvider.getEventReader(new StreamSource(inputStream));
+            final XMLEventWriter writer = xmlOutputFactory.createXMLEventWriter(outputStream, StandardCharsets.UTF_8.name());
+            while (reader.hasNext()) {
+                final XMLEvent event = reader.nextEvent();
+                if (event.getEventType() == XMLEvent.CHARACTERS) {
+                    final Characters characters = event.asCharacters();
+                    final String value = characters.getData();
+                    final Matcher matcher = ENCRYPTED_PATTERN.matcher(value);
+                    if (matcher.matches()) {
+                        final String decryptedValue = getOutputDecrypted(matcher.group(FIRST_GROUP), inputEncryptor);
+                        if(decryptedValue.equals(fieldName)) {
+                            writer.add(eventFactory.createCharacters(
+                                    String.format(ENCRYPTED_FORMAT, outputEncryptor.encrypt(newFieldName))));
+                        } else {
+                            writer.add(eventFactory.createCharacters(
+                                    getOutputEncrypted(matcher.group(FIRST_GROUP), inputEncryptor, outputEncryptor)));
+                        }
+
+                    } else {
+                        if(value.equals(fieldName)) {
+                            writer.add(eventFactory.createCharacters(newFieldName));
+                        } else {
+                            writer.add(characters);
+                        }
+                    }
+                } else if (event.getEventType() == XMLEvent.START_DOCUMENT) {
+                    writer.add(event);
+                    writer.add(eventFactory.createSpace(System.lineSeparator()));
+                } else {
+                    writer.add(event);
+                }
+            }
+            writer.flush();
+            writer.close();
+            reader.close();
+            outputStream.close();
+            inputStream.close();
+        } catch (final XMLStreamException e) {
+            throw new RuntimeException("Flow XML Processing Failed", e);
+        } catch (final IOException e) {
+            throw new UncheckedIOException("Failed Processing Flow Configuration", e);
+        }
+    }
+
+    @Override
     public void processFlow(final InputStream inputStream, final OutputStream outputStream,
                             final PropertyEncryptor inputEncryptor, final PropertyEncryptor outputEncryptor) {
         final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
@@ -75,6 +125,45 @@ public class XmlFlowEncryptor extends AbstractFlowEncryptor {
             throw new RuntimeException("Flow XML Processing Failed", e);
         } catch (final IOException e) {
             throw new UncheckedIOException("Failed Processing Flow Configuration", e);
+        }
+    }
+
+    @Override
+    public void decryptFlow(InputStream inputStream, OutputStream outputStream, PropertyEncryptor inputEncryptor) {
+        final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+        final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
+
+        try {
+            final XMLEventReader reader = eventReaderProvider.getEventReader(new StreamSource(inputStream));
+            final XMLEventWriter writer = xmlOutputFactory.createXMLEventWriter(outputStream, StandardCharsets.UTF_8.name());
+            while (reader.hasNext()) {
+                final XMLEvent event = reader.nextEvent();
+                if (event.getEventType() == XMLEvent.CHARACTERS) {
+                    final Characters characters = event.asCharacters();
+                    final String value = characters.getData();
+                    final Matcher matcher = ENCRYPTED_PATTERN.matcher(value);
+                    if (matcher.matches()) {
+                        final String processedValue = getOutputDecrypted(matcher.group(FIRST_GROUP), inputEncryptor);
+                        writer.add(eventFactory.createCharacters(processedValue));
+                    } else {
+                        writer.add(characters);
+                    }
+                } else if (event.getEventType() == XMLEvent.START_DOCUMENT) {
+                    writer.add(event);
+                    writer.add(eventFactory.createSpace(System.lineSeparator()));
+                } else {
+                    writer.add(event);
+                }
+            }
+            writer.flush();
+            writer.close();
+            reader.close();
+            outputStream.close();
+            inputStream.close();
+        } catch (final XMLStreamException e) {
+            throw new RuntimeException("Flow XML Processing Failed", e);
+        } catch (final IOException e) {
+            throw new UncheckedIOException("Failed Decrypting Flow Configuration", e);
         }
     }
 }
