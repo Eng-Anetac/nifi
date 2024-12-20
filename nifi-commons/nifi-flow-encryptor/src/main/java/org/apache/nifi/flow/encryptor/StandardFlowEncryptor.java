@@ -16,10 +16,6 @@
  */
 package org.apache.nifi.flow.encryptor;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.nifi.encrypt.PropertyEncryptor;
 
 import java.io.BufferedInputStream;
