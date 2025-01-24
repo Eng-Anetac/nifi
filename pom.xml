@@ -138,7 +138,7 @@
         <hadoop.version>3.4.0</hadoop.version>
         <ozone.version>1.4.0</ozone.version>
         <gcs.version>2.1.5</gcs.version>
-        <aspectj.version>1.9.6</aspectj.version>
+        <aspectj.version>1.9.22.1</aspectj.version>
         <jersey.bom.version>2.43</jersey.bom.version>
         <log4j2.version>2.23.1</log4j2.version>
         <mockito.version>4.11.0</mockito.version>
