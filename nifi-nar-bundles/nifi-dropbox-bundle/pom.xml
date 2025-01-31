@@ -28,7 +28,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <dropbox.client.version>4.0.1</dropbox.client.version>
+        <dropbox.client.version>7.0.0</dropbox.client.version>
     </properties>
 
     <modules>
