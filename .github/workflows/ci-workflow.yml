@@ -165,7 +165,7 @@ jobs:
           ${{ env.MAVEN_BUILD_PROFILES }}
           ${{ env.MAVEN_PROJECTS }}
       - name: Upload Test Reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: surefire-reports-ubuntu-17
           path: |
