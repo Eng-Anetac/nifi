@@ -466,7 +466,7 @@ limitations under the License.
             <dependency>
                 <groupId>org.codehaus.janino</groupId>
                 <artifactId>commons-compiler</artifactId>
-                <version>3.1.10</version>
+                <version>3.1.12</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.janino</groupId>
