@@ -392,12 +392,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-solr-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-hl7-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
@@ -422,12 +416,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-geohash-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-aws-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
@@ -435,12 +423,6 @@ language governing permissions and limitations under the License. -->
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-aws-service-api-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-rethinkdb-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
         </dependency>
@@ -519,12 +501,6 @@ language governing permissions and limitations under the License. -->
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-cybersecurity-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-email-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
         </dependency>
