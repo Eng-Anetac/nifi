@@ -83,19 +83,9 @@ language governing permissions and limitations under the License. -->
             <artifactId>nifi-toolkit-admin</artifactId>
             <version>1.27.0-ANETAC</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-toolkit-zookeeper-migrator</artifactId>
-            <version>1.27.0-ANETAC</version>
-        </dependency>
           <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-toolkit-flowanalyzer</artifactId>
-            <version>1.27.0-ANETAC</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-toolkit-kafka-migrator</artifactId>
             <version>1.27.0-ANETAC</version>
         </dependency>
         <dependency>

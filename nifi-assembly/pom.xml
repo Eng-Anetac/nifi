@@ -199,14 +199,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-docs</artifactId>
-            <classifier>resources</classifier>
-            <version>1.27.0-ANETAC</version>
-            <scope>runtime</scope>
-            <type>zip</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-framework-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
@@ -800,12 +792,6 @@ language governing permissions and limitations under the License. -->
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-db-schema-registry-service-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-protobuf-services-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
         </dependency>
