@@ -296,12 +296,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-hadoop-libraries-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-kafka-1-0-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
@@ -345,12 +339,6 @@ language governing permissions and limitations under the License. -->
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-poi-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-kudu-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
         </dependency>
