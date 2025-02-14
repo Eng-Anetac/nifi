@@ -253,12 +253,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-datadog-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-standard-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
@@ -285,30 +279,6 @@ language governing permissions and limitations under the License. -->
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-stateless-bootstrap</artifactId>
             <version>1.27.0-ANETAC</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-kafka-1-0-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-kafka-2-0-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-kafka-2-6-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-confluent-platform-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
@@ -361,24 +331,6 @@ language governing permissions and limitations under the License. -->
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-hadoop-dbcp-service-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-	<dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-mongodb-client-service-api-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-mongodb-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-mongodb-services-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
         </dependency>
@@ -463,30 +415,6 @@ language governing permissions and limitations under the License. -->
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-groovyx-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-elasticsearch-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-elasticsearch-client-service-api-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-elasticsearch-client-service-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-elasticsearch-restapi-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
         </dependency>
@@ -612,18 +540,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-gcp-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-gcp-services-api-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-stateful-analysis-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
@@ -655,30 +571,6 @@ language governing permissions and limitations under the License. -->
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-hwx-schema-registry-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-redis-service-api-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-redis-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-hazelcast-services-api-nar</artifactId>
-            <version>1.27.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-hazelcast-services-nar</artifactId>
             <version>1.27.0-ANETAC</version>
             <type>nar</type>
         </dependency>
