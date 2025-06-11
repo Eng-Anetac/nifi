@@ -91,8 +91,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-      - name: Cache Maven Modules
-        uses: actions/cache@v3
+      - name: Cache Maven packages
+        uses: actions/cache@v4
         with:
           path: |
             ~/.m2/repository
@@ -126,8 +126,8 @@ jobs:
           df
       - name: Checkout Code
         uses: actions/checkout@v3
-      - name: Cache Node Modules
-        uses: actions/cache@v3
+      - name: Cache Node modules
+        uses: actions/cache@v4
         with:
           path: |
             ~/.npm

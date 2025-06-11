@@ -57,35 +57,35 @@ jobs:
           echo "nifi_commit_hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: cache Nifi Toolkit
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: cache-nifi-toolkit-assembly
         with:
           path: nifi-toolkit/nifi-toolkit-assembly/target/nifi-toolkit-*-bin.zip
           key: nifi-toolkit-java17-${{ steps.get_nifi_commit_hash.outputs.nifi_commit_hash }}
 
       - name: cache Nifi Assembly
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: cache-nifi-assembly
         with:
           path: nifi-assembly/target/nifi-*-bin.zip
           key: nifi-assembly-java17-${{ steps.get_nifi_commit_hash.outputs.nifi_commit_hash }}
 
       - name: cache Minifi Assembly
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: cache-minifi-assembly
         with:
           path: minifi/minifi-assembly/target/minifi-*-bin.zip
           key: minifi-assembly-java17-${{ steps.get_nifi_commit_hash.outputs.nifi_commit_hash }}
 
       - name: Cache Minifi C2 Assembly
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: cache-minifi-c2-assembly
         with:
           path: minifi/minifi-c2/minifi-c2-assembly/target/minifi-c2-*-bin.zip
           key: minifi-c2-assembly-java17-${{ steps.get_nifi_commit_hash.outputs.nifi_commit_hash }}
 
       - name: Cache Nifi Registry Assembly
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: cache-nifi-registry-assembly
         with:
           path: nifi-registry/nifi-registry-assembly/target/nifi-registry-*-bin.zip
