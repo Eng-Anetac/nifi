@@ -25,7 +25,7 @@
     <artifactId>nifi-hbase_1_1_2-client-service</artifactId>
     <packaging>jar</packaging>
     <properties>
-        <hbase.version>2.6.1-hadoop3</hbase.version>
+        <hbase.version>2.6.2-hadoop3</hbase.version>
     </properties>
     <dependencies>
         <dependency>
