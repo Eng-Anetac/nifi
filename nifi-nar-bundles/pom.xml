@@ -85,7 +85,6 @@
         <module>nifi-poi-bundle</module>
         <module>nifi-cdc</module>
         <module>nifi-cybersecurity-bundle</module>
-        <module>nifi-parquet-bundle</module>
         <module>nifi-extension-utils</module>
         <module>nifi-ranger-bundle</module>
         <module>nifi-redis-bundle</module>
