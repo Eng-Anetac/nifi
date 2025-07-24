@@ -77,13 +77,6 @@ jobs:
           path: minifi/minifi-assembly/target/minifi-*-bin.zip
           key: minifi-assembly-java21-${{ steps.get_nifi_commit_hash.outputs.nifi_commit_hash }}
 
-      - name: Cache Minifi C2 Assembly
-        uses: actions/cache@v2
-        id: cache-minifi-c2-assembly
-        with:
-          path: minifi/minifi-c2/minifi-c2-assembly/target/minifi-c2-*-bin.zip
-          key: minifi-c2-assembly-java21-${{ steps.get_nifi_commit_hash.outputs.nifi_commit_hash }}
-
       - name: Cache Nifi Registry Assembly
         uses: actions/cache@v2
         id: cache-nifi-registry-assembly
@@ -104,7 +97,6 @@ jobs:
             nifi-assembly/target/nifi-*-bin.zip
             nifi-toolkit/nifi-toolkit-assembly/target/nifi-toolkit-*-bin.zip
             minifi/minifi-assembly/target/minifi-*-bin.zip
-            minifi/minifi-c2/minifi-c2-assembly/target/minifi-c2-*-bin.zip
             nifi-registry/nifi-registry-assembly/target/nifi-registry-*-bin.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
