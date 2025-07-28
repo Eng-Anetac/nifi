@@ -98,6 +98,7 @@ jobs:
             nifi-toolkit/nifi-toolkit-assembly/target/nifi-toolkit-*-bin.zip
             minifi/minifi-assembly/target/minifi-*-bin.zip
             nifi-registry/nifi-registry-assembly/target/nifi-registry-*-bin.zip
+            minifi/minifi-toolkit/minifi-toolkit-assembly/target/minifi-toolkit-*-bin.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
