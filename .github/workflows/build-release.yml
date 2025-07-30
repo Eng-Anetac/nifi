@@ -97,10 +97,10 @@ jobs:
 
       - name: Create Release
         if: steps.cache-nifi-registry-assembly.outputs.cache-hit != 'true' || steps.cache-minifi-assembly.outputs.cache-hit != 'true' || steps.cache-nifi-toolkit-assembly.outputs.cache-hit != 'true' || steps.cache-nifi-assembly.outputs.cache-hit != 'true' || steps.cache-minifi-c2-assembly.outputs.cache-hit != 'true'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: "1.27.0-ANE-3898"
-          soft_latest: false
+          make_latest: false
           files: |
             nifi-assembly/target/nifi-*-bin.zip
             nifi-toolkit/nifi-toolkit-assembly/target/nifi-toolkit-*-bin.zip
