@@ -44,7 +44,7 @@ public class UpdateRegistryClient extends AbstractNiFiCommand<VoidResult> {
 
     @Override
     public String getDescription() {
-        return "Updates the given registry client with a new name or description.";
+        return "Updates the given registry client with a new name, description, or URL.";
     }
 
     @Override
@@ -52,6 +52,7 @@ public class UpdateRegistryClient extends AbstractNiFiCommand<VoidResult> {
         addOption(CommandOption.REGISTRY_CLIENT_ID.createOption());
         addOption(CommandOption.REGISTRY_CLIENT_NAME.createOption());
         addOption(CommandOption.REGISTRY_CLIENT_DESC.createOption());
+        addOption(CommandOption.REGISTRY_CLIENT_URL.createOption());
         addOption(CommandOption.SSL_CONTEXT_SERVICE_ID.createOption());
     }
 
@@ -70,10 +71,11 @@ public class UpdateRegistryClient extends AbstractNiFiCommand<VoidResult> {
 
         final String name = getArg(properties, CommandOption.REGISTRY_CLIENT_NAME);
         final String desc = getArg(properties, CommandOption.REGISTRY_CLIENT_DESC);
+        final String url = getArg(properties, CommandOption.REGISTRY_CLIENT_URL);
         final String sslServiceId = getArg(properties, CommandOption.SSL_CONTEXT_SERVICE_ID);
 
-        if (StringUtils.isBlank(name) && StringUtils.isBlank(desc) && StringUtils.isBlank(sslServiceId)) {
-            throw new CommandException("Name, description, and SSL context service were all blank, nothing to update");
+        if (StringUtils.isBlank(name) && StringUtils.isBlank(desc) && StringUtils.isBlank(url)) {
+            throw new CommandException("Name, description, and URL were all blank, nothing to update");
         }
 
         if (StringUtils.isNotBlank(name)) {
@@ -82,6 +84,18 @@ public class UpdateRegistryClient extends AbstractNiFiCommand<VoidResult> {
 
         if (StringUtils.isNotBlank(desc)) {
             existingRegClient.getComponent().setDescription(desc);
+        }
+
+        if (StringUtils.isNotBlank(url)) {
+            Map<String, String> clientProperties = existingRegClient.getComponent().getProperties();
+            if (clientProperties == null) {
+                clientProperties = new HashMap<>();
+            } else {
+                // Create a new map to avoid modifying the original
+                clientProperties = new HashMap<>(clientProperties);
+            }
+            clientProperties.put("url", url);
+            existingRegClient.getComponent().setProperties(clientProperties);
         }
 
         if (StringUtils.isNotBlank(sslServiceId)) {
@@ -93,7 +107,7 @@ public class UpdateRegistryClient extends AbstractNiFiCommand<VoidResult> {
             updatedProperties.put("ssl-context-service", sslServiceId);
             existingRegClient.getComponent().setProperties(updatedProperties);
         }
-
+        
         final String clientId = getContext().getSession().getNiFiClientID();
         existingRegClient.getRevision().setClientId(clientId);
 
