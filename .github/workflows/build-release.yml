@@ -100,6 +100,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: "1.27.0-ANE-3898"
+          soft_latest: false
           files: |
             nifi-assembly/target/nifi-*-bin.zip
             nifi-toolkit/nifi-toolkit-assembly/target/nifi-toolkit-*-bin.zip
