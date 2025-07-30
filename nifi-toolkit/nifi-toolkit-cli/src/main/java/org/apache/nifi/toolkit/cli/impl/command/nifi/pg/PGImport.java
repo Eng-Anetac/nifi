@@ -78,6 +78,7 @@ public class PGImport extends AbstractNiFiCommand<StringResult> {
         addOption(CommandOption.POS_X.createOption());
         addOption(CommandOption.POS_Y.createOption());
         addOption(CommandOption.KEEP_EXISTING_PARAMETER_CONTEXT.createOption());
+        addOption(CommandOption.PG_NAME.createOption());
     }
 
     @Override
@@ -91,6 +92,7 @@ public class PGImport extends AbstractNiFiCommand<StringResult> {
         final String flowId = getArg(properties, CommandOption.FLOW_ID);
         String flowVersion = getArg(properties, CommandOption.FLOW_VERSION);
         final String flowBranch = getArg(properties, CommandOption.FLOW_BRANCH);
+        final String name = getArg(properties, CommandOption.PG_NAME);
 
         final String posXStr = getArg(properties, CommandOption.POS_X);
         final String posYStr = getArg(properties, CommandOption.POS_Y);
@@ -204,6 +206,9 @@ public class PGImport extends AbstractNiFiCommand<StringResult> {
             final ProcessGroupDTO pgDto = new ProcessGroupDTO();
             pgDto.setVersionControlInformation(versionControlInfo);
             pgDto.setPosition(posDto);
+            if(StringUtils.isNotBlank(name)) {
+                pgDto.setName(name);
+            }
 
             final ProcessGroupEntity pgEntity = new ProcessGroupEntity();
             pgEntity.setComponent(pgDto);
@@ -214,7 +219,7 @@ public class PGImport extends AbstractNiFiCommand<StringResult> {
         } else {
             JsonNode rootNode = OBJECT_MAPPER.readTree(input);
             JsonNode flowContentsNode = rootNode.path("flowContents");
-            String pgName = flowContentsNode.path("name").asText();
+            String pgName = StringUtils.isNotBlank(name) ? name : flowContentsNode.path("name").asText();
             createdEntity = pgClient.upload(parentPgId, input, pgName, posDto.getX(), posDto.getY());
         }
 
