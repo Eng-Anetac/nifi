@@ -27,8 +27,6 @@ import org.apache.nifi.web.api.dto.FlowRegistryClientDTO;
 import org.apache.nifi.web.api.entity.FlowRegistryClientEntity;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -52,7 +50,6 @@ public class CreateRegistryClient extends AbstractNiFiCommand<StringResult> {
         addOption(CommandOption.REGISTRY_CLIENT_NAME.createOption());
         addOption(CommandOption.REGISTRY_CLIENT_DESC.createOption());
         addOption(CommandOption.REGISTRY_CLIENT_TYPE.createOption());
-        addOption(CommandOption.REGISTRY_CLIENT_URL.createOption());
     }
 
     @Override
@@ -62,19 +59,11 @@ public class CreateRegistryClient extends AbstractNiFiCommand<StringResult> {
         final String name = getRequiredArg(properties, CommandOption.REGISTRY_CLIENT_NAME);
         final String type = getRequiredArg(properties, CommandOption.REGISTRY_CLIENT_TYPE);
         final String desc = getArg(properties, CommandOption.REGISTRY_CLIENT_DESC);
-        final String url = getArg(properties, CommandOption.REGISTRY_CLIENT_URL);
 
         final FlowRegistryClientDTO flowRegistryClientDTO = new FlowRegistryClientDTO();
         flowRegistryClientDTO.setName(name);
         flowRegistryClientDTO.setDescription(desc);
         flowRegistryClientDTO.setType(type);
-
-        // Set URL property if provided
-        if (url != null && !url.isEmpty()) {
-            final Map<String, String> clientProperties = new HashMap<>();
-            clientProperties.put("url", url);
-            flowRegistryClientDTO.setProperties(clientProperties);
-        }
 
         final FlowRegistryClientEntity clientEntity = new FlowRegistryClientEntity();
         clientEntity.setComponent(flowRegistryClientDTO);
