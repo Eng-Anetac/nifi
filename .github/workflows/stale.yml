@@ -17,8 +17,7 @@ name: pull-request-review
 
 on:
   # Run every day at midnight 00:00
-  schedule:
-    - cron: "0 0 * * *"
+
 
 permissions:
   contents: read
