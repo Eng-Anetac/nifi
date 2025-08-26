@@ -38,6 +38,7 @@ import org.apache.nifi.components.ValidationContext;
 import org.apache.nifi.components.ValidationResult;
 import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
+import org.apache.nifi.flowfile.attributes.CoreAttributes;
 import org.apache.nifi.logging.ComponentLog;
 import org.apache.nifi.processor.DataUnit;
 import org.apache.nifi.processor.ProcessContext;
@@ -344,6 +345,9 @@ public class EvaluateJsonPath extends AbstractJsonPathProcessor {
                 flowFile = processSession.putAllAttributes(flowFile, jsonPathResults);
             }
             processSession.transfer(flowFile, REL_MATCH);
+        } catch (final Exception e) {
+            logger.error("Error processing FlowFile {} did not have valid JSON content.", flowFile.getAttribute(CoreAttributes.UUID.key()), e);
+            processSession.transfer(flowFile, REL_FAILURE);
         } finally {
             attributeToJsonPathEntrySetQueue.offer(attributeJsonPathEntries);
         }
