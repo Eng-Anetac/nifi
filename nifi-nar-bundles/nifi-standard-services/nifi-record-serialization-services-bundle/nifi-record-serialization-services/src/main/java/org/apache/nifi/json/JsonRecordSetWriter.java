@@ -127,12 +127,22 @@ public class JsonRecordSetWriter extends DateTimeTextRecordSetWriter implements 
             .dependsOn(COMPRESSION_FORMAT, COMPRESSION_FORMAT_GZIP)
             .build();
 
+    public static final PropertyDescriptor IGNORE_SCHEMA = new PropertyDescriptor.Builder()
+            .name("ignore-record-schema")
+            .displayName("Ignore Record Schema")
+            .description("If true, the schema provided by the Record will be ignored and all fields will be written. If false, only fields defined in the schema will be written.")
+            .required(false)
+            .allowableValues("true", "false")
+            .defaultValue("false")
+            .build();
+
     private volatile boolean prettyPrint;
     private volatile boolean allowScientificNotation;
     private volatile NullSuppression nullSuppression;
     private volatile OutputGrouping outputGrouping;
     private volatile String compressionFormat;
     private volatile int compressionLevel;
+    private volatile boolean ignoreSchema;
 
     @Override
     protected List<PropertyDescriptor> getSupportedPropertyDescriptors() {
@@ -143,6 +153,7 @@ public class JsonRecordSetWriter extends DateTimeTextRecordSetWriter implements 
         properties.add(OUTPUT_GROUPING);
         properties.add(COMPRESSION_FORMAT);
         properties.add(COMPRESSION_LEVEL);
+        properties.add(IGNORE_SCHEMA);
         return properties;
     }
 
@@ -161,6 +172,7 @@ public class JsonRecordSetWriter extends DateTimeTextRecordSetWriter implements 
     public void onEnabled(final ConfigurationContext context) {
         prettyPrint = context.getProperty(PRETTY_PRINT_JSON).asBoolean();
         allowScientificNotation = context.getProperty(ALLOW_SCIENTIFIC_NOTATION).asBoolean();
+        ignoreSchema = context.getProperty(IGNORE_SCHEMA).asBoolean();
 
         final NullSuppression suppression;
         final String suppressNullValue = context.getProperty(SUPPRESS_NULLS).getValue();
@@ -228,7 +240,7 @@ public class JsonRecordSetWriter extends DateTimeTextRecordSetWriter implements 
         }
 
         return new WriteJsonResult(logger, schema, getSchemaAccessWriter(schema, variables), compressionOut, prettyPrint, nullSuppression, outputGrouping,
-                getDateFormat().orElse(null), getTimeFormat().orElse(null), getTimestampFormat().orElse(null), mimeType, allowScientificNotation);
+                getDateFormat().orElse(null), getTimeFormat().orElse(null), getTimestampFormat().orElse(null), mimeType, allowScientificNotation, ignoreSchema);
     }
 
 }

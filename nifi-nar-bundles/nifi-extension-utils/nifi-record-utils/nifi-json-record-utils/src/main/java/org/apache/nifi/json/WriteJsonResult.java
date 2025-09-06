@@ -69,19 +69,28 @@ public class WriteJsonResult extends AbstractRecordSetWriter implements RecordSe
     private String mimeType = "application/json";
     private final boolean prettyPrint;
     private final boolean allowScientificNotation;
+    private final boolean ignoreSchema;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+
     public WriteJsonResult(final ComponentLog logger, final RecordSchema recordSchema, final SchemaAccessWriter schemaAccess, final OutputStream out, final boolean prettyPrint,
             final NullSuppression nullSuppression, final OutputGrouping outputGrouping, final String dateFormat, final String timeFormat, final String timestampFormat) throws IOException {
-        this(logger, recordSchema, schemaAccess, out, prettyPrint, nullSuppression, outputGrouping, dateFormat, timeFormat, timestampFormat, "application/json", false);
+        this(logger, recordSchema, schemaAccess, out, prettyPrint, nullSuppression, outputGrouping, dateFormat, timeFormat, timestampFormat, "application/json", false, false);
+    }
+
+    public WriteJsonResult(final ComponentLog logger, final RecordSchema recordSchema, final SchemaAccessWriter schemaAccess, final OutputStream out, final boolean prettyPrint,
+                           final NullSuppression nullSuppression, final OutputGrouping outputGrouping, final String dateFormat, final String timeFormat, final String timestampFormat,
+                           final String mimeType, final boolean allowScientificNotation) throws IOException {
+        this(logger, recordSchema, schemaAccess, out, prettyPrint, nullSuppression, outputGrouping, dateFormat, timeFormat, timestampFormat, mimeType, allowScientificNotation, false);
     }
 
     public WriteJsonResult(final ComponentLog logger, final RecordSchema recordSchema, final SchemaAccessWriter schemaAccess, final OutputStream out, final boolean prettyPrint,
         final NullSuppression nullSuppression, final OutputGrouping outputGrouping, final String dateFormat, final String timeFormat, final String timestampFormat,
-        final String mimeType, final boolean allowScientificNotation) throws IOException {
+        final String mimeType, final boolean allowScientificNotation, final boolean ignoreSchema) throws IOException {
 
         super(out);
+        this.ignoreSchema = ignoreSchema;
         this.logger = logger;
         this.recordSchema = recordSchema;
         this.schemaAccess = schemaAccess;
@@ -161,7 +170,8 @@ public class WriteJsonResult extends AbstractRecordSetWriter implements RecordSe
             schemaAccess.writeHeader(recordSchema, getOutputStream());
         }
 
-        writeRecord(record, recordSchema, generator, JsonGenerator::writeStartObject, JsonGenerator::writeEndObject, true);
+
+        writeRecord(record, recordSchema, generator, JsonGenerator::writeStartObject, JsonGenerator::writeEndObject, !this.ignoreSchema);
         return schemaAccess.getAttributes(recordSchema);
     }
 
@@ -461,7 +471,7 @@ public class WriteJsonResult extends AbstractRecordSetWriter implements RecordSe
                 final Record record = (Record) coercedValue;
                 final RecordDataType recordDataType = (RecordDataType) chosenDataType;
                 final RecordSchema childSchema = recordDataType.getChildSchema();
-                writeRecord(record, childSchema, generator, JsonGenerator::writeStartObject, JsonGenerator::writeEndObject, true);
+                writeRecord(record, childSchema, generator, JsonGenerator::writeStartObject, JsonGenerator::writeEndObject, !this.ignoreSchema);
                 break;
             }
             case MAP: {
