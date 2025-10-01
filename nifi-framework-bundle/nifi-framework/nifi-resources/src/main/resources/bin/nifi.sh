@@ -283,7 +283,7 @@ run() {
             exit 1
         fi
     elif [ "$1" = "start" ]; then
-        eval "${run_nifi_cmd}" > /dev/null 1>&- &
+        ( eval "cd ${NIFI_HOME} && ${run_nifi_cmd}" & )> /dev/null 1>&-
 
         if [ "$2" = "--wait-for-init" ]; then
 
