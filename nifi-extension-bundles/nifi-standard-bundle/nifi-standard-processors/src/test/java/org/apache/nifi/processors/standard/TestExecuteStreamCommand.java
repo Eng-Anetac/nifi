@@ -584,23 +584,20 @@ public class TestExecuteStreamCommand {
         runner.setProperty(ExecuteStreamCommand.EXECUTION_ARGUMENTS, javaFile.toString());
         runner.setProperty(ExecuteStreamCommand.PUT_ATTRIBUTE_MAX_LENGTH, "10");
         runner.setProperty(ExecuteStreamCommand.PUT_OUTPUT_IN_ATTRIBUTE, "outputDest");
-        assertEquals(1, runner.getProcessContext().getAvailableRelationships().size());
+        assertEquals(2, runner.getProcessContext().getAvailableRelationships().size());
         runner.run(1);
         runner.assertTransferCount(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP, 1);
         runner.assertTransferCount(ExecuteStreamCommand.OUTPUT_STREAM_RELATIONSHIP, 0);
         runner.assertTransferCount(ExecuteStreamCommand.NONZERO_STATUS_RELATIONSHIP, 0);
 
-        List<MockFlowFile> flowFiles = controller.getFlowFilesForRelationship(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP);
-        MockFlowFile outputFlowFile = flowFiles.get(0);
+        List<MockFlowFile> flowFiles = runner.getFlowFilesForRelationship(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP);
+        MockFlowFile outputFlowFile = flowFiles.getFirst();
         outputFlowFile.assertContentEquals("small test".getBytes());
         String result = outputFlowFile.getAttribute("outputDest");
         assertTrue(Pattern.compile("Test was a").matcher(result).find());
         assertEquals("0", outputFlowFile.getAttribute("execution.status"));
-        assertEquals("java", outputFlowFile.getAttribute("execution.command"));
-        assertEquals("-jar;", outputFlowFile.getAttribute("execution.command.args").substring(0, 5));
-        String attribute = outputFlowFile.getAttribute("execution.command.args");
-        String expected = "src" + File.separator + "test" + File.separator + "resources" + File.separator + "ExecuteCommand" + File.separator + "TestSuccess.jar";
-        assertEquals(expected, attribute.substring(attribute.length() - expected.length()));
+        assertEquals(JAVA_COMMAND, outputFlowFile.getAttribute("execution.command"));
+        assertEquals(javaFile.toString(), outputFlowFile.getAttribute("execution.command.args"));
     }
 
     @Test
@@ -617,7 +614,7 @@ public class TestExecuteStreamCommand {
         runner.setProperty(dynamicProp1, javaFile.toString());
         runner.setProperty(ExecuteStreamCommand.PUT_ATTRIBUTE_MAX_LENGTH, "10");
         runner.setProperty(ExecuteStreamCommand.PUT_OUTPUT_IN_ATTRIBUTE, "outputDest");
-        assertEquals(1, runner.getProcessContext().getAvailableRelationships().size());
+        assertEquals(2, runner.getProcessContext().getAvailableRelationships().size());
         runner.run(1);
         runner.assertTransferCount(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP, 1);
         runner.assertTransferCount(ExecuteStreamCommand.OUTPUT_STREAM_RELATIONSHIP, 0);
@@ -960,6 +957,63 @@ public class TestExecuteStreamCommand {
 
         final PropertyMigrationResult propertyMigrationResult = runner.migrateProperties();
         assertEquals(expectedRenamed, propertyMigrationResult.getPropertiesRenamed());
+    }
+
+    @Test
+    public void testCommandTimeoutProperty() throws Exception {
+        final TestRunner controller = TestRunners.newTestRunner(ExecuteStreamCommand.class);
+
+        // Test that the timeout property is available and valid
+        controller.setProperty(ExecuteStreamCommand.EXECUTION_COMMAND, "echo");
+        controller.setProperty(ExecuteStreamCommand.COMMAND_TIMEOUT, "5");
+        controller.assertValid();
+
+        // Test that timeout relationship is available
+        assertTrue(controller.getProcessContext().getAvailableRelationships().contains(ExecuteStreamCommand.TIMEOUT_RELATIONSHIP));
+    }
+
+    @Test
+    public void testCommandTimeoutPutToAttributeProperty() throws Exception {
+        final TestRunner controller = TestRunners.newTestRunner(ExecuteStreamCommand.class);
+
+        // Test that timeout relationship is available when using PUT_OUTPUT_IN_ATTRIBUTE
+        controller.setProperty(ExecuteStreamCommand.EXECUTION_COMMAND, "echo");
+        controller.setProperty(ExecuteStreamCommand.PUT_OUTPUT_IN_ATTRIBUTE, "output");
+        controller.setProperty(ExecuteStreamCommand.COMMAND_TIMEOUT, "5");
+        controller.assertValid();
+
+        // Test that timeout relationship is available
+        assertTrue(controller.getProcessContext().getAvailableRelationships().contains(ExecuteStreamCommand.TIMEOUT_RELATIONSHIP));
+    }
+
+    @Test
+    public void testCommandNoTimeout() throws Exception {
+        final TestRunner controller = TestRunners.newTestRunner(ExecuteStreamCommand.class);
+        controller.enqueue("test data".getBytes());
+
+        // Set a command that will complete quickly
+        if (isWindows()) {
+            controller.setProperty(ExecuteStreamCommand.EXECUTION_COMMAND, "cmd.exe");
+            controller.setProperty(ExecuteStreamCommand.EXECUTION_ARGUMENTS, "/c;echo Hello");
+        } else {
+            controller.setProperty(ExecuteStreamCommand.EXECUTION_COMMAND, "echo");
+            controller.setProperty(ExecuteStreamCommand.EXECUTION_ARGUMENTS, "Hello");
+        }
+        controller.setProperty(ExecuteStreamCommand.IGNORE_STDIN, "true");
+        controller.setProperty(ExecuteStreamCommand.COMMAND_TIMEOUT, "5"); // 5 second timeout (should not trigger)
+
+        controller.run(1);
+
+        // Should route to output stream relationship (success)
+        controller.assertTransferCount(ExecuteStreamCommand.OUTPUT_STREAM_RELATIONSHIP, 1);
+        controller.assertTransferCount(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP, 1);
+        controller.assertTransferCount(ExecuteStreamCommand.TIMEOUT_RELATIONSHIP, 0);
+        controller.assertTransferCount(ExecuteStreamCommand.NONZERO_STATUS_RELATIONSHIP, 0);
+
+        // Check output flow file attributes
+        List<MockFlowFile> outputFlowFiles = controller.getFlowFilesForRelationship(ExecuteStreamCommand.OUTPUT_STREAM_RELATIONSHIP);
+        MockFlowFile outputFlowFile = outputFlowFiles.get(0);
+        assertEquals("0", outputFlowFile.getAttribute("execution.status"));
     }
 
     private static boolean isWindows() {

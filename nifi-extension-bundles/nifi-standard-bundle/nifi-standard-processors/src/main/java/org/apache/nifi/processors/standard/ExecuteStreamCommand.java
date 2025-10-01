@@ -67,6 +67,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -116,6 +119,14 @@ import java.util.regex.Pattern;
  * <li>Supports expression language: false</li>
  * </ul>
  * </li>
+ * <li>Command Timeout
+ * <ul>
+ * <li>The maximum amount of time to wait for the command to complete. If the command does not complete within this time,
+ * the process will be terminated and the flow file will be routed to the 'timeout' relationship.</li>
+ * <li>Default value: 0 (no timeout - wait indefinitely)</li>
+ * <li>Supports expression language: false</li>
+ * </ul>
+ * </li>
  * </ul>
  *
  * <p>
@@ -135,6 +146,11 @@ import java.util.regex.Pattern;
  * <li>nonzero-status
  * <ul>
  * <li>The destination path for the FlowFile created from the command's output, if the exit code is non-zero</li>
+ * </ul>
+ * </li>
+ * <li>timeout
+ * <ul>
+ * <li>The destination path for flow files when the command execution exceeds the configured timeout period</li>
  * </ul>
  * </li>
  * </ul>
@@ -175,14 +191,19 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             .description("The destination path for the FlowFile created from the command's output, if the returned status code is non-zero. "
                     + "All FlowFiles routed to this relationship will be penalized.")
             .build();
+    public static final Relationship TIMEOUT_RELATIONSHIP = new Relationship.Builder()
+            .name("timeout")
+            .description("The destination path for flow files when the command execution exceeds the configured timeout period.")
+            .build();
     private final AtomicReference<Set<Relationship>> relationships = new AtomicReference<>();
 
     private static final Set<Relationship> OUTPUT_STREAM_RELATIONSHIP_SET = Set.of(
             OUTPUT_STREAM_RELATIONSHIP,
             ORIGINAL_RELATIONSHIP,
-            NONZERO_STATUS_RELATIONSHIP
+            NONZERO_STATUS_RELATIONSHIP,
+            TIMEOUT_RELATIONSHIP
     );
-    private static final Set<Relationship> ATTRIBUTE_RELATIONSHIP_SET = Set.of(ORIGINAL_RELATIONSHIP);
+    private static final Set<Relationship> ATTRIBUTE_RELATIONSHIP_SET = Set.of(ORIGINAL_RELATIONSHIP, TIMEOUT_RELATIONSHIP);
 
     private static final Pattern COMMAND_ARGUMENT_PATTERN = Pattern.compile("command\\.argument\\.(?<commandIndex>[0-9]+)$");
 
@@ -277,6 +298,16 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
             .build();
 
+    static final PropertyDescriptor COMMAND_TIMEOUT = new PropertyDescriptor.Builder()
+            .name("Command Timeout")
+            .description("The maximum amount of time to wait for the command to complete. If the command does not complete within this time, "
+                    + "the process will be terminated and the flow file will be routed to the 'timeout' relationship. "
+                    + "A value of 0 means no timeout (wait indefinitely).")
+            .required(false)
+            .defaultValue("0")
+            .addValidator(StandardValidators.NON_NEGATIVE_INTEGER_VALIDATOR)
+            .build();
+
     private static final List<PropertyDescriptor> PROPERTY_DESCRIPTORS = List.of(
             WORKING_DIR,
             EXECUTION_COMMAND,
@@ -286,7 +317,8 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             IGNORE_STDIN,
             PUT_OUTPUT_IN_ATTRIBUTE,
             PUT_ATTRIBUTE_MAX_LENGTH,
-            MIME_TYPE
+            MIME_TYPE,
+            COMMAND_TIMEOUT
     );
 
     private static final String MASKED_ARGUMENT = "********";
@@ -357,6 +389,7 @@ public class ExecuteStreamCommand extends AbstractProcessor {
         final boolean useDynamicPropertyArguments = argumentsStrategyPropertyValue.isSet() && argumentsStrategyPropertyValue.getValue().equals(DYNAMIC_PROPERTY_ARGUMENTS_STRATEGY.getValue());
         final Integer attributeSize = context.getProperty(PUT_ATTRIBUTE_MAX_LENGTH).asInteger();
         final String attributeName = context.getProperty(PUT_OUTPUT_IN_ATTRIBUTE).getValue();
+        final int timeoutSeconds = context.getProperty(COMMAND_TIMEOUT).asInteger();
 
         final String executeCommand = context.getProperty(EXECUTION_COMMAND).evaluateAttributeExpressions(inputFlowFile).getValue();
         args.add(executeCommand);
@@ -471,7 +504,7 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             FlowFile outputFlowFile = putToAttribute ? inputFlowFile : session.create(inputFlowFile);
 
             ProcessStreamWriterCallback callback = new ProcessStreamWriterCallback(ignoreStdin, bos, bis, logger,
-                    attributeName, session, outputFlowFile, process, putToAttribute, attributeSize);
+                    attributeName, session, outputFlowFile, process, putToAttribute, attributeSize, timeoutSeconds);
             session.read(inputFlowFile, callback);
 
             outputFlowFile = callback.outputFlowFile;
@@ -480,7 +513,8 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             }
 
             int exitCode = callback.exitCode;
-            logger.debug("Execution complete for command: {}.  Exited with code: {}", executeCommand, exitCode);
+            boolean timeoutOccurred = callback.timeoutOccurred;
+            logger.debug("Execution complete for command: {}.  Exited with code: {}, Timeout: {}", executeCommand, exitCode, timeoutOccurred);
 
             Map<String, String> attributes = new HashMap<>();
 
@@ -492,8 +526,20 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             }
             attributes.put("execution.error", stdErr);
 
-            final Relationship outputFlowFileRelationship = putToAttribute ? ORIGINAL_RELATIONSHIP : (exitCode != 0) ? NONZERO_STATUS_RELATIONSHIP : OUTPUT_STREAM_RELATIONSHIP;
-            if (exitCode == 0) {
+            final Relationship outputFlowFileRelationship;
+            if (timeoutOccurred) {
+                outputFlowFileRelationship = TIMEOUT_RELATIONSHIP;
+            } else if (putToAttribute) {
+                outputFlowFileRelationship = ORIGINAL_RELATIONSHIP;
+            } else if (exitCode != 0) {
+                outputFlowFileRelationship = NONZERO_STATUS_RELATIONSHIP;
+            } else {
+                outputFlowFileRelationship = OUTPUT_STREAM_RELATIONSHIP;
+            }
+            if (timeoutOccurred) {
+                logger.warn("Transferring {} to {}. Command {} timed out after {} seconds",
+                        outputFlowFile, outputFlowFileRelationship.getName(), executeCommand, timeoutSeconds);
+            } else if (exitCode == 0) {
                 logger.info("Transferring {} to {}", outputFlowFile, outputFlowFileRelationship.getName());
             } else {
                 logger.error("Transferring {} to {}. Executable command {} returned exitCode {} and error message: {}",
@@ -508,7 +554,7 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             }
             outputFlowFile = session.putAllAttributes(outputFlowFile, attributes);
 
-            if (NONZERO_STATUS_RELATIONSHIP.equals(outputFlowFileRelationship)) {
+            if (NONZERO_STATUS_RELATIONSHIP.equals(outputFlowFileRelationship) || TIMEOUT_RELATIONSHIP.equals(outputFlowFileRelationship)) {
                 outputFlowFile = session.penalize(outputFlowFile);
             }
             // This will transfer the FlowFile that received the stream output to its destined relationship.
@@ -547,12 +593,14 @@ public class ExecuteStreamCommand extends AbstractProcessor {
         int exitCode;
         final boolean putToAttribute;
         final int attributeSize;
+        final int timeoutSeconds;
+        boolean timeoutOccurred;
 
         byte[] outputBuffer;
         int size;
 
         public ProcessStreamWriterCallback(boolean ignoreStdin, OutputStream stdinWritable, InputStream stdoutReadable, ComponentLog logger, String attributeName,
-                                           ProcessSession session, FlowFile outputFlowFile, Process process, boolean putToAttribute, int attributeSize) {
+                                           ProcessSession session, FlowFile outputFlowFile, Process process, boolean putToAttribute, int attributeSize, int timeoutSeconds) {
             this.ignoreStdin = ignoreStdin;
             this.stdinWritable = stdinWritable;
             this.stdoutReadable = stdoutReadable;
@@ -562,6 +610,8 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             this.process = process;
             this.putToAttribute = putToAttribute;
             this.attributeSize = attributeSize;
+            this.timeoutSeconds = timeoutSeconds;
+            this.timeoutOccurred = false;
         }
 
         @Override
@@ -583,9 +633,24 @@ public class ExecuteStreamCommand extends AbstractProcessor {
                     stdoutReadable.close();
 
                     try {
-                        exitCode = process.waitFor();
+                        if (timeoutSeconds > 0) {
+                            boolean finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
+                            if (!finished) {
+                                timeoutOccurred = true;
+                                logger.warn("Command execution timed out after {} seconds, terminating process", timeoutSeconds);
+                                process.destroyForcibly();
+                                exitCode = -1; // Use -1 to indicate timeout
+                            } else {
+                                exitCode = process.exitValue();
+                            }
+                        } else {
+                            exitCode = process.waitFor();
+                        }
                     } catch (InterruptedException e) {
                         logger.warn("Command Execution Process was interrupted", e);
+                        timeoutOccurred = true;
+                        process.destroyForcibly();
+                        exitCode = -1;
                     }
                 }
             } else {
@@ -593,9 +658,24 @@ public class ExecuteStreamCommand extends AbstractProcessor {
                     readStdoutReadable(ignoreStdin, stdinWritable, logger, incomingFlowFileIS);
                     StreamUtils.copy(stdoutReadable, out);
                     try {
-                        exitCode = process.waitFor();
+                        if (timeoutSeconds > 0) {
+                            boolean finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
+                            if (!finished) {
+                                timeoutOccurred = true;
+                                logger.warn("Command execution timed out after {} seconds, terminating process", timeoutSeconds);
+                                process.destroyForcibly();
+                                exitCode = -1; // Use -1 to indicate timeout
+                            } else {
+                                exitCode = process.exitValue();
+                            }
+                        } else {
+                            exitCode = process.waitFor();
+                        }
                     } catch (InterruptedException e) {
                         logger.warn("Command Execution Process was interrupted", e);
+                        timeoutOccurred = true;
+                        process.destroyForcibly();
+                        exitCode = -1;
                     }
                 });
             }
