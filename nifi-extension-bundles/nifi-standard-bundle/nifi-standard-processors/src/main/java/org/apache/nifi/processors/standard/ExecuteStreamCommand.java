@@ -206,7 +206,7 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             .build();
     private final AtomicReference<Set<Relationship>> relationships = new AtomicReference<>();
 
-    private final static Set<Relationship> OUTPUT_STREAM_RELATIONSHIP_SET = Set.of(
+    private static final Set<Relationship> OUTPUT_STREAM_RELATIONSHIP_SET = Set.of(
             OUTPUT_STREAM_RELATIONSHIP,
             ORIGINAL_RELATIONSHIP,
             NONZERO_STATUS_RELATIONSHIP,
