@@ -23,6 +23,7 @@ import org.apache.nifi.flowfile.attributes.CoreAttributes;
 import org.apache.nifi.processors.standard.util.ArgumentUtils;
 import org.apache.nifi.util.LogMessage;
 import org.apache.nifi.util.MockFlowFile;
+import org.apache.nifi.util.PropertyMigrationResult;
 import org.apache.nifi.util.TestRunner;
 import org.apache.nifi.util.TestRunners;
 import org.junit.jupiter.api.BeforeEach;
@@ -570,7 +571,7 @@ public class TestExecuteStreamCommand {
     }
 
     @Test
-    public void testArgumentsWithQuotesFromAttributeDynamicProperties() throws Exception {
+    public void testArgumentsWithQuotesFromAttributeDynamicProperties() {
         Map<String, String> attrs = new HashMap<>();
         String exStr = "Hello World with quotes";
         attrs.put("str.attribute", exStr);
