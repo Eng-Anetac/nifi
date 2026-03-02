@@ -129,7 +129,7 @@
         <org.apache.httpcomponents.httpclient.version>4.5.14</org.apache.httpcomponents.httpclient.version>
         <org.apache.httpcomponents.httpcore.version>4.4.16</org.apache.httpcomponents.httpcore.version>
         <org.bouncycastle.version>1.81</org.bouncycastle.version>
-        <pmd.version>7.10.0</pmd.version>
+        <pmd.version>7.22.0</pmd.version>
         <testcontainers.version>1.21.3</testcontainers.version>
         <org.slf4j.version>2.0.17</org.slf4j.version>
         <com.jayway.jsonpath.version>2.9.0</com.jayway.jsonpath.version>
@@ -150,7 +150,7 @@
         <aspectj.version>1.9.24</aspectj.version>
         <jersey.bom.version>3.1.10</jersey.bom.version>
         <log4j2.version>2.25.1</log4j2.version>
-        <logback.version>1.5.18</logback.version>
+        <logback.version>1.5.25</logback.version>
         <mockito.version>5.18.0</mockito.version>
         <netty.3.version>3.10.6.Final</netty.3.version>
         <snakeyaml.version>2.4</snakeyaml.version>
@@ -160,7 +160,7 @@
         <spring.security.version>6.5.1</spring.security.version>
         <swagger.annotations.version>2.2.34</swagger.annotations.version>
         <h2.version>2.3.232</h2.version>
-        <zookeeper.version>3.9.3</zookeeper.version>
+        <zookeeper.version>3.9.4</zookeeper.version>
         <caffeine.version>3.2.2</caffeine.version>
         <hapi.version>2.6.0</hapi.version>
         <commons.dbcp2.version>2.13.0</commons.dbcp2.version>
