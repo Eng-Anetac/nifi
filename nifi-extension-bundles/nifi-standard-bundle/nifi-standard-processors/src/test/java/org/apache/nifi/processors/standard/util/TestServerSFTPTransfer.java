@@ -23,9 +23,11 @@ import org.apache.nifi.context.PropertyContext;
 import org.apache.nifi.logging.ComponentLog;
 import org.apache.nifi.processor.util.file.transfer.FileInfo;
 import org.apache.nifi.util.MockPropertyContext;
+import org.apache.sshd.common.CommonModuleProperties;
 import org.apache.sshd.common.file.virtualfs.VirtualFileSystemFactory;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
+import org.apache.sshd.sftp.SftpModuleProperties;
 import org.apache.sshd.sftp.server.SftpSubsystemFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +44,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -67,6 +70,7 @@ public class TestServerSFTPTransfer {
     private static final String DIR_2 = "dir2";
     private static final String LINKED_DIRECTORY = "linked-directory";
     private static final String LINKED_FILE = "linked-file";
+    private static final String NESTED_LINK = "nested-link";
     private static final String EMPTY_DIRECTORY = "dir4";
 
     private static final String DIR_1_CHILD_1 = "child1";
@@ -75,6 +79,9 @@ public class TestServerSFTPTransfer {
     private static final String FILE_1 = "file1.txt";
     private static final String FILE_2 = "file2.txt";
     private static final String DOT_FILE = ".foo.txt";
+
+    private static final String FIRST_LEVEL_NESTED_DIRECTORY = "first-level-nested";
+    private static final String SECOND_LEVEL_NESTED_DIRECTORY = "second-level-nested";
 
     private static final boolean FILTERING_ENABLED = true;
 
@@ -108,6 +115,15 @@ public class TestServerSFTPTransfer {
 
         final File emptyDirectory = new File(serverDirectory, EMPTY_DIRECTORY);
         assertTrue(emptyDirectory.mkdirs());
+
+        final File firstLevelNestedDirectory = new File(serverDirectory, FIRST_LEVEL_NESTED_DIRECTORY);
+        assertTrue(firstLevelNestedDirectory.mkdirs());
+        final File secondLevelNestedDirectory = new File(firstLevelNestedDirectory, SECOND_LEVEL_NESTED_DIRECTORY);
+        assertTrue(secondLevelNestedDirectory.mkdirs());
+
+        // Create nested link for verifying expected directory path resolution
+        final File nestedLink = new File(secondLevelNestedDirectory, NESTED_LINK);
+        Files.createSymbolicLink(nestedLink.toPath(), linkedDirectoryTarget.toPath());
 
         startServer();
     }
@@ -201,7 +217,21 @@ public class TestServerSFTPTransfer {
         try (final SFTPTransfer transfer = createSFTPTransfer(properties)) {
             final List<FileInfo> listing = transfer.getListing(FILTERING_ENABLED);
             assertNotNull(listing);
-            assertEquals(11, listing.size());
+            assertEquals(15, listing.size(), "Expected number of linked files not found");
+        }
+    }
+
+    @Test
+    public void testGetListingWithSymlinksNestedDirectory() throws IOException {
+        final Map<PropertyDescriptor, String> properties = createBaseProperties();
+        properties.put(SFTPTransfer.RECURSIVE_SEARCH, "true");
+        properties.put(SFTPTransfer.FOLLOW_SYMLINK, "true");
+        properties.put(SFTPTransfer.REMOTE_PATH, FIRST_LEVEL_NESTED_DIRECTORY);
+
+        try (final SFTPTransfer transfer = createSFTPTransfer(properties)) {
+            final List<FileInfo> listing = transfer.getListing(FILTERING_ENABLED);
+            assertNotNull(listing);
+            assertEquals(4, listing.size(), "Expected number of nested linked files not found");
         }
     }
 
@@ -508,6 +538,22 @@ public class TestServerSFTPTransfer {
     }
 
     @Test
+    public void testGetRemoteFileInfoCustomAlgorithmConfiguration() throws IOException {
+        final Map<PropertyDescriptor, String> properties = createBaseProperties();
+        properties.put(SFTPTransfer.ALGORITHM_CONFIGURATION, SFTPTransfer.AlgorithmConfiguration.CUSTOM.getValue());
+        properties.put(SFTPTransfer.CIPHERS_ALLOWED, "aes256-gcm@openssh.com");
+        properties.put(SFTPTransfer.KEY_EXCHANGE_ALGORITHMS_ALLOWED, "diffie-hellman-group14-sha256");
+        properties.put(SFTPTransfer.MESSAGE_AUTHENTICATION_CODES_ALLOWED, "hmac-sha2-256");
+        properties.put(SFTPTransfer.KEY_ALGORITHMS_ALLOWED, "ecdsa-sha2-nistp521");
+
+        try (final SFTPTransfer transfer = createSFTPTransfer(properties)) {
+            final FileInfo fileInfo = transfer.getRemoteFileInfo(null, DIR_2, FILE_1);
+            assertNotNull(fileInfo);
+            assertEquals(FILE_1, fileInfo.getFileName());
+        }
+    }
+
+    @Test
     public void testRename() throws IOException {
         final Map<PropertyDescriptor, String> properties = createBaseProperties();
 
@@ -675,6 +721,9 @@ public class TestServerSFTPTransfer {
 
     private void startServer() throws IOException {
         sshServer = SshServer.setUpDefaultServer();
+        // Set SFTP Version 3 for general compatibility for File Attribute operations
+        SftpModuleProperties.SFTP_VERSION.set(sshServer, 3);
+        CommonModuleProperties.CLOSE_WAIT_TIMEOUT.set(sshServer, Duration.ofMillis(250));
         sshServer.setHost(LOCALHOST);
         sshServer.setPasswordAuthenticator((username, password, serverSession) -> USERNAME.equals(username) && PASSWORD.equals(password));
         sshServer.setKeyPairProvider(new SimpleGeneratorHostKeyProvider());

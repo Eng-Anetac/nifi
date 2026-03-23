@@ -18,7 +18,6 @@ package org.apache.nifi.processors.gcp.drive;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.services.drive.Drive;
-import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.User;
@@ -40,6 +39,8 @@ import org.apache.nifi.components.ValidationResult;
 import org.apache.nifi.components.state.Scope;
 import org.apache.nifi.context.PropertyContext;
 import org.apache.nifi.expression.ExpressionLanguageScope;
+import org.apache.nifi.migration.PropertyConfiguration;
+import org.apache.nifi.migration.ProxyServiceMigration;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.util.StandardValidators;
 import org.apache.nifi.processor.util.list.AbstractListProcessor;
@@ -100,6 +101,7 @@ import static org.apache.nifi.processors.gcp.drive.GoogleDriveAttributes.WEB_CON
 import static org.apache.nifi.processors.gcp.drive.GoogleDriveAttributes.WEB_CONTENT_LINK_DESC;
 import static org.apache.nifi.processors.gcp.drive.GoogleDriveAttributes.WEB_VIEW_LINK;
 import static org.apache.nifi.processors.gcp.drive.GoogleDriveAttributes.WEB_VIEW_LINK_DESC;
+import static org.apache.nifi.processors.gcp.util.GoogleUtils.GOOGLE_CLOUD_PLATFORM_SCOPE;
 
 @PrimaryNodeOnly
 @TriggerSerially
@@ -139,8 +141,7 @@ import static org.apache.nifi.processors.gcp.drive.GoogleDriveAttributes.WEB_VIE
 @DefaultSchedule(strategy = SchedulingStrategy.TIMER_DRIVEN, period = "1 min")
 public class ListGoogleDrive extends AbstractListProcessor<GoogleDriveFileInfo> implements GoogleDriveTrait {
     public static final PropertyDescriptor FOLDER_ID = new PropertyDescriptor.Builder()
-            .name("folder-id")
-            .displayName("Folder ID")
+            .name("Folder ID")
             .description("The ID of the folder from which to pull list of files." +
                     " Please see Additional Details to set up access to Google Drive and obtain Folder ID." +
                     " WARNING: Unauthorized access to the folder is treated as if the folder was empty." +
@@ -151,8 +152,7 @@ public class ListGoogleDrive extends AbstractListProcessor<GoogleDriveFileInfo> 
             .build();
 
     public static final PropertyDescriptor RECURSIVE_SEARCH = new PropertyDescriptor.Builder()
-            .name("recursive-search")
-            .displayName("Search Recursively")
+            .name("Search Recursively")
             .description("When 'true', will include list of files from concrete sub-folders (ignores shortcuts)." +
                     " Otherwise, will return only files that have the defined 'Folder ID' as their parent directly." +
                     " WARNING: The listing may fail if there are too many sub-folders (500+).")
@@ -162,8 +162,7 @@ public class ListGoogleDrive extends AbstractListProcessor<GoogleDriveFileInfo> 
             .build();
 
     public static final PropertyDescriptor MIN_AGE = new PropertyDescriptor.Builder()
-            .name("min-age")
-            .displayName("Minimum File Age")
+            .name("Minimum File Age")
             .description("The minimum age a file must be in order to be considered; any files younger than this will be ignored.")
             .required(true)
             .addValidator(StandardValidators.TIME_PERIOD_VALIDATOR)
@@ -230,7 +229,22 @@ public class ListGoogleDrive extends AbstractListProcessor<GoogleDriveFileInfo> 
 
         HttpTransport httpTransport = new ProxyAwareTransportFactory(proxyConfiguration).create();
 
-        driveService = createDriveService(context, httpTransport, DriveScopes.DRIVE, DriveScopes.DRIVE_METADATA_READONLY);
+        driveService = createDriveService(context, httpTransport, GOOGLE_CLOUD_PLATFORM_SCOPE);
+    }
+
+    @Override
+    public void migrateProperties(PropertyConfiguration config) {
+        super.migrateProperties(config);
+        config.renameProperty(ListedEntityTracker.OLD_TRACKING_STATE_CACHE_PROPERTY_NAME, TRACKING_STATE_CACHE.getName());
+        config.renameProperty(ListedEntityTracker.OLD_TRACKING_TIME_WINDOW_PROPERTY_NAME, TRACKING_TIME_WINDOW.getName());
+        config.renameProperty(ListedEntityTracker.OLD_INITIAL_LISTING_TARGET_PROPERTY_NAME, INITIAL_LISTING_TARGET.getName());
+        config.renameProperty(OLD_CONNECT_TIMEOUT_PROPERTY_NAME, CONNECT_TIMEOUT.getName());
+        config.renameProperty(OLD_READ_TIMEOUT_PROPERTY_NAME, READ_TIMEOUT.getName());
+        config.renameProperty("folder-id", FOLDER_ID.getName());
+        config.renameProperty("recursive-search", RECURSIVE_SEARCH.getName());
+        config.renameProperty("min-age", MIN_AGE.getName());
+        config.renameProperty(GoogleUtils.OLD_GCP_CREDENTIALS_PROVIDER_SERVICE_PROPERTY_NAME, GoogleUtils.GCP_CREDENTIALS_PROVIDER_SERVICE.getName());
+        ProxyServiceMigration.renameProxyConfigurationServiceProperty(config);
     }
 
     @Override
@@ -286,7 +300,7 @@ public class ListGoogleDrive extends AbstractListProcessor<GoogleDriveFileInfo> 
 
             queryTemplateBuilder.append(" and (mimeType = '").append(DRIVE_FOLDER_MIME_TYPE).append("'");
             queryTemplateBuilder.append(" or modifiedTime >= '").append(formattedMinTimestamp).append("'");
-            queryTemplateBuilder.append(" or createdTime >= '").append(formattedMinTimestamp).append( "'");
+            queryTemplateBuilder.append(" or createdTime >= '").append(formattedMinTimestamp).append("'");
             queryTemplateBuilder.append(")");
         }
         if (minAge != null && minAge > 0) {
@@ -327,7 +341,7 @@ public class ListGoogleDrive extends AbstractListProcessor<GoogleDriveFileInfo> 
 
         String pageToken = null;
         do {
-            final FileList result = driveService.files()
+            final FileList result = driveService.files() //NOPMD
                     .list()
                     .setSupportsAllDrives(true)
                     .setIncludeItemsFromAllDrives(true)

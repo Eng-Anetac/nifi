@@ -79,7 +79,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 public class TestStandardLoadBalanceProtocol {
-    private final LoadBalanceAuthorizer ALWAYS_AUTHORIZED = (sslSocket) -> sslSocket == null ? null : "authorized.mydomain.com";
+    private static final LoadBalanceAuthorizer ALWAYS_AUTHORIZED = (sslSocket) -> sslSocket == null ? null : "authorized.mydomain.com";
     private FlowFileRepository flowFileRepo;
     private ContentRepository contentRepo;
     private ProvenanceRepository provenanceRepo;
@@ -92,7 +92,6 @@ public class TestStandardLoadBalanceProtocol {
     private List<FlowFileRecord> flowFileQueueReceiveRecords;
 
     private ConcurrentMap<ContentClaim, byte[]> claimContents;
-
 
     @BeforeEach
     public void setup() throws IOException, IllegalClusterStateException {
@@ -160,7 +159,6 @@ public class TestStandardLoadBalanceProtocol {
             return null;
         }).when(provenanceRepo).registerEvents(anyCollection());
     }
-
 
     @Test
     public void testSimpleFlowFileTransaction() throws IOException, IllegalClusterStateException {
@@ -273,7 +271,6 @@ public class TestStandardLoadBalanceProtocol {
 
         assertTrue(provRepoUpdateRecords.stream().allMatch(event -> event.getEventType() == ProvenanceEventType.RECEIVE));
     }
-
 
     @Test
     public void testMultipleFlowFilesWithoutCheckingSpace() throws IOException {

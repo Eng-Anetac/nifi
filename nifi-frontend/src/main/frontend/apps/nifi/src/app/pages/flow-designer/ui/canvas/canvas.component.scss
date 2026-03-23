@@ -15,6 +15,19 @@
  * limitations under the License.
  */
 
+.canvas-overlap-banner {
+    position: absolute;
+    z-index: 99;
+    top: 16px;
+    left: 46px;
+    right: 16px;
+    transition: left 150ms ease;
+
+    &.palettes-expanded {
+        left: 310px;
+    }
+}
+
 .canvas-background {
     background-size: 14px 14px;
     z-index: 1;
@@ -245,17 +258,10 @@
     text.connection-to-run-status,
     text.expiration-icon,
     text.load-balance-icon,
+    text.retry-icon,
     text.penalized-icon {
         font-family: FontAwesome;
         font-size: 12px;
-    }
-
-    text.load-balance-icon-184 {
-        transform-origin: 197px 10px 0;
-    }
-
-    text.load-balance-icon-200 {
-        transform-origin: 213px 10px 0;
     }
 
     g.connection rect.backpressure-object > title > tspan,

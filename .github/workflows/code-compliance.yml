@@ -36,6 +36,7 @@ env:
     -Xms6g
     -Xmx6g
     -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN
+  DEVELOCITY_ACCESS_KEY: ${{ secrets.NIFI_DEVELOCITY_ACCESS_KEY }}
 
 jobs:
   validate:
@@ -44,9 +45,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '21'
@@ -67,15 +68,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '21'
           cache: 'maven'
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: java
       - name: Maven Package
@@ -89,10 +90,10 @@ jobs:
           --no-transfer-progress
           --fail-fast
           -DskipTests
-          pmd:check
           package
+          pmd:check
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
       - name: Get Project Version
         run: echo "PROJECT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
       - name: Generate SBOM
@@ -104,7 +105,7 @@ jobs:
           artifact-name: nifi-${{ env.PROJECT_VERSION }}.spdx.json
           output-file: nifi-${{ env.PROJECT_VERSION }}.spdx.json
       - name: Scan SBOM
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@v7
         with:
           sbom: nifi-${{ env.PROJECT_VERSION }}.spdx.json
           severity-cutoff: 'medium'

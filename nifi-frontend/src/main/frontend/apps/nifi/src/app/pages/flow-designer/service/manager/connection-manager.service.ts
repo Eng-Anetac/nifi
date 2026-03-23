@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { CanvasState } from '../../state';
 import { CanvasUtils } from '../canvas-utils.service';
@@ -46,6 +46,7 @@ import { filter, Subject, switchMap, takeUntil } from 'rxjs';
 import { ComponentType, NiFiCommon, SelectOption } from '@nifi/shared';
 import { QuickSelectBehavior } from '../behavior/quick-select-behavior.service';
 import { ClusterConnectionService } from '../../../../service/cluster-connection.service';
+import { wouldRemovalCauseOverlap } from '../../../../ui/common/overlap-detection.utils';
 
 export class ConnectionRenderOptions {
     updatePath?: boolean;
@@ -56,10 +57,19 @@ export class ConnectionRenderOptions {
     providedIn: 'root'
 })
 export class ConnectionManager implements OnDestroy {
+    private store = inject<Store<CanvasState>>(Store);
+    private canvasUtils = inject(CanvasUtils);
+    private nifiCommon = inject(NiFiCommon);
+    private client = inject(Client);
+    private selectableBehavior = inject(SelectableBehavior);
+    private transitionBehavior = inject(TransitionBehavior);
+    private quickSelectBehavior = inject(QuickSelectBehavior);
+    private clusterConnectionService = inject(ClusterConnectionService);
+
     private destroyed$: Subject<boolean> = new Subject();
 
     private static readonly DIMENSIONS: Dimension = {
-        width: 224,
+        width: 240,
         height: 0
     };
 
@@ -91,16 +101,7 @@ export class ConnectionManager implements OnDestroy {
 
     private snapEnabled = true;
 
-    constructor(
-        private store: Store<CanvasState>,
-        private canvasUtils: CanvasUtils,
-        private nifiCommon: NiFiCommon,
-        private client: Client,
-        private selectableBehavior: SelectableBehavior,
-        private transitionBehavior: TransitionBehavior,
-        private quickSelectBehavior: QuickSelectBehavior,
-        private clusterConnectionService: ClusterConnectionService
-    ) {
+    constructor() {
         const self: ConnectionManager = this;
 
         // define the line generator
@@ -305,6 +306,17 @@ export class ConnectionManager implements OnDestroy {
                                     x: rightCenter.x + ConnectionManager.SELF_LOOP_X_OFFSET,
                                     y: rightCenter.y + ConnectionManager.SELF_LOOP_Y_OFFSET
                                 });
+                            } else if (self.nifiCommon.isEmpty(connectionData.bends)) {
+                                const sourceComponentId =
+                                    self.canvasUtils.getConnectionSourceComponentId(connectionData);
+                                const collisionBends = self.canvasUtils.calculateBendPointsForCollisionAvoidanceByIds(
+                                    sourceComponentId,
+                                    destinationData.id,
+                                    connectionData.id
+                                );
+                                if (collisionBends.length > 0) {
+                                    payload.component.bends = collisionBends;
+                                }
                             }
 
                             self.store.dispatch(
@@ -595,9 +607,9 @@ export class ConnectionManager implements OnDestroy {
      */
     private isExpirationConfigured(connection: any): boolean {
         if (connection.flowFileExpiration != null) {
-            const match: string[] = connection.flowFileExpiration.match(/^(\d+).*/);
+            const match: string[] = connection.flowFileExpiration.match(/^(\d*\.?\d+).*/);
             if (match !== null && match.length > 0) {
-                if (parseInt(match[0], 10) > 0) {
+                if (parseFloat(match[1]) > 0) {
                     return true;
                 }
             }
@@ -613,6 +625,16 @@ export class ConnectionManager implements OnDestroy {
      */
     private isLoadBalanceConfigured(connection: any): boolean {
         return connection.loadBalanceStrategy != null && 'DO_NOT_LOAD_BALANCE' !== connection.loadBalanceStrategy;
+    }
+
+    /**
+     * Determines whether retried relationships are configured for the specified connection.
+     *
+     * @param {object} connection
+     * @return {boolean} Whether retried relationships are configured
+     */
+    private isRetryConfigured(connection: any): boolean {
+        return connection.retriedRelationships != null && connection.retriedRelationships.length > 0;
     }
 
     /**
@@ -1162,6 +1184,24 @@ export class ConnectionManager implements OnDestroy {
                                 return;
                             }
 
+                            if (newBends.length === 0 && sourceComponentId !== destinationComponentId) {
+                                const wouldOverlap = wouldRemovalCauseOverlap(
+                                    connectionData.id,
+                                    self.connections,
+                                    self.currentProcessGroupId
+                                );
+                                if (wouldOverlap) {
+                                    self.store.dispatch(
+                                        showOkDialog({
+                                            title: 'Connection',
+                                            message:
+                                                'This bend point cannot be removed because it would cause this connection to overlap with another connection between the same components.'
+                                        })
+                                    );
+                                    return;
+                                }
+                            }
+
                             const connectionRemovedBend: any = {
                                 id: connectionData.id,
                                 bends: newBends
@@ -1221,14 +1261,6 @@ export class ConnectionManager implements OnDestroy {
 
                         self.quickSelectBehavior.activate(connectionLabelContainer);
 
-                        // connection label
-                        connectionLabelContainer
-                            .append('rect')
-                            .attr('class', 'body')
-                            .attr('width', ConnectionManager.DIMENSIONS.width)
-                            .attr('x', 0)
-                            .attr('y', 0);
-
                         // processor border
                         connectionLabelContainer
                             .append('rect')
@@ -1236,6 +1268,14 @@ export class ConnectionManager implements OnDestroy {
                             .attr('width', ConnectionManager.DIMENSIONS.width)
                             .attr('fill', 'transparent')
                             .attr('stroke', 'transparent');
+
+                        // connection label
+                        connectionLabelContainer
+                            .append('rect')
+                            .attr('class', 'body')
+                            .attr('width', ConnectionManager.DIMENSIONS.width)
+                            .attr('x', 0)
+                            .attr('y', 0);
                     }
 
                     let labelCount = 0;
@@ -1290,12 +1330,12 @@ export class ConnectionManager implements OnDestroy {
                                     .attr('class', 'stats-value connection-from')
                                     .attr('x', 43)
                                     .attr('y', 14)
-                                    .attr('width', 130);
+                                    .attr('width', 146);
 
                                 connectionFrom
                                     .append('text')
                                     .attr('class', 'connection-from-run-status')
-                                    .attr('x', 208)
+                                    .attr('x', 224)
                                     .attr('y', 14);
                             } else {
                                 backgrounds.push(connectionFrom.select('rect.connection-label-background'));
@@ -1405,12 +1445,12 @@ export class ConnectionManager implements OnDestroy {
                                     .attr('class', 'stats-value connection-to')
                                     .attr('x', 25)
                                     .attr('y', 14)
-                                    .attr('width', 145);
+                                    .attr('width', 161);
 
                                 connectionTo
                                     .append('text')
                                     .attr('class', 'connection-to-run-status')
-                                    .attr('x', 208)
+                                    .attr('x', 224)
                                     .attr('y', 14);
                             } else {
                                 backgrounds.push(connectionTo.select('rect.connection-label-background'));
@@ -1523,7 +1563,7 @@ export class ConnectionManager implements OnDestroy {
                                     .attr('class', 'stats-value connection-name')
                                     .attr('x', 45)
                                     .attr('y', 14)
-                                    .attr('width', 142);
+                                    .attr('width', 158);
                             } else {
                                 backgrounds.push(connectionName.select('rect.connection-label-background'));
                                 borders.push(connectionName.select('rect.connection-label-border'));
@@ -1618,11 +1658,21 @@ export class ConnectionManager implements OnDestroy {
                             })
                             .append('title');
 
+                        // retry icon
+                        queued
+                            .append('text')
+                            .attr('class', 'retry-icon')
+                            .attr('y', 14)
+                            .text(function () {
+                                return '\uf021';
+                            })
+                            .append('title');
+
                         // expiration icon
                         queued
                             .append('text')
                             .attr('class', 'expiration-icon primary-color')
-                            .attr('x', 208)
+                            .attr('x', 224)
                             .attr('y', 14)
                             .text(function () {
                                 return '\uf017';
@@ -1795,6 +1845,36 @@ export class ConnectionManager implements OnDestroy {
                         }
                     });
 
+                    // determine whether or not to show the retry icon
+                    connectionLabelContainer
+                        .select('text.retry-icon')
+                        .classed('hidden', function () {
+                            if (d.permissions.canRead) {
+                                return !self.isRetryConfigured(d.component);
+                            } else {
+                                return true;
+                            }
+                        })
+                        .classed('primary-color', function () {
+                            return d.permissions.canRead;
+                        })
+                        .attr('x', function () {
+                            let offset = 224;
+                            if (d.permissions.canRead && self.isExpirationConfigured(d.component)) {
+                                offset -= 16;
+                            }
+                            // retry icon comes before load-balance icon, so no additional offset needed here
+                            return offset;
+                        })
+                        .select('title')
+                        .text(function () {
+                            if (d.permissions.canRead && self.isRetryConfigured(d.component)) {
+                                return `Relationships configured to be retried: ${d.component.retriedRelationships.join(', ')}`;
+                            } else {
+                                return '';
+                            }
+                        });
+
                     // determine whether or not to show the load-balance icon
                     connectionLabelContainer
                         .select('text.load-balance-icon')
@@ -1811,14 +1891,16 @@ export class ConnectionManager implements OnDestroy {
                         .classed('primary-color', function (d: any) {
                             return d.permissions.canRead && d.component.loadBalanceStatus !== 'LOAD_BALANCE_ACTIVE';
                         })
-                        .classed('load-balance-icon-184', function () {
-                            return d.permissions.canRead && self.isExpirationConfigured(d.component);
-                        })
-                        .classed('load-balance-icon-200', function () {
-                            return d.permissions.canRead && !self.isExpirationConfigured(d.component);
-                        })
                         .attr('x', function () {
-                            return d.permissions.canRead && self.isExpirationConfigured(d.component) ? 192 : 208;
+                            let offset = 224;
+                            if (d.permissions.canRead && self.isExpirationConfigured(d.component)) {
+                                offset -= 16;
+                            }
+                            if (d.permissions.canRead && self.isRetryConfigured(d.component)) {
+                                offset -= 16;
+                            }
+                            // load-balance icon is leftmost, so it gets additional offset
+                            return offset;
                         })
                         .select('title')
                         .text(function () {
@@ -1977,7 +2059,10 @@ export class ConnectionManager implements OnDestroy {
                 if (!connectionLabelContainer.select('text.load-balance-icon').classed('hidden')) {
                     offset += 16;
                 }
-                return 208 - offset;
+                if (!connectionLabelContainer.select('text.retry-icon').classed('hidden')) {
+                    offset += 16;
+                }
+                return 224 - offset;
             })
             .select('title')
             .text(function () {

@@ -93,6 +93,7 @@ public class StandardFlowSnippet implements FlowSnippet {
         this.extensionManager = extensionManager;
     }
 
+    @Override
     public void validate(final ProcessGroup group) {
         // validate the names of Input Ports
         for (final PortDTO port : dto.getInputPorts()) {
@@ -113,6 +114,7 @@ public class StandardFlowSnippet implements FlowSnippet {
         SnippetUtils.verifyNoVersionControlConflicts(dto, group);
     }
 
+    @Override
     public void verifyComponentTypesInSnippet() {
         final Map<String, Set<BundleCoordinate>> processorClasses = new HashMap<>();
         for (final ExtensionDefinition extensionDefinition : extensionManager.getExtensions(Processor.class)) {
@@ -152,11 +154,10 @@ public class StandardFlowSnippet implements FlowSnippet {
         }
     }
 
+    @Override
     public void instantiate(final FlowManager flowManager, final FlowController flowController, final ProcessGroup group) throws ProcessorInstantiationException {
         instantiate(flowManager, flowController, group, true);
     }
-
-
 
     /**
      * Recursively finds all ConnectionDTO's
@@ -220,7 +221,6 @@ public class StandardFlowSnippet implements FlowSnippet {
             templateContents.getProcessGroups().forEach(processGroup -> verifyProcessorsInSnippet(processGroup.getContents(), supportedTypes));
         }
     }
-
 
     public void instantiate(final FlowManager flowManager, final FlowController flowController, final ProcessGroup group, final boolean topLevel) {
         //
@@ -423,8 +423,9 @@ public class StandardFlowSnippet implements FlowSnippet {
                 }
 
                 // Notify the processor node that the configuration (properties, e.g.) has been restored
+                final Class<?> componentClass = procNode.getProcessor() == null ? null : procNode.getProcessor().getClass();
                 final StandardProcessContext processContext = new StandardProcessContext(procNode, flowController.getControllerServiceProvider(),
-                        flowController.getStateManagerProvider().getStateManager(procNode.getProcessor().getIdentifier()), () -> false, flowController);
+                        flowController.getStateManagerProvider().getStateManager(procNode.getProcessor().getIdentifier(), componentClass), () -> false, flowController);
                 procNode.onConfigurationRestored(processContext);
             } finally {
                 procNode.resumeValidationTrigger();
@@ -671,7 +672,6 @@ public class StandardFlowSnippet implements FlowSnippet {
             return group.getProcessGroup(parentGroupId);
         }
     }
-
 
     private Position toPosition(final PositionDTO dto) {
         return new Position(dto.getX(), dto.getY());

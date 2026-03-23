@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -67,9 +68,10 @@ public class AuthenticationResource extends ApplicationResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/configuration")
     @Operation(
-            summary = "Retrieves the authentication configuration endpoint and status information",
+            summary = "Retrieves the authentication configuration details and status information",
             responses = @ApiResponse(content = @Content(schema = @Schema(implementation = AuthenticationConfigurationEntity.class)))
     )
+    @SecurityRequirements
     public Response getAuthenticationConfiguration() {
         final AuthenticationConfigurationDTO configuration = new AuthenticationConfigurationDTO();
         configuration.setExternalLoginRequired(authenticationConfiguration.externalLoginRequired());

@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -54,7 +55,7 @@ class TestJsonPathRowRecordReader {
     private final String timeFormat = RecordFieldType.TIME.getDefaultFormat();
     private final String timestampFormat = RecordFieldType.TIMESTAMP.getDefaultFormat();
 
-    private final LinkedHashMap<String, JsonPath> allJsonPaths = new LinkedHashMap<>();
+    private final Map<String, JsonPath> allJsonPaths = new LinkedHashMap<>();
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final TokenParserFactory parserFactory = new JsonParserFactory();
@@ -72,7 +73,6 @@ class TestJsonPathRowRecordReader {
         allJsonPaths.put("zipCode", JsonPath.compile("$.zipCode"));
         allJsonPaths.put("country", JsonPath.compile("$.country"));
     }
-
 
     private List<RecordField> getDefaultFields() {
         final List<RecordField> fields = new ArrayList<>();
@@ -94,7 +94,6 @@ class TestJsonPathRowRecordReader {
 
         return new SimpleRecordSchema(accountFields);
     }
-
 
     @Test
     void testReadArray() throws IOException, MalformedRecordException {
@@ -176,7 +175,7 @@ class TestJsonPathRowRecordReader {
         final List<RecordField> recordFields = Collections.singletonList(new RecordField("timestamp", RecordFieldType.TIMESTAMP.getDataType()));
         final RecordSchema schema = new SimpleRecordSchema(recordFields);
 
-        final LinkedHashMap<String, JsonPath> jsonPaths = new LinkedHashMap<>();
+        final Map<String, JsonPath> jsonPaths = new LinkedHashMap<>();
         jsonPaths.put("timestamp", JsonPath.compile("$.timestamp"));
         jsonPaths.put("field_not_in_schema", JsonPath.compile("$.field_not_in_schema"));
 
@@ -195,11 +194,9 @@ class TestJsonPathRowRecordReader {
         }
     }
 
-
-
     @Test
     void testElementWithNestedData() throws IOException, MalformedRecordException {
-        final LinkedHashMap<String, JsonPath> jsonPaths = new LinkedHashMap<>(allJsonPaths);
+        final Map<String, JsonPath> jsonPaths = new LinkedHashMap<>(allJsonPaths);
         jsonPaths.put("account", JsonPath.compile("$.account"));
 
         final DataType accountType = RecordFieldType.RECORD.getRecordDataType(getAccountSchema());
@@ -235,7 +232,7 @@ class TestJsonPathRowRecordReader {
 
     @Test
     void testElementWithNestedArray() throws IOException, MalformedRecordException {
-        final LinkedHashMap<String, JsonPath> jsonPaths = new LinkedHashMap<>(allJsonPaths);
+        final Map<String, JsonPath> jsonPaths = new LinkedHashMap<>(allJsonPaths);
         jsonPaths.put("accounts", JsonPath.compile("$.accounts"));
 
         final DataType accountRecordType = RecordFieldType.RECORD.getRecordDataType(getAccountSchema());
@@ -243,7 +240,6 @@ class TestJsonPathRowRecordReader {
         final List<RecordField> fields = getDefaultFields();
         fields.add(new RecordField("accounts", accountsType));
         final RecordSchema schema = new SimpleRecordSchema(fields);
-
 
         try (final InputStream in = new FileInputStream("src/test/resources/json/single-element-nested-array.json");
              final JsonPathRowRecordReader reader = new JsonPathRowRecordReader(jsonPaths, schema, in, mock(ComponentLog.class), dateFormat, timeFormat, timestampFormat, mapper, parserFactory)) {
@@ -314,13 +310,12 @@ class TestJsonPathRowRecordReader {
 
     @Test
     void testReadArrayDifferentSchemasWithOverride() throws IOException, MalformedRecordException {
-        final LinkedHashMap<String, JsonPath> jsonPaths = new LinkedHashMap<>(allJsonPaths);
+        final Map<String, JsonPath> jsonPaths = new LinkedHashMap<>(allJsonPaths);
         jsonPaths.put("address2", JsonPath.compile("$.address2"));
 
         final List<RecordField> fields = getDefaultFields();
         fields.add(new RecordField("address2", RecordFieldType.STRING.getDataType()));
         final RecordSchema schema = new SimpleRecordSchema(fields);
-
 
         try (final InputStream in = new FileInputStream("src/test/resources/json/bank-account-array-different-schemas.json");
              final JsonPathRowRecordReader reader = new JsonPathRowRecordReader(jsonPaths, schema, in, mock(ComponentLog.class), dateFormat, timeFormat, timestampFormat, mapper, parserFactory)) {
@@ -349,7 +344,7 @@ class TestJsonPathRowRecordReader {
 
     @Test
     void testPrimitiveTypeArrays() throws IOException, MalformedRecordException {
-        final LinkedHashMap<String, JsonPath> jsonPaths = new LinkedHashMap<>(allJsonPaths);
+        final Map<String, JsonPath> jsonPaths = new LinkedHashMap<>(allJsonPaths);
         jsonPaths.put("accountIds", JsonPath.compile("$.accountIds"));
 
         final List<RecordField> fields = getDefaultFields();

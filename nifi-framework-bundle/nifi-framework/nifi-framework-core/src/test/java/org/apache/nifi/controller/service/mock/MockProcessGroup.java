@@ -807,6 +807,7 @@ public class MockProcessGroup implements ProcessGroup {
         return new NoOpBatchCounts();
     }
 
+    @Override
     public DataValve getDataValve(Port port) {
         return null;
     }
@@ -857,10 +858,16 @@ public class MockProcessGroup implements ProcessGroup {
     }
 
     @Override
+    public Map<String, String> getLoggingAttributes() {
+        return Map.of();
+    }
+
+    @Override
     public String getLogFileSuffix() {
         return null;
     }
 
+    @Override
     public ExecutionEngine getExecutionEngine() {
         return ExecutionEngine.STANDARD;
     }

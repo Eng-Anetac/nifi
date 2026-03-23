@@ -42,6 +42,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.authorization.AuthorizableLookup;
+import org.apache.nifi.authorization.AuthorizeComponentReference;
 import org.apache.nifi.authorization.AuthorizeControllerServiceReference;
 import org.apache.nifi.authorization.Authorizer;
 import org.apache.nifi.authorization.ComponentAuthorizable;
@@ -84,6 +85,8 @@ import org.apache.nifi.web.api.dto.PropertyDescriptorDTO;
 import org.apache.nifi.web.api.dto.RevisionDTO;
 import org.apache.nifi.web.api.dto.VerifyConfigRequestDTO;
 import org.apache.nifi.web.api.entity.AffectedComponentEntity;
+import org.apache.nifi.web.api.entity.ClearBulletinsRequestEntity;
+import org.apache.nifi.web.api.entity.ClearBulletinsResultEntity;
 import org.apache.nifi.web.api.entity.ComponentStateEntity;
 import org.apache.nifi.web.api.entity.ConfigurationAnalysisEntity;
 import org.apache.nifi.web.api.entity.Entity;
@@ -113,6 +116,7 @@ import org.springframework.stereotype.Controller;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -440,7 +444,7 @@ public class ParameterProviderResource extends AbstractParameterResource {
      * @return a componentStateEntity
      */
     @POST
-    @Consumes(MediaType.WILDCARD)
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}/state/clear-requests")
     @Operation(
@@ -462,10 +466,18 @@ public class ParameterProviderResource extends AbstractParameterResource {
                     description = "The parameter provider id.",
                     required = true
             )
-            @PathParam("id") final String id) {
+            @PathParam("id") final String id,
+            @Parameter(
+                    description = "Optional component state to perform a selective key removal. If omitted, clears all state.",
+                    required = false
+            ) final ComponentStateEntity componentStateEntity) {
 
         if (isReplicateRequest()) {
-            return replicate(HttpMethod.POST);
+            if (componentStateEntity == null) {
+                return replicate(HttpMethod.POST);
+            } else {
+                return replicate(HttpMethod.POST, componentStateEntity);
+            }
         }
 
         final ParameterProviderEntity requestParameterProviderEntity = new ParameterProviderEntity();
@@ -480,13 +492,86 @@ public class ParameterProviderResource extends AbstractParameterResource {
                 },
                 () -> serviceFacade.verifyCanClearParameterProviderState(id),
                 (parameterProviderEntity) -> {
-                    // get the component state
-                    serviceFacade.clearParameterProviderState(parameterProviderEntity.getId());
+                    // clear state
+                    final ComponentStateDTO expectedState = componentStateEntity == null ? null : componentStateEntity.getComponentState();
+                    final ComponentStateDTO state = serviceFacade.clearParameterProviderState(parameterProviderEntity.getId(), expectedState);
 
                     // generate the response entity
                     final ComponentStateEntity entity = new ComponentStateEntity();
+                    entity.setComponentState(state);
 
                     // generate the response
+                    return generateOkResponse(entity).build();
+                }
+        );
+    }
+
+    /**
+     * Clears bulletins for a parameter provider.
+     *
+     * @param id The id of the parameter provider
+     * @param clearBulletinsRequestEntity The clear bulletin request
+     * @return a clearBulletinsResultEntity
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{id}/bulletins/clear-requests")
+    @Operation(
+            summary = "Clears bulletins for a parameter provider",
+            responses = {
+                    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = ClearBulletinsResultEntity.class))),
+                    @ApiResponse(responseCode = "400", description = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
+                    @ApiResponse(responseCode = "401", description = "Client could not be authenticated."),
+                    @ApiResponse(responseCode = "403", description = "Client is not authorized to make this request."),
+                    @ApiResponse(responseCode = "404", description = "The specified resource could not be found."),
+                    @ApiResponse(responseCode = "409", description = "The request was valid but NiFi was not in the appropriate state to process it.")
+            },
+            security = {
+                    @SecurityRequirement(name = "Write - /parameter-providers/{uuid}")
+            }
+    )
+    public Response clearBulletins(
+            @Parameter(
+                    description = "The parameter provider id.",
+                    required = true
+            )
+            @PathParam("id") final String id,
+            @Parameter(
+                    description = "The clear bulletin request specifying the timestamp from which to clear bulletins.",
+                    required = true
+            ) final ClearBulletinsRequestEntity clearBulletinsRequestEntity) {
+
+        if (clearBulletinsRequestEntity == null) {
+            throw new IllegalArgumentException("Clear bulletin request must be specified.");
+        }
+
+        // Validate the request
+        if (clearBulletinsRequestEntity.getFromTimestamp() == null) {
+            throw new IllegalArgumentException("From timestamp must be specified in the clear bulletin request.");
+        }
+
+        if (isReplicateRequest()) {
+            return replicate(HttpMethod.POST, clearBulletinsRequestEntity);
+        }
+
+        final ParameterProviderEntity requestParameterProviderEntity = new ParameterProviderEntity();
+        requestParameterProviderEntity.setId(id);
+
+        return withWriteLock(
+                serviceFacade,
+                requestParameterProviderEntity,
+                lookup -> {
+                    final Authorizable parameterProvider = lookup.getParameterProvider(id).getAuthorizable();
+                    parameterProvider.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
+                },
+                () -> { },
+                (parameterProviderEntity) -> {
+                    final Instant fromTimestamp = clearBulletinsRequestEntity.getFromTimestamp();
+
+                    // Clear bulletins for the parameter provider
+                    final ClearBulletinsResultEntity entity = serviceFacade.clearBulletinsForComponent(parameterProviderEntity.getId(), fromTimestamp);
+
                     return generateOkResponse(entity).build();
                 }
         );
@@ -561,8 +646,9 @@ public class ParameterProviderResource extends AbstractParameterResource {
                     final ComponentAuthorizable authorizable = lookup.getParameterProvider(id);
                     authorizable.getAuthorizable().authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
 
-                    // authorize any referenced services
-                    AuthorizeControllerServiceReference.authorizeControllerServiceReferences(requestParameterProviderDTO.getProperties(), authorizable, authorizer, lookup);
+                    final Authorizable parameterContext = authorizable.getParameterContext();
+                    final Map<String, String> componentProperties = requestParameterProviderDTO.getProperties();
+                    AuthorizeComponentReference.authorizeComponentConfiguration(authorizer, lookup, authorizable, componentProperties, parameterContext);
                 },
                 () -> serviceFacade.verifyUpdateParameterProvider(requestParameterProviderDTO),
                 (revision, parameterProviderEntity) -> {
@@ -832,6 +918,7 @@ public class ParameterProviderResource extends AbstractParameterResource {
             }
     )
     public Response submitApplyParameters(
+            @Parameter(description = "The ID of the Parameter Provider")
             @PathParam("providerId") final String parameterProviderId,
             @Parameter(description = "The apply parameters request.", required = true) final ParameterProviderParameterApplicationEntity requestEntity) {
 
@@ -1337,7 +1424,6 @@ public class ParameterProviderResource extends AbstractParameterResource {
         entity.setRequest(dto);
         return entity;
     }
-
 
     private Response retrieveApplyParametersRequest(final String requestType, final String parameterProviderId, final String requestId) {
         if (requestId == null) {

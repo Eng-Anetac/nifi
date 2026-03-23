@@ -75,7 +75,7 @@ public class JsonPathReader extends SchemaRegistryService implements RecordReade
     private volatile String dateFormat;
     private volatile String timeFormat;
     private volatile String timestampFormat;
-    private volatile LinkedHashMap<String, JsonPath> jsonPaths;
+    private volatile Map<String, JsonPath> jsonPaths;
     private volatile ObjectMapper objectMapper;
     private volatile TokenParserFactory tokenParserFactory;
 
@@ -116,7 +116,7 @@ public class JsonPathReader extends SchemaRegistryService implements RecordReade
         final boolean allowComments = context.getProperty(AbstractJsonRowRecordReader.ALLOW_COMMENTS).asBoolean();
         this.tokenParserFactory = new JsonParserFactory(streamReadConstraints, allowComments);
 
-        final LinkedHashMap<String, JsonPath> compiled = new LinkedHashMap<>();
+        final Map<String, JsonPath> compiled = new LinkedHashMap<>();
         for (final PropertyDescriptor descriptor : context.getProperties().keySet()) {
             if (!descriptor.isDynamic()) {
                 continue;
@@ -161,7 +161,7 @@ public class JsonPathReader extends SchemaRegistryService implements RecordReade
 
     @Override
     protected SchemaAccessStrategy getSchemaAccessStrategy(final String strategy, final SchemaRegistry schemaRegistry, final PropertyContext context) {
-        final RecordSourceFactory<JsonNode> jsonSourceFactory = (var, in) -> new JsonRecordSource(in, null, null, tokenParserFactory);
+        final RecordSourceFactory<JsonNode> jsonSourceFactory = (variables, in) -> new JsonRecordSource(in, null, null, tokenParserFactory);
         final Supplier<SchemaInferenceEngine<JsonNode>> inferenceSupplier = () -> new JsonSchemaInference(new TimeValueInference(dateFormat, timeFormat, timestampFormat));
 
         return SchemaInferenceUtil.getSchemaAccessStrategy(strategy, context, getLogger(), jsonSourceFactory, inferenceSupplier,

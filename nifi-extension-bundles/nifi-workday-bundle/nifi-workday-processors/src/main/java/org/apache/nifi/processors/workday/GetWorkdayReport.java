@@ -30,6 +30,7 @@ import org.apache.nifi.components.AllowableValue;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.flowfile.attributes.CoreAttributes;
+import org.apache.nifi.migration.PropertyConfiguration;
 import org.apache.nifi.oauth2.OAuth2AccessTokenProvider;
 import org.apache.nifi.processor.AbstractProcessor;
 import org.apache.nifi.processor.ProcessContext;
@@ -100,20 +101,19 @@ public class GetWorkdayReport extends AbstractProcessor {
 
     protected static final PropertyDescriptor REPORT_URL = new PropertyDescriptor.Builder()
         .name("Workday Report URL")
-        .displayName("Workday Report URL")
         .description("HTTP remote URL of Workday report including a scheme of http or https, as well as a hostname or IP address with optional port and path elements.")
         .required(true)
         .expressionLanguageSupported(FLOWFILE_ATTRIBUTES)
         .addValidator(URL_VALIDATOR)
         .build();
 
-    public static AllowableValue BASIC_AUTH_TYPE = new AllowableValue(
+    public static final AllowableValue BASIC_AUTH_TYPE = new AllowableValue(
         "BASIC_AUTH",
         "Basic Auth",
         "Used to access resources using Workday password and username."
     );
 
-    public static AllowableValue OAUTH_TYPE = new AllowableValue(
+    public static final AllowableValue OAUTH_TYPE = new AllowableValue(
         "OAUTH",
         "OAuth",
         "Used to get fresh access tokens based on a previously acquired refresh token. Requires Client ID, Client Secret and Refresh Token."
@@ -129,7 +129,6 @@ public class GetWorkdayReport extends AbstractProcessor {
 
     protected static final PropertyDescriptor WORKDAY_USERNAME = new PropertyDescriptor.Builder()
         .name("Workday Username")
-        .displayName("Workday Username")
         .description("The username provided for authentication of Workday requests. Encoded using Base64 for HTTP Basic Authentication as described in RFC 7617.")
         .dependsOn(AUTH_TYPE, BASIC_AUTH_TYPE)
         .required(true)
@@ -139,7 +138,6 @@ public class GetWorkdayReport extends AbstractProcessor {
 
     protected static final PropertyDescriptor WORKDAY_PASSWORD = new PropertyDescriptor.Builder()
         .name("Workday Password")
-        .displayName("Workday Password")
         .description("The password provided for authentication of Workday requests. Encoded using Base64 for HTTP Basic Authentication as described in RFC 7617.")
         .dependsOn(AUTH_TYPE, BASIC_AUTH_TYPE)
         .required(true)
@@ -164,16 +162,14 @@ public class GetWorkdayReport extends AbstractProcessor {
         .build();
 
     protected static final PropertyDescriptor RECORD_READER_FACTORY = new PropertyDescriptor.Builder()
-        .name("record-reader")
-        .displayName("Record Reader")
+        .name("Record Reader")
         .description("Specifies the Controller Service to use for parsing incoming data and determining the data's schema.")
         .identifiesControllerService(RecordReaderFactory.class)
         .required(false)
         .build();
 
     protected static final PropertyDescriptor RECORD_WRITER_FACTORY = new PropertyDescriptor.Builder()
-        .name("record-writer")
-        .displayName("Record Writer")
+        .name("Record Writer")
         .description("The Record Writer to use for serializing Records to an output FlowFile.")
         .identifiesControllerService(RecordSetWriterFactory.class)
         .dependsOn(RECORD_READER_FACTORY)
@@ -297,6 +293,12 @@ public class GetWorkdayReport extends AbstractProcessor {
                 session.remove(responseFlowFile);
             }
         }
+    }
+
+    @Override
+    public void migrateProperties(PropertyConfiguration config) {
+        config.renameProperty("record-reader", RECORD_READER_FACTORY.getName());
+        config.renameProperty("record-writer", RECORD_WRITER_FACTORY.getName());
     }
 
     /*

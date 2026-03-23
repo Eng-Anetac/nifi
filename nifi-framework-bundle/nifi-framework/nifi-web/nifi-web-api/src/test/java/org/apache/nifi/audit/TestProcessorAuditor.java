@@ -77,7 +77,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
 @ContextConfiguration(classes = {TestProcessorAuditor.AuditorConfiguration.class})
 class TestProcessorAuditor {
@@ -156,8 +155,7 @@ class TestProcessorAuditor {
         when(extensionManager.getBundle(any(BundleCoordinate.class))).thenReturn(bundle);
         when(extensionManager.getBundles(anyString())).thenReturn(Collections.singletonList(bundle));
 
-
-        when(mockStateManagerProvider.getStateManager(PN_ID)).thenReturn(mockStateManager);
+        when(mockStateManagerProvider.getStateManager(anyString(), any())).thenReturn(mockStateManager);
 
         final ProcessorNode processor = processorDao.createProcessor(GROUP_ID, processorDto);
 

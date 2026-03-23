@@ -23,7 +23,11 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.vault.client.RestTemplateBuilder;
 import org.springframework.vault.client.RestTemplateFactory;
+import org.springframework.vault.client.VaultEndpointProvider;
+import org.springframework.vault.client.VaultHttpHeaders;
 import org.springframework.vault.config.EnvironmentVaultConfiguration;
 import org.springframework.vault.core.VaultKeyValueOperationsSupport.KeyValueBackend;
 import org.springframework.vault.support.ClientOptions;
@@ -47,7 +51,8 @@ public class HashiCorpVaultConfiguration extends EnvironmentVaultConfiguration {
         READ_TIMEOUT("vault.read.timeout"),
         CONNECTION_TIMEOUT("vault.connection.timeout"),
         KV_VERSION("vault.kv.version"),
-        URI("vault.uri");
+        URI("vault.uri"),
+        NAMESPACE("vault.namespace");
 
         private final String key;
 
@@ -72,12 +77,23 @@ public class HashiCorpVaultConfiguration extends EnvironmentVaultConfiguration {
 
     /**
      * Creates a HashiCorpVaultConfiguration from property sources, in increasing precedence.
+     * The environment includes system environment variables and system properties as fallback sources.
      * @param propertySources A series of Spring PropertySource objects (the last in the list take precedence over
      *                        sources earlier in the list)
      * @throws HashiCorpVaultConfigurationException If the authentication properties file could not be read
      */
     public HashiCorpVaultConfiguration(final PropertySource<?>... propertySources) {
-        final ConfigurableEnvironment env = new StandardEnvironment();
+        this(new StandardEnvironment(), propertySources);
+    }
+
+    /**
+     * Creates a HashiCorpVaultConfiguration from property sources with a provided environment.
+     * @param env The ConfigurableEnvironment to use for property resolution
+     * @param propertySources A series of Spring PropertySource objects (the last in the list take precedence over
+     *                        sources earlier in the list)
+     * @throws HashiCorpVaultConfigurationException If the authentication properties file could not be read
+     */
+    public HashiCorpVaultConfiguration(final ConfigurableEnvironment env, final PropertySource<?>... propertySources) {
         for (final PropertySource<?> propertySource : propertySources) {
             env.getPropertySources().addFirst(propertySource);
         }
@@ -140,7 +156,6 @@ public class HashiCorpVaultConfiguration extends EnvironmentVaultConfiguration {
         Objects.requireNonNull(environment.getProperty(propertyName), propertyName + " is required with an https URI");
     }
 
-
     public KeyValueBackend getKeyValueBackend() {
         return keyValueBackend;
     }
@@ -163,6 +178,19 @@ public class HashiCorpVaultConfiguration extends EnvironmentVaultConfiguration {
     @Override
     protected RestTemplateFactory getRestTemplateFactory() {
         return this.restTemplateFactory(clientHttpRequestFactoryWrapper());
+    }
+
+    @Override
+    protected RestTemplateBuilder restTemplateBuilder(final VaultEndpointProvider endpointProvider,
+                                                       final ClientHttpRequestFactory requestFactory) {
+        RestTemplateBuilder builder = super.restTemplateBuilder(endpointProvider, requestFactory);
+        final String namespace = getEnvironment().getProperty(VaultConfigurationKey.NAMESPACE.key);
+
+        if (namespace != null && !namespace.isEmpty()) {
+            builder = builder.defaultHeader(VaultHttpHeaders.VAULT_NAMESPACE, namespace);
+        }
+
+        return builder;
     }
 
     @Override

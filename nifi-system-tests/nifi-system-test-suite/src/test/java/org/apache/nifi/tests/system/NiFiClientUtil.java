@@ -741,7 +741,6 @@ public class NiFiClientUtil {
 
         final ParameterContextEntity entityUpdate = createParameterContextEntity(existingEntity.getComponent().getName(), existingEntity.getComponent().getDescription(),
             parameterEntities, inheritedParameterContextIds, null);
-        entityUpdate.setId(existingEntity.getId());
         entityUpdate.setRevision(existingEntity.getRevision());
         entityUpdate.getComponent().setId(existingEntity.getComponent().getId());
 
@@ -1033,7 +1032,6 @@ public class NiFiClientUtil {
             counterValues = getCountersAsMap(context);
         }
     }
-
 
     public Map<String, Long> getCountersAsMap(final String processorId) throws NiFiClientException, IOException {
         final CountersEntity firstCountersEntity = nifiClient.getCountersClient().getCounters();
@@ -1932,7 +1930,6 @@ public class NiFiClientUtil {
         return results.getRequest().getResults();
     }
 
-
     public ReportingTaskEntity createReportingTask(final String type, final String bundleGroupId, final String artifactId, final String version)
                 throws NiFiClientException, IOException {
         final ReportingTaskDTO dto = new ReportingTaskDTO();
@@ -2020,8 +2017,6 @@ public class NiFiClientUtil {
         final VersionControlInformationDTO currentDto = currentVci.getVersionControlInformation();
         return publishFlowVersion(group, registryClient, currentDto.getBucketId(), currentDto.getFlowName(), currentDto.getFlowId());
     }
-
-
 
     public VersionedFlowUpdateRequestEntity revertChanges(final ProcessGroupEntity group) throws NiFiClientException, IOException, InterruptedException {
         final VersionControlInformationEntity vciEntity = nifiClient.getVersionsClient().getVersionControlInfo(group.getId());
@@ -2124,7 +2119,6 @@ public class NiFiClientUtil {
             return null;
         }
     }
-
 
     public void assertFlowStaleAndUnmodified(final String processGroupId) throws NiFiClientException, IOException {
         final String state = nifiClient.getProcessGroupClient().getProcessGroup(processGroupId).getVersionedFlowState();

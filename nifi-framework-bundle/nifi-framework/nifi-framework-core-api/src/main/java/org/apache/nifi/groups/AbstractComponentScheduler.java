@@ -96,7 +96,6 @@ public abstract class AbstractComponentScheduler implements ComponentScheduler {
         return pauseCount.get() > 0;
     }
 
-
     @Override
     public void transitionComponentState(final Connectable component, final ScheduledState desiredState) {
         final ScheduledState scheduledState = getScheduledState(component);
@@ -150,7 +149,6 @@ public abstract class AbstractComponentScheduler implements ComponentScheduler {
 
     }
 
-
     private void enable(final Connectable component) {
         final ProcessGroup group = component.getProcessGroup();
         switch (component.getConnectableType()) {
@@ -168,7 +166,6 @@ public abstract class AbstractComponentScheduler implements ComponentScheduler {
             case PROCESSOR -> group.disableProcessor((ProcessorNode) component);
         }
     }
-
 
     @Override
     public void startComponent(final Connectable component) {
@@ -215,6 +212,7 @@ public abstract class AbstractComponentScheduler implements ComponentScheduler {
         return serviceProvider;
     }
 
+    @Override
     public void startReportingTask(final ReportingTaskNode reportingTask) {
         if (isPaused()) {
             logger.debug("{} called to start {} but paused so will queue it for start later", this, reportingTask);

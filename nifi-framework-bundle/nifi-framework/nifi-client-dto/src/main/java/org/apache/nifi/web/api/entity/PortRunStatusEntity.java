@@ -17,7 +17,6 @@
 package org.apache.nifi.web.api.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import jakarta.xml.bind.annotation.XmlType;
 
 /**
@@ -26,7 +25,7 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlType(name = "portRunStatus")
 public class PortRunStatusEntity extends ComponentRunStatusEntity {
 
-    private static String[] SUPPORTED_STATE = {"RUNNING", "STOPPED", "DISABLED"};
+    private static final String[] SUPPORTED_STATE = {"RUNNING", "STOPPED", "DISABLED"};
 
     @Override
     protected String[] getSupportedState() {
@@ -38,8 +37,8 @@ public class PortRunStatusEntity extends ComponentRunStatusEntity {
      * @return The run status
      */
     @Schema(description = "The run status of the Port.",
-            allowableValues = {"RUNNING", "STOPPED", "DISABLED"}
-    )
+            allowableValues = {"RUNNING", "STOPPED", "DISABLED"})
+    @Override
     public String getState() {
         return super.getState();
     }

@@ -14,12 +14,12 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>35</version>
+        <version>37</version>
         <relativePath />
     </parent>
     <groupId>org.apache.nifi</groupId>
     <artifactId>nifi</artifactId>
-    <version>2.6.0-SNAPSHOT</version>
+    <version>2.9.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <description>Apache NiFi is an easy to use, powerful, and reliable system to process and distribute data.</description>
     <modules>
@@ -91,83 +91,123 @@
         <url>https://issues.apache.org/jira/browse/NIFI</url>
     </issueManagement>
     <properties>
-        <maven.compiler.release>21</maven.compiler.release>
-        <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
-        <!-- Set minimum Java version for maven-enforcer-plugin from parent POM -->
-        <minimalJavaBuildVersion>21</minimalJavaBuildVersion>
-        <maven.surefire.arguments />
-        <!-- Disable maven-site-plugin from parent POM -->
-        <maven.site.skip>true</maven.site.skip>
-        <docker.jdk.image.name>bellsoft/liberica-openjdk-debian</docker.jdk.image.name>
-        <docker.jre.image.name>bellsoft/liberica-openjre-debian</docker.jre.image.name>
-        <docker.image.tag>21</docker.image.tag>
-        <node.version>v22.1.0</node.version>
-        <frontend.mvn.plugin.version>1.15.1</frontend.mvn.plugin.version>
-        <nifi.nar.maven.plugin.version>2.1.0</nifi.nar.maven.plugin.version>
-        <nifi-api.version>2.2.0</nifi-api.version>
-        <project.build.outputTimestamp>1753212759</project.build.outputTimestamp>
+        <!-- Project metadata -->
+        <inceptionYear>2014</inceptionYear>
+        <project.build.outputTimestamp>1771022282</project.build.outputTimestamp>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <inceptionYear>2014</inceptionYear>
-        <com.amazonaws.version>1.12.788</com.amazonaws.version>
-        <software.amazon.awssdk.version>2.32.4</software.amazon.awssdk.version>
-        <gson.version>2.13.1</gson.version>
-        <io.fabric8.kubernetes.client.version>7.3.1</io.fabric8.kubernetes.client.version>
-        <kotlin.version>2.2.0</kotlin.version>
-        <okhttp.version>5.1.0</okhttp.version>
-        <okio.version>3.15.0</okio.version>
-        <org.apache.commons.cli.version>1.9.0</org.apache.commons.cli.version>
-        <org.apache.commons.codec.version>1.18.0</org.apache.commons.codec.version>
+        <!-- Build configuration -->
+        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
+        <!-- Disable maven-site-plugin from parent POM -->
+        <maven.site.skip>true</maven.site.skip>
+        <maven.surefire.arguments />
+        <!-- Set minimum Java version for maven-enforcer-plugin from parent POM -->
+        <minimalJavaBuildVersion>21</minimalJavaBuildVersion>
+        <surefire.version>3.5.5</surefire.version>
+
+        <!-- Container images -->
+        <docker.image.tag>21</docker.image.tag>
+        <docker.jdk.image.name>bellsoft/liberica-openjdk-debian</docker.jdk.image.name>
+        <docker.jre.image.name>bellsoft/liberica-openjre-debian</docker.jre.image.name>
+
+        <!-- Frontend tooling -->
+        <frontend.mvn.plugin.version>2.0.0</frontend.mvn.plugin.version>
+        <node.version>v22.19.0</node.version>
+
+        <!-- NiFi build -->
+        <nifi-api.version>2.7.0</nifi-api.version>
+        <nifi.nar.maven.plugin.version>2.3.0</nifi.nar.maven.plugin.version>
+
+        <!-- CSPs SDK -->
+        <software.amazon.awssdk.version>2.42.16</software.amazon.awssdk.version>
+        <software.amazon.encryption.s3.version>4.0.1</software.amazon.encryption.s3.version>
+        <azure.sdk.bom.version>1.3.5</azure.sdk.bom.version> <!-- when changing this version, also update msal4j to the version that is required by azure-identity -->
+
+        <!-- Apache Commons -->
+        <org.apache.commons.cli.version>1.11.0</org.apache.commons.cli.version>
+        <org.apache.commons.codec.version>1.21.0</org.apache.commons.codec.version>
         <org.apache.commons.collections4.version>4.5.0</org.apache.commons.collections4.version>
-        <org.apache.commons.compress.version>1.27.1</org.apache.commons.compress.version>
-        <com.github.luben.zstd-jni.version>1.5.7-4</com.github.luben.zstd-jni.version>
-        <org.apache.commons.configuration.version>2.12.0</org.apache.commons.configuration.version>
-        <org.apache.commons.lang3.version>3.18.0</org.apache.commons.lang3.version>
-        <org.apache.commons.net.version>3.11.1</org.apache.commons.net.version>
-        <org.apache.commons.io.version>2.20.0</org.apache.commons.io.version>
-        <org.apache.commons.text.version>1.13.1</org.apache.commons.text.version>
+        <org.apache.commons.compress.version>1.28.0</org.apache.commons.compress.version>
+        <org.apache.commons.configuration.version>2.13.0</org.apache.commons.configuration.version>
+        <org.apache.commons.csv.version>1.14.1</org.apache.commons.csv.version>
+        <org.apache.commons.io.version>2.21.0</org.apache.commons.io.version>
+        <org.apache.commons.lang3.version>3.20.0</org.apache.commons.lang3.version>
+        <org.apache.commons.net.version>3.13.0</org.apache.commons.net.version>
+        <org.apache.commons.text.version>1.15.0</org.apache.commons.text.version>
+
+        <!-- Big data platforms -->
+        <hadoop.version>3.4.3</hadoop.version>
+        <ozone.version>1.4.1</ozone.version>
+
+        <!-- Kubernetes -->
+        <io.fabric8.kubernetes.client.version>7.6.1</io.fabric8.kubernetes.client.version>
+
+        <!-- Data access -->
+        <commons.dbcp2.version>2.14.0</commons.dbcp2.version>
+        <hsqldb.version>2.7.4</hsqldb.version>
+
+        <!-- Data formats and serialization -->
+        <avro.version>1.12.1</avro.version>
+        <com.github.luben.zstd-jni.version>1.5.7-7</com.github.luben.zstd-jni.version>
+        <com.jayway.jsonpath.version>3.0.0</com.jayway.jsonpath.version>
+        <gson.version>2.13.2</gson.version>
+        <jackson.annotations.version>2.21</jackson.annotations.version>
+        <jackson.bom.version>2.21.1</jackson.bom.version>
+        <jackson3.bom.version>3.1.0</jackson3.bom.version>
+        <json.smart.version>2.6.0</json.smart.version>
+        <snakeyaml.version>2.6</snakeyaml.version>
+
+        <!-- JVM languages and bytecode -->
+        <aspectj.version>1.9.25.1</aspectj.version>
+        <groovy.version>5.0.4</groovy.version>
+        <kotlin.version>2.3.20</kotlin.version>
+
+        <!-- Logging and observability -->
+        <log4j2.version>2.25.3</log4j2.version>
+        <logback.version>1.5.32</logback.version>
+        <org.slf4j.version>2.0.17</org.slf4j.version>
+        <prometheus.version>0.16.0</prometheus.version>
+        <simple-syslog-5424.version>0.0.19</simple-syslog-5424.version>
+
+        <!-- Networking and transport -->
+        <netty.4.version>4.2.10.Final</netty.4.version>
+        <okhttp.version>5.3.2</okhttp.version>
+        <okio.version>3.17.0</okio.version>
         <org.apache.httpcomponents.httpclient.version>4.5.14</org.apache.httpcomponents.httpclient.version>
         <org.apache.httpcomponents.httpcore.version>4.4.16</org.apache.httpcomponents.httpcore.version>
-        <org.bouncycastle.version>1.81</org.bouncycastle.version>
-        <pmd.version>7.10.0</pmd.version>
-        <testcontainers.version>1.21.3</testcontainers.version>
-        <org.slf4j.version>2.0.17</org.slf4j.version>
-        <com.jayway.jsonpath.version>2.9.0</com.jayway.jsonpath.version>
-        <derby.version>10.17.1.0</derby.version>
-        <jetty.version>12.0.23</jetty.version>
-        <jackson.bom.version>2.19.2</jackson.bom.version>
-        <avro.version>1.11.4</avro.version>
-        <jaxb.runtime.version>4.0.5</jaxb.runtime.version>
-        <javax.annotation-api.version>1.3.2</javax.annotation-api.version>
-        <jakarta.xml.bind-api.version>4.0.2</jakarta.xml.bind-api.version>
-        <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
-        <json.smart.version>2.5.2</json.smart.version>
-        <groovy.version>4.0.27</groovy.version>
-        <surefire.version>3.5.1</surefire.version>
-        <hadoop.version>3.4.1</hadoop.version>
-        <ozone.version>1.4.1</ozone.version>
-        <gcs.version>2.1.5</gcs.version>
-        <aspectj.version>1.9.24</aspectj.version>
-        <jersey.bom.version>3.1.10</jersey.bom.version>
-        <log4j2.version>2.25.1</log4j2.version>
-        <logback.version>1.5.18</logback.version>
-        <mockito.version>5.18.0</mockito.version>
-        <netty.3.version>3.10.6.Final</netty.3.version>
-        <snakeyaml.version>2.4</snakeyaml.version>
-        <netty.4.version>4.2.3.Final</netty.4.version>
-        <servlet-api.version>6.1.0</servlet-api.version>
-        <spring.version>6.2.9</spring.version>
-        <spring.security.version>6.5.1</spring.security.version>
-        <swagger.annotations.version>2.2.34</swagger.annotations.version>
-        <h2.version>2.3.232</h2.version>
-        <zookeeper.version>3.9.3</zookeeper.version>
-        <caffeine.version>3.2.2</caffeine.version>
-        <hapi.version>2.6.0</hapi.version>
-        <commons.dbcp2.version>2.13.0</commons.dbcp2.version>
-        <prometheus.version>0.16.0</prometheus.version>
+        <org.apache.sshd.version>2.17.1</org.apache.sshd.version>
+
+        <!-- Security -->
+        <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
+        <nimbus-oauth2-oidc.version>11.34</nimbus-oauth2-oidc.version>
+        <org.bouncycastle.version>1.83</org.bouncycastle.version>
+
+        <!-- Utilities -->
+        <caffeine.version>3.2.3</caffeine.version>
         <velocity-engine-core.version>2.4.1</velocity-engine-core.version>
-        <simple-syslog-5424.version>0.0.19</simple-syslog-5424.version>
-        <nimbus-jose-jwt.version>10.4</nimbus-jose-jwt.version>
+
+        <!-- Web and API frameworks -->
+        <hapi.version>2.6.0</hapi.version>
+        <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
+        <jakarta.ws.rs-api.version>4.0.0</jakarta.ws.rs-api.version>
+        <jakarta.xml.bind-api.version>4.0.5</jakarta.xml.bind-api.version>
+        <jakarta.activation-api.version>2.1.4</jakarta.activation-api.version>
+        <jaxb.runtime.version>4.0.7</jaxb.runtime.version>
+        <jersey.bom.version>4.0.2</jersey.bom.version>
+        <jetty.version>12.1.7</jetty.version>
+        <servlet-api.version>6.1.0</servlet-api.version>
+        <spring.security.version>7.0.4</spring.security.version>
+        <spring.version>7.0.6</spring.version>
+        <swagger.annotations.version>2.2.45</swagger.annotations.version>
+
+        <!-- Testing and quality -->
+        <junit.version>6.0.3</junit.version>
+        <mockito.version>5.23.0</mockito.version>
+        <pmd.version>7.22.0</pmd.version>
+        <checkstyle.version>13.3.0</checkstyle.version>
+        <testcontainers.version>2.0.4</testcontainers.version>
+        <jacoco.version>0.8.14</jacoco.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -184,8 +224,8 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty.ee10</groupId>
-                <artifactId>jetty-ee10-bom</artifactId>
+                <groupId>org.eclipse.jetty.ee11</groupId>
+                <artifactId>jetty-ee11-bom</artifactId>
                 <version>${jetty.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
@@ -282,6 +322,11 @@
                 <version>${org.apache.commons.text.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-csv</artifactId>
+                <version>${org.apache.commons.csv.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>${org.apache.httpcomponents.httpclient.version}</version>
@@ -299,6 +344,17 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore-nio</artifactId>
+                <version>${org.apache.httpcomponents.httpcore.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>fluent-hc</artifactId>
                 <version>${org.apache.httpcomponents.httpclient.version}</version>
                 <exclusions>
@@ -311,7 +367,7 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>5.11.4</version>
+                <version>${junit.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -416,29 +472,6 @@
                 <version>${json.smart.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk-bom</artifactId>
-                <version>${com.amazonaws.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk-core</artifactId>
-                <version>${com.amazonaws.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk-bundle</artifactId>
-                <version>${com.amazonaws.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>bom</artifactId>
                 <version>${software.amazon.awssdk.version}</version>
@@ -449,6 +482,13 @@
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
                 <version>${jackson.bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>tools.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson3.bom.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -479,6 +519,17 @@
                 <version>${spring.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>${spring.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.springframework.security</groupId>
@@ -534,24 +585,34 @@
                 <version>${jaxb.runtime.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.sun.activation</groupId>
-                <artifactId>javax.activation</artifactId>
-                <version>1.2.0</version>
+                <groupId>jakarta.activation</groupId>
+                <artifactId>jakarta.activation-api</artifactId>
+                <version>${jakarta.activation-api.version}</version>
             </dependency>
             <dependency>
-                <groupId>javax.annotation</groupId>
-                <artifactId>javax.annotation-api</artifactId>
-                <version>1.3.2</version>
+                <groupId>org.eclipse.angus</groupId>
+                <artifactId>angus-activation</artifactId>
+                <version>2.0.3</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.annotation</groupId>
+                <artifactId>jakarta.annotation-api</artifactId>
+                <version>${jakarta.annotation-api.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
-                <version>1.21.1</version>
+                <version>1.22.1</version>
             </dependency>
             <dependency>
                 <groupId>com.github.ben-manes.caffeine</groupId>
                 <artifactId>caffeine</artifactId>
                 <version>${caffeine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hsqldb</groupId>
+                <artifactId>hsqldb</artifactId>
+                <version>${hsqldb.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -563,16 +624,6 @@
                         <artifactId>commons-logging</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.zookeeper</groupId>
-                <artifactId>zookeeper</artifactId>
-                <version>${zookeeper.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.zookeeper</groupId>
-                <artifactId>zookeeper-jute</artifactId>
-                <version>${zookeeper.version}</version>
             </dependency>
             <!-- Override velocity-engine-core 2.3 for framework and Hadoop dependencies -->
             <dependency>
@@ -589,7 +640,7 @@
             <dependency>
                 <groupId>org.junit.platform</groupId>
                 <artifactId>junit-platform-commons</artifactId>
-                <version>1.11.4</version>
+                <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -679,7 +730,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>jaxb2-maven-plugin</artifactId>
-                    <version>3.3.0</version>
+                    <version>4.1.0</version>
                     <configuration>
                         <noGeneratedHeaderComments>true</noGeneratedHeaderComments>
                     </configuration>
@@ -687,18 +738,16 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
-                    <version>3.5.1</version>
+                    <version>3.6.3</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <configuration>
-                        <failOnError>false</failOnError>
+                        <failOnError>true</failOnError>
                         <quiet>true</quiet>
                         <show>private</show>
                         <encoding>UTF-8</encoding>
-                        <quiet>true</quiet>
-                        <javadocVersion>1.8</javadocVersion>
                         <additionalJOption>-J-Xmx512m</additionalJOption>
                         <doclint>none</doclint>
                     </configuration>
@@ -731,12 +780,12 @@
                 <plugin>
                     <groupId>io.fabric8</groupId>
                     <artifactId>docker-maven-plugin</artifactId>
-                    <version>0.46.0</version>
+                    <version>0.48.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>buildnumber-maven-plugin</artifactId>
-                    <version>3.2.1</version>
+                    <version>3.3.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.antlr</groupId>
@@ -751,7 +800,7 @@
                         <dependency>
                             <groupId>com.puppycrawl.tools</groupId>
                             <artifactId>checkstyle</artifactId>
-                            <version>10.21.1</version>
+                            <version>${checkstyle.version}</version>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -762,7 +811,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.18.0</version>
+                    <version>2.21.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.rat</groupId>
@@ -779,34 +828,29 @@
                     <version>1.7.0</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.patrodyne.jvnet</groupId>
-                    <artifactId>hisrc-higherjaxb40-maven-plugin</artifactId>
-                    <version>2.2.1</version>
-                </plugin>
-                <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>0.8.13</version>
+                    <version>${jacoco.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>io.swagger.core.v3</groupId>
                     <artifactId>swagger-maven-plugin-jakarta</artifactId>
-                    <version>2.2.34</version>
+                    <version>2.2.45</version>
                 </plugin>
                 <plugin>
                     <groupId>io.swagger.codegen.v3</groupId>
                     <artifactId>swagger-codegen-maven-plugin</artifactId>
-                    <version>3.0.71</version>
+                    <version>3.0.78</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.4.2</version>
+                    <version>3.5.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-pmd-plugin</artifactId>
-                    <version>3.27.0</version>
+                    <version>3.28.0</version>
                     <dependencies>
                         <dependency>
                             <groupId>net.sourceforge.pmd</groupId>
@@ -819,6 +863,11 @@
                             <version>${pmd.version}</version>
                         </dependency>
                     </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>io.github.download-maven-plugin</groupId>
+                    <artifactId>download-maven-plugin</artifactId>
+                    <version>2.1.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -842,15 +891,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.patrodyne.jvnet</groupId>
-                <artifactId>hisrc-higherjaxb40-maven-plugin</artifactId>
-                <configuration>
-                    <noFileHeader>true</noFileHeader>
-                    <!-- Disable episode file generation with non-reproducible timestamps -->
-                    <episode>false</episode>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
@@ -870,7 +910,7 @@
                                     </plugins>
                                 </requireSameVersions>
                                 <requireMavenVersion>
-                                    <version>3.9.11</version>
+                                    <version>3.9.14</version>
                                 </requireMavenVersion>
                                 <requireReleaseDeps>
                                     <message>Dependencies outside of Apache NiFi must not use SNAPSHOT versions</message>
@@ -885,6 +925,9 @@
                                     <excludes>
                                         <!-- JUnit 5 is the preferred test framework -->
                                         <exclude>org.testng:testng</exclude>
+                                        <!-- JUnit 4 should not be used -->
+                                        <exclude>junit:junit</exclude>
+                                        <exclude>org.junit.vintage:junit-vintage-engine</exclude>
                                         <!-- Cat-X Deps -->
                                         <exclude>org.json:json:(,20240303):compile</exclude>
                                         <exclude>c3p0:c3p0:*:*:compile</exclude>
@@ -909,6 +952,9 @@
                                         <exclude>commons-logging:commons-logging:*</exclude>
                                         <!-- Apache Xalan is no longer maintained and is bundled in the standard JRE -->
                                         <exclude>xalan:xalan</exclude>
+                                        <!-- Enforce migration to new Mortbay coordinates; block old artifacts -->
+                                        <exclude>org.mortbay.jasper:apache-jsp:*</exclude>
+                                        <exclude>org.mortbay.jasper:apache-el:*</exclude>
                                         <!-- As of Bouncycastle 1.71 Java 8 is the minimum required so jdk15on artifacts not allowed -->
                                         <exclude>org.bouncycastle:bcprov-jdk15on</exclude>
                                         <exclude>org.bouncycastle:bcpg-jdk15on</exclude>
@@ -923,6 +969,10 @@
                                         <exclude>org.apache.groovy:groovy-test</exclude>
                                         <!-- Hamcrest should not be used for testing -->
                                         <exclude>org.hamcrest:hamcrest</exclude>
+                                        <!-- org.lz4:lz4-java is no longer maintained -->
+                                        <exclude>org.lz4:lz4-java</exclude>
+                                        <!-- Apache Derby is retired as of 2025-10-10 -->
+                                        <exclude>org.apache.derby</exclude>
                                     </excludes>
                                 </bannedDependencies>
                             </rules>
@@ -990,6 +1040,7 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <configuration>
                     <configLocation>checkstyle.xml</configLocation>
+                    <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
                     <violationSeverity>warning</violationSeverity>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                 </configuration>
@@ -1110,6 +1161,31 @@
                         <configuration>
                             <skipTests>true</skipTests>
                         </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!--
+            Enables JaCoCo coverage collection for integration tests.
+            This profile is inherited by all modules and sets up the JaCoCo agent
+            for Failsafe integration tests, writing to jacoco-it.exec files.
+            The nifi-code-coverage module also defines this profile for report aggregation.
+            -->
+            <id>report-code-coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>prepare-agent-integration</id>
+                                <goals>
+                                    <goal>prepare-agent-integration</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

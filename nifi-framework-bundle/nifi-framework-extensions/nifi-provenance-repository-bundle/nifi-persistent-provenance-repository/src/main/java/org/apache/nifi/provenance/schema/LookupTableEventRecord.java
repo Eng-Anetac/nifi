@@ -17,12 +17,6 @@
 
 package org.apache.nifi.provenance.schema;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
-
 import org.apache.nifi.flowfile.attributes.CoreAttributes;
 import org.apache.nifi.provenance.ProvenanceEventRecord;
 import org.apache.nifi.provenance.ProvenanceEventType;
@@ -32,6 +26,12 @@ import org.apache.nifi.repository.schema.NamedValue;
 import org.apache.nifi.repository.schema.Record;
 import org.apache.nifi.repository.schema.RecordField;
 import org.apache.nifi.repository.schema.RecordSchema;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 public class LookupTableEventRecord implements Record {
     private final RecordSchema schema;
@@ -70,7 +70,6 @@ public class LookupTableEventRecord implements Record {
     public RecordSchema getSchema() {
         return schema;
     }
-
 
     private static Record createPreviousContentClaimRecord(final RecordSchema contentClaimSchema, final String container, final String section,
         final String identifier, final Long offset, final Long size) {
@@ -181,52 +180,33 @@ public class LookupTableEventRecord implements Record {
 
     @Override
     public Object getFieldValue(final String fieldName) {
-        switch (fieldName) {
-            case EventFieldNames.EVENT_IDENTIFIER:
-                return (int) (eventId - eventIdStartOffset);
-            case EventFieldNames.ALTERNATE_IDENTIFIER:
-                return event.getAlternateIdentifierUri();
-            case EventFieldNames.CHILD_UUIDS:
-                return event.getChildUuids();
-            case EventFieldNames.COMPONENT_ID:
-                return createLookupValue(event.getComponentId(), componentIdMap);
-            case EventFieldNames.COMPONENT_TYPE:
-                return createLookupValue(event.getComponentType(), componentTypeMap);
-            case EventFieldNames.CONTENT_CLAIM:
-                return createExplicitSameOrNoneValue(contentClaimRecord, previousClaimRecord, () -> contentClaimRecord);
-            case EventFieldNames.EVENT_DETAILS:
-                return event.getDetails();
-            case EventFieldNames.EVENT_DURATION:
-                return (int) event.getEventDuration();
-            case EventFieldNames.EVENT_TIME:
-                return (int) (event.getEventTime() - startTimeOffset);
-            case EventFieldNames.EVENT_TYPE:
-                return eventTypeMap.get(event.getEventType().name());
-            case EventFieldNames.FLOWFILE_ENTRY_DATE:
-                return (int) (event.getFlowFileEntryDate() - startTimeOffset);
-            case EventFieldNames.LINEAGE_START_DATE:
-                return (int) (event.getLineageStartDate() - startTimeOffset);
-            case EventFieldNames.PARENT_UUIDS:
-                return event.getParentUuids();
-            case EventFieldNames.PREVIOUS_ATTRIBUTES:
-                return event.getPreviousAttributes();
-            case EventFieldNames.PREVIOUS_CONTENT_CLAIM:
-                return previousClaimRecord;
-            case EventFieldNames.RELATIONSHIP:
-                return event.getRelationship();
-            case EventFieldNames.SOURCE_QUEUE_IDENTIFIER:
-                return createLookupValue(event.getSourceQueueIdentifier(), queueIdMap);
-            case EventFieldNames.SOURCE_SYSTEM_FLOWFILE_IDENTIFIER:
-                return event.getSourceSystemFlowFileIdentifier();
-            case EventFieldNames.TRANSIT_URI:
-                return event.getTransitUri();
-            case EventFieldNames.UPDATED_ATTRIBUTES:
-                return event.getUpdatedAttributes();
-            case EventFieldNames.FLOWFILE_UUID:
-                return event.getAttribute(CoreAttributes.UUID.key());
-        }
+        return switch (fieldName) {
+            case EventFieldNames.EVENT_IDENTIFIER -> (int) (eventId - eventIdStartOffset);
+            case EventFieldNames.ALTERNATE_IDENTIFIER -> event.getAlternateIdentifierUri();
+            case EventFieldNames.CHILD_UUIDS -> event.getChildUuids();
+            case EventFieldNames.COMPONENT_ID -> createLookupValue(event.getComponentId(), componentIdMap);
+            case EventFieldNames.COMPONENT_TYPE -> createLookupValue(event.getComponentType(), componentTypeMap);
+            case EventFieldNames.CONTENT_CLAIM ->
+                createExplicitSameOrNoneValue(contentClaimRecord, previousClaimRecord, () -> contentClaimRecord);
+            case EventFieldNames.EVENT_DETAILS -> event.getDetails();
+            case EventFieldNames.EVENT_DURATION -> (int) event.getEventDuration();
+            case EventFieldNames.EVENT_TIME -> (int) (event.getEventTime() - startTimeOffset);
+            case EventFieldNames.EVENT_TYPE -> eventTypeMap.get(event.getEventType().name());
+            case EventFieldNames.FLOWFILE_ENTRY_DATE -> (int) (event.getFlowFileEntryDate() - startTimeOffset);
+            case EventFieldNames.LINEAGE_START_DATE -> (int) (event.getLineageStartDate() - startTimeOffset);
+            case EventFieldNames.PARENT_UUIDS -> event.getParentUuids();
+            case EventFieldNames.PREVIOUS_ATTRIBUTES -> event.getPreviousAttributes();
+            case EventFieldNames.PREVIOUS_CONTENT_CLAIM -> previousClaimRecord;
+            case EventFieldNames.RELATIONSHIP -> event.getRelationship();
+            case EventFieldNames.SOURCE_QUEUE_IDENTIFIER ->
+                createLookupValue(event.getSourceQueueIdentifier(), queueIdMap);
+            case EventFieldNames.SOURCE_SYSTEM_FLOWFILE_IDENTIFIER -> event.getSourceSystemFlowFileIdentifier();
+            case EventFieldNames.TRANSIT_URI -> event.getTransitUri();
+            case EventFieldNames.UPDATED_ATTRIBUTES -> event.getUpdatedAttributes();
+            case EventFieldNames.FLOWFILE_UUID -> event.getAttribute(CoreAttributes.UUID.key());
+            default -> null;
+        };
 
-        return null;
     }
 
     private static Long addLong(final Integer optionalValue, final long requiredValue) {
@@ -258,7 +238,6 @@ public class LookupTableEventRecord implements Record {
         builder.setSourceSystemFlowFileIdentifier((String) record.getFieldValue(EventFieldNames.SOURCE_SYSTEM_FLOWFILE_IDENTIFIER));
         builder.setTransitUri((String) record.getFieldValue(EventFieldNames.TRANSIT_URI));
         builder.setUpdatedAttributes(updatedAttributes);
-
 
         builder.setComponentId(readLookupValue(record.getFieldValue(EventFieldNames.COMPONENT_ID), componentIds));
         builder.setComponentType(readLookupValue(record.getFieldValue(EventFieldNames.COMPONENT_TYPE), componentTypes));

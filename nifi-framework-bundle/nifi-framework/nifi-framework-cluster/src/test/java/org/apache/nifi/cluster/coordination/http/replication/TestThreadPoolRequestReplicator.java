@@ -16,6 +16,10 @@
  */
 package org.apache.nifi.cluster.coordination.http.replication;
 
+import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 import org.apache.nifi.authorization.user.NiFiUser;
 import org.apache.nifi.authorization.user.NiFiUserDetails;
 import org.apache.nifi.authorization.user.NiFiUserUtils;
@@ -43,10 +47,6 @@ import org.mockito.stubbing.Answer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import jakarta.ws.rs.HttpMethod;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.util.Arrays;
@@ -462,7 +462,6 @@ public class TestThreadPoolRequestReplicator {
         });
     }
 
-
     @Test
     @Timeout(value = 5)
     public void testMonitorNotifiedOnFailureResponse() {
@@ -511,7 +510,6 @@ public class TestThreadPoolRequestReplicator {
             postNotifyLatch.await();
         }, Status.INTERNAL_SERVER_ERROR, 0L, null);
     }
-
 
     private void withReplicator(final WithReplicator function) {
         withReplicator(function, Response.Status.OK, 0L, null);

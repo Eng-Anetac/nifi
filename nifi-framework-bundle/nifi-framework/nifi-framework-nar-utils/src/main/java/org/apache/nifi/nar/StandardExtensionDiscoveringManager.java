@@ -32,6 +32,7 @@ import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.state.StateProvider;
 import org.apache.nifi.controller.ControllerService;
 import org.apache.nifi.controller.leader.election.LeaderElectionManager;
+import org.apache.nifi.controller.metrics.ComponentMetricReporter;
 import org.apache.nifi.controller.repository.ContentRepository;
 import org.apache.nifi.controller.repository.FlowFileRepository;
 import org.apache.nifi.controller.repository.FlowFileSwapManager;
@@ -134,6 +135,7 @@ public class StandardExtensionDiscoveringManager implements ExtensionDiscovering
         definitionMap.put(NarPersistenceProvider.class, new HashSet<>());
         definitionMap.put(AssetManager.class, new HashSet<>());
         definitionMap.put(FlowActionReporter.class, new HashSet<>());
+        definitionMap.put(ComponentMetricReporter.class, new HashSet<>());
 
         additionalExtensionTypes.forEach(type -> definitionMap.putIfAbsent(type, new HashSet<>()));
     }
@@ -322,7 +324,6 @@ public class StandardExtensionDiscoveringManager implements ExtensionDiscovering
             .build();
     }
 
-
     /**
      * Loads extensions from the specified bundle.
      *
@@ -424,7 +425,6 @@ public class StandardExtensionDiscoveringManager implements ExtensionDiscovering
         registerServiceClass(implementationClassName, extensionType, classNameBundleLookup, bundleCoordinateClassesLookup, bundle, registeredClasses);
     }
 
-
     protected void initializeTempComponent(final ConfigurableComponent configurableComponent) {
         try {
             final ConfigurableComponentInitializer initializer = ConfigurableComponentInitializerFactory.createComponentInitializer(this, configurableComponent.getClass());
@@ -435,7 +435,6 @@ public class StandardExtensionDiscoveringManager implements ExtensionDiscovering
             logger.warn("Unable to initialize component {} due to {}", configurableComponent.getClass().getName(), e.getMessage());
         }
     }
-
 
     /**
      * Registers extension for the specified type from the specified Bundle.
@@ -647,7 +646,6 @@ public class StandardExtensionDiscoveringManager implements ExtensionDiscovering
         return instanceClassLoader;
     }
 
-
     /**
      * Find the bundle coordinates for any service APIs that are referenced by this component and not part of the same bundle.
      *
@@ -742,11 +740,9 @@ public class StandardExtensionDiscoveringManager implements ExtensionDiscovering
 
         final Bundle removedBundle = bundleCoordinateBundleLookup.remove(bundleCoordinate);
         if (removedBundle == null) {
-            logger.debug("Bundle not found with coordinate [{}]", bundleCoordinate);
             return null;
         }
 
-        logger.debug("Removing bundle [{}]", bundleCoordinate);
         final ClassLoader removedBundleClassLoader = removedBundle.getClassLoader();
         classLoaderBundleLookup.remove(removedBundleClassLoader);
 
@@ -965,7 +961,6 @@ public class StandardExtensionDiscoveringManager implements ExtensionDiscovering
             }
         }
     }
-
 
     private static class BaseClassLoaderKey {
         private final Bundle bundle;

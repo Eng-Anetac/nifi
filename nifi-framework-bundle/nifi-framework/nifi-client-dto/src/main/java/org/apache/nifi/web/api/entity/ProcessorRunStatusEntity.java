@@ -17,7 +17,6 @@
 package org.apache.nifi.web.api.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import jakarta.xml.bind.annotation.XmlType;
 
 /**
@@ -38,6 +37,7 @@ public class ProcessorRunStatusEntity extends ComponentRunStatusEntity {
      * @return The run status
      */
     @Schema(description = "The run status of the Processor.", allowableValues = {"RUNNING", "STOPPED", "DISABLED", "RUN_ONCE"})
+    @Override
     public String getState() {
         return super.getState();
     }

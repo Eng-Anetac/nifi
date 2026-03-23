@@ -16,11 +16,6 @@
  */
 package org.apache.nifi.util;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import org.apache.nifi.annotation.behavior.InputRequirement;
 import org.apache.nifi.attribute.expression.language.Query;
 import org.apache.nifi.attribute.expression.language.Query.Range;
@@ -40,6 +35,12 @@ import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.parameter.ParameterLookup;
 import org.apache.nifi.processor.DataUnit;
 import org.apache.nifi.processor.exception.ProcessException;
+
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class MockPropertyValue implements PropertyValue {
     private final String rawValue;
@@ -66,15 +67,24 @@ public class MockPropertyValue implements PropertyValue {
         this(rawValue, serviceLookup, null, environmentVariables);
     }
 
+    public MockPropertyValue(final String rawValue, final ControllerServiceLookup serviceLookup, final Map<String, String> environmentVariables, ParameterLookup parameterLookup) {
+        this(rawValue, serviceLookup, null, false, environmentVariables, parameterLookup);
+    }
+
     public MockPropertyValue(final String rawValue, final ControllerServiceLookup serviceLookup, final PropertyDescriptor propertyDescriptor,
             final Map<String, String> environmentVariables) {
         this(rawValue, serviceLookup, propertyDescriptor, false, environmentVariables);
     }
 
     protected MockPropertyValue(final String rawValue, final ControllerServiceLookup serviceLookup, final PropertyDescriptor propertyDescriptor,
-            final boolean alreadyEvaluated, final Map<String, String> environmentVariables) {
+                                final boolean alreadyEvaluated, final Map<String, String> environmentVariables) {
+        this(rawValue, serviceLookup, propertyDescriptor, alreadyEvaluated, environmentVariables, ParameterLookup.EMPTY);
+    }
+
+    protected MockPropertyValue(final String rawValue, final ControllerServiceLookup serviceLookup, final PropertyDescriptor propertyDescriptor,
+            final boolean alreadyEvaluated, final Map<String, String> environmentVariables, ParameterLookup parameterLookup) {
         final ResourceContext resourceContext = new StandardResourceContext(new StandardResourceReferenceFactory(), propertyDescriptor);
-        this.stdPropValue = new StandardPropertyValue(resourceContext, rawValue, serviceLookup, ParameterLookup.EMPTY);
+        this.stdPropValue = new StandardPropertyValue(resourceContext, rawValue, serviceLookup, parameterLookup);
         this.rawValue = rawValue;
         this.serviceLookup = (MockControllerServiceLookup) serviceLookup;
         this.expectExpressions = propertyDescriptor == null ? null : propertyDescriptor.isExpressionLanguageSupported();
@@ -107,7 +117,6 @@ public class MockPropertyValue implements PropertyValue {
                     + " PropertyDescriptor.Builder.expressionLanguageSupported(ExpressionLanguageScope)");
         }
 
-
         // we check if the input requirement is INPUT_FORBIDDEN
         // in that case, we don't care if attributes are not available even though scope is FLOWFILE_ATTRIBUTES
         // it likely means that the property has been defined in a common/abstract class used by multiple processors with
@@ -124,7 +133,7 @@ public class MockPropertyValue implements PropertyValue {
             return;
         }
 
-        // we're trying to evaluate against flow files attributes but we don't have a FlowFile available.
+        // we're trying to evaluate against FlowFiles attributes but we don't have a FlowFile available.
         if (!flowFileProvided && !additionalAttributesAvailable && ExpressionLanguageScope.FLOWFILE_ATTRIBUTES.equals(expressionLanguageScope)) {
             throw new IllegalStateException("Attempting to evaluate expression language for " + propertyDescriptor.getName()
                     + " without using flow file attributes but the scope evaluation is set to " + expressionLanguageScope + ". The"
@@ -220,8 +229,9 @@ public class MockPropertyValue implements PropertyValue {
         if (flowFile == null && expressionLanguageScope == ExpressionLanguageScope.FLOWFILE_ATTRIBUTES) {
             return evaluateAttributeExpressions(new HashMap<>());
         } else if (flowFile == null && expressionLanguageScope == ExpressionLanguageScope.ENVIRONMENT) {
-            return evaluateAttributeExpressions(); //Added this to get around a similar edge case where the a null flowfile is passed
-                                                    //and the scope is to the sys/env variable registry
+            // Added this to get around a similar edge case where a null flowfile is passed
+            // and the scope is to the sys/env variable registry
+            return evaluateAttributeExpressions();
         }
 
         return evaluateAttributeExpressions(flowFile, null, null);
@@ -266,7 +276,7 @@ public class MockPropertyValue implements PropertyValue {
             validateExpressionScope(flowFile != null, additionalAttributes != null);
         }
 
-        if (additionalAttributes == null ) {
+        if (additionalAttributes == null) {
             additionalAttributes = new HashMap<>();
         }
         // we need a new map here because additionalAttributes can be an unmodifiable map when it's the FlowFile attributes

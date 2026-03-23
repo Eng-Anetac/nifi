@@ -45,7 +45,6 @@ public interface ComponentScheduler {
 
     void stopStatelessGroup(ProcessGroup group);
 
-
     ComponentScheduler NOP_SCHEDULER = new ComponentScheduler() {
         @Override
         public void startComponent(final Connectable component) {
@@ -67,6 +66,7 @@ public interface ComponentScheduler {
         public void disableControllerServicesAsync(final Collection<ControllerServiceNode> controllerServices) {
         }
 
+        @Override
         public void startReportingTask(final ReportingTaskNode reportingTask) {
         }
 

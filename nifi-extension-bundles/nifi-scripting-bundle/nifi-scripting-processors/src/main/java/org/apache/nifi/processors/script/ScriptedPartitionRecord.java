@@ -43,8 +43,6 @@ import org.apache.nifi.serialization.record.Record;
 import org.apache.nifi.serialization.record.RecordSchema;
 import org.apache.nifi.serialization.record.RecordSet;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -52,6 +50,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 
 @SideEffectFree
 @Tags({"record", "partition", "script", "groovy", "segment", "split", "group", "organize"})
@@ -189,7 +189,7 @@ public class ScriptedPartitionRecord extends ScriptedRecordProcessor {
                         writer.write(record);
                     }
 
-                    // Sending outgoing flow files
+                    // Sending outgoing FlowFiles
                     int fragmentIndex = 0;
 
                     for (final Object partition : outgoingFlowFiles.keySet()) {

@@ -44,11 +44,26 @@ import { Overlay, OverlayRef, PositionStrategy } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { initialState as initialTransformState } from '../state/transform/transform.reducer';
 import { selectScale } from '../state/transform/transform.selectors';
+import { ConnectionManager } from './manager/connection-manager.service';
+
+export interface CollisionConnection {
+    id: string;
+    sourceId: string;
+    sourceGroupId: string;
+    destinationId: string;
+    destinationGroupId: string;
+    bends: Position[];
+    labelIndex: number;
+}
 
 @Injectable({
     providedIn: 'root'
 })
 export class CanvasUtils {
+    private store = inject<Store<CanvasState>>(Store);
+    private nifiCommon = inject(NiFiCommon);
+    private overlay = inject(Overlay);
+
     private static readonly TWO_PI: number = 2 * Math.PI;
 
     private destroyRef = inject(DestroyRef);
@@ -68,11 +83,7 @@ export class CanvasUtils {
 
     private readonly humanizeDuration: Humanizer;
 
-    constructor(
-        private store: Store<CanvasState>,
-        private nifiCommon: NiFiCommon,
-        private overlay: Overlay
-    ) {
+    constructor() {
         this.humanizeDuration = humanizer();
 
         this.store
@@ -1279,41 +1290,13 @@ export class CanvasUtils {
         selection.on('mouseenter', null).on('mouseleave', null);
     }
 
-    private getHigherSeverityBulletinLevel(left: BulletinEntity, right: BulletinEntity): BulletinEntity {
-        const bulletinSeverityMap: { [key: string]: number } = {
-            TRACE: 0,
-            DEBUG: 1,
-            INFO: 2,
-            WARNING: 3,
-            ERROR: 4
-        };
-        let mappedLeft = 0;
-        let mappedRight = 0;
-        if (left.bulletin) {
-            mappedLeft = bulletinSeverityMap[left.bulletin.level.toUpperCase()] || 0;
-        }
-        if (right.bulletin) {
-            mappedRight = bulletinSeverityMap[right.bulletin.level.toUpperCase()] || 0;
-        }
-        return mappedLeft >= mappedRight ? left : right;
-    }
-
-    public getMostSevereBulletin(bulletins: BulletinEntity[]): BulletinEntity | null {
-        if (bulletins && bulletins.length > 0) {
-            const mostSevere = bulletins.reduce((previous, current) => {
-                return this.getHigherSeverityBulletinLevel(previous, current);
-            });
-            if (mostSevere.bulletin) {
-                return mostSevere;
-            }
-        }
-        return null;
-    }
-
     private resetBulletin(selection: any) {
         // reset the bulletin icon/background
         selection.select('text.bulletin-icon').style('visibility', 'hidden');
         selection.select('rect.bulletin-background').style('visibility', 'hidden');
+
+        // remove the has-bulletins class
+        selection.classed('has-bulletins', false);
 
         // reset the canvas tooltip
         this.resetCanvasTooltip(selection);
@@ -1335,7 +1318,7 @@ export class CanvasUtils {
             this.resetBulletin(selection);
         } else {
             // determine the most severe of the bulletins
-            const mostSevere = this.getMostSevereBulletin(filteredBulletins);
+            const mostSevere = this.nifiCommon.getMostSevereBulletin(filteredBulletins);
 
             // add the proper class to indicate the most severe bulletin
             if (mostSevere) {
@@ -1346,6 +1329,9 @@ export class CanvasUtils {
                 const bulletinBackground: any = selection
                     .select('rect.bulletin-background')
                     .style('visibility', 'visible');
+
+                // add the has-bulletins class to indicate this component has bulletins
+                selection.classed('has-bulletins', true);
 
                 // reset any level-specifying classes that might have been there before
                 bulletinIcon
@@ -1955,7 +1941,15 @@ export class CanvasUtils {
         let stoppable = false;
         const selectionData = selection.datum();
         if (this.isProcessor(selection) || this.isInputPort(selection) || this.isOutputPort(selection)) {
-            stoppable = selectionData.status.aggregateSnapshot.runStatus === 'Running';
+            const runStatus = selectionData.status.aggregateSnapshot.runStatus;
+
+            // For processors, also check if physical state is Starting when runStatus is Invalid
+            if (this.isProcessor(selection) && runStatus === 'Invalid') {
+                const physicalState = selectionData.physicalState;
+                stoppable = physicalState === 'STARTING';
+            } else {
+                stoppable = runStatus === 'Running';
+            }
         }
         return stoppable;
     }
@@ -2336,5 +2330,162 @@ export class CanvasUtils {
         const allLabels = selectedLabels.size() === selection.size();
 
         return allProcessors || allLabels;
+    }
+
+    /**
+     * Calculates bend points for a connection to avoid collision with existing connections
+     * between the same source and destination components.
+     *
+     * @param sourceData          Source component data with id, position, and dimensions
+     * @param destinationData     Destination component data with id, position, and dimensions
+     * @param connectionIdToExclude  Optional connection ID to exclude from collision checks (for updates)
+     */
+    public calculateBendPointsForCollisionAvoidance(
+        sourceData: { id: string; position: Position; dimensions: { width: number; height: number } },
+        destinationData: { id: string; position: Position; dimensions: { width: number; height: number } },
+        connectionIdToExclude?: string
+    ): Position[] {
+        const bends: Position[] = [];
+
+        if (sourceData.id === destinationData.id) {
+            const rightCenter: Position = {
+                x: sourceData.position.x + sourceData.dimensions.width,
+                y: sourceData.position.y + sourceData.dimensions.height / 2
+            };
+
+            bends.push({
+                x: rightCenter.x + ConnectionManager.SELF_LOOP_X_OFFSET,
+                y: rightCenter.y - ConnectionManager.SELF_LOOP_Y_OFFSET
+            });
+            bends.push({
+                x: rightCenter.x + ConnectionManager.SELF_LOOP_X_OFFSET,
+                y: rightCenter.y + ConnectionManager.SELF_LOOP_Y_OFFSET
+            });
+        } else {
+            const existingConnections: CollisionConnection[] = [];
+
+            const connectionsForSourceComponent: any[] = this.getComponentConnections(sourceData.id);
+            connectionsForSourceComponent.forEach((connection) => {
+                if (connectionIdToExclude && connection.id === connectionIdToExclude) {
+                    return;
+                }
+
+                const connectionSourceComponentId = this.getConnectionSourceComponentId(connection);
+                const connectionDestinationComponentId = this.getConnectionDestinationComponentId(connection);
+
+                if (
+                    (connectionSourceComponentId === sourceData.id &&
+                        connectionDestinationComponentId === destinationData.id) ||
+                    (connectionDestinationComponentId === sourceData.id &&
+                        connectionSourceComponentId === destinationData.id)
+                ) {
+                    existingConnections.push(connection);
+                }
+            });
+
+            if (existingConnections.length > 0) {
+                const avoidCollision = existingConnections.some((existingConnection) => {
+                    return this.nifiCommon.isEmpty(existingConnection.bends);
+                });
+
+                if (avoidCollision) {
+                    const sourceMiddle: Position = {
+                        x: sourceData.position.x + sourceData.dimensions.width / 2,
+                        y: sourceData.position.y + sourceData.dimensions.height / 2
+                    };
+                    const destinationMiddle: Position = {
+                        x: destinationData.position.x + destinationData.dimensions.width / 2,
+                        y: destinationData.position.y + destinationData.dimensions.height / 2
+                    };
+
+                    const slope = (sourceMiddle.y - destinationMiddle.y) / (sourceMiddle.x - destinationMiddle.x);
+                    const isMoreHorizontal = slope <= 1 && slope >= -1;
+
+                    const xCandidate = (sourceMiddle.x + destinationMiddle.x) / 2;
+                    const yCandidate = (sourceMiddle.y + destinationMiddle.y) / 2;
+
+                    let xStep = isMoreHorizontal ? 0 : ConnectionManager.CONNECTION_OFFSET_X_INCREMENT;
+                    let yStep = isMoreHorizontal ? ConnectionManager.CONNECTION_OFFSET_Y_INCREMENT : 0;
+
+                    const MAX_ATTEMPTS = 100;
+                    let positioned = false;
+                    let attempts = 0;
+                    while (!positioned && attempts < MAX_ATTEMPTS) {
+                        attempts++;
+                        if (!this.collidesWith(existingConnections, xCandidate - xStep, yCandidate - yStep)) {
+                            bends.push({
+                                x: xCandidate - xStep,
+                                y: yCandidate - yStep
+                            });
+                            positioned = true;
+                        } else if (!this.collidesWith(existingConnections, xCandidate + xStep, yCandidate + yStep)) {
+                            bends.push({
+                                x: xCandidate + xStep,
+                                y: yCandidate + yStep
+                            });
+                            positioned = true;
+                        }
+
+                        if (isMoreHorizontal) {
+                            yStep += ConnectionManager.CONNECTION_OFFSET_Y_INCREMENT;
+                        } else {
+                            xStep += ConnectionManager.CONNECTION_OFFSET_X_INCREMENT;
+                        }
+                    }
+
+                    if (!positioned) {
+                        bends.push({
+                            x: xCandidate - xStep,
+                            y: yCandidate - yStep
+                        });
+                    }
+                }
+            }
+        }
+
+        return bends;
+    }
+
+    /**
+     * Convenience wrapper that resolves component data from the canvas DOM by ID,
+     * then delegates to calculateBendPointsForCollisionAvoidance.
+     */
+    public calculateBendPointsForCollisionAvoidanceByIds(
+        sourceComponentId: string,
+        destinationComponentId: string,
+        connectionIdToExclude?: string
+    ): Position[] {
+        const sourceElement: any = d3.select('#id-' + sourceComponentId);
+        const destinationElement: any = d3.select('#id-' + destinationComponentId);
+
+        if (sourceElement.empty() || destinationElement.empty()) {
+            return [];
+        }
+
+        return this.calculateBendPointsForCollisionAvoidance(
+            sourceElement.datum(),
+            destinationElement.datum(),
+            connectionIdToExclude
+        );
+    }
+
+    private collidesWith(existingConnections: CollisionConnection[], x: number, y: number): boolean {
+        return existingConnections.some((existingConnection) => {
+            if (!this.nifiCommon.isEmpty(existingConnection.bends)) {
+                let labelIndex = existingConnection.labelIndex;
+                if (labelIndex >= existingConnection.bends.length) {
+                    labelIndex = 0;
+                }
+
+                return (
+                    existingConnection.bends[labelIndex].y - 25 < y &&
+                    existingConnection.bends[labelIndex].y + 25 > y &&
+                    existingConnection.bends[labelIndex].x - 100 < x &&
+                    existingConnection.bends[labelIndex].x + 100 > x
+                );
+            }
+
+            return false;
+        });
     }
 }

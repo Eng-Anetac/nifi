@@ -25,6 +25,8 @@ import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.context.PropertyContext;
 import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
+import org.apache.nifi.migration.PropertyConfiguration;
+import org.apache.nifi.migration.ProxyServiceMigration;
 import org.apache.nifi.processor.AbstractProcessor;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.Relationship;
@@ -53,9 +55,10 @@ import static org.apache.nifi.processors.azure.storage.utils.BlobAttributes.ATTR
 
 public abstract class AbstractAzureBlobProcessor_v12 extends AbstractProcessor {
 
+    public static final String OLD_BLOB_NAME_PROPERTY_DESCRIPTOR_NAME = "blob-name";
+
     public static final PropertyDescriptor BLOB_NAME = new PropertyDescriptor.Builder()
-            .name("blob-name")
-            .displayName("Blob Name")
+            .name("Blob Name")
             .description("The full name of the blob")
             .addValidator(StandardValidators.NON_BLANK_VALIDATOR)
             .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
@@ -81,6 +84,11 @@ public abstract class AbstractAzureBlobProcessor_v12 extends AbstractProcessor {
     @Override
     public Set<Relationship> getRelationships() {
         return RELATIONSHIPS;
+    }
+
+    @Override
+    public void migrateProperties(PropertyConfiguration config) {
+        ProxyServiceMigration.renameProxyConfigurationServiceProperty(config);
     }
 
     @OnScheduled
@@ -123,6 +131,8 @@ public abstract class AbstractAzureBlobProcessor_v12 extends AbstractProcessor {
     protected void applyBlobMetadata(Map<String, String> attributes, BlobClient blobClient) {
         Supplier<BlobProperties> props = new Supplier<>() {
             BlobProperties properties;
+
+            @Override
             public BlobProperties get() {
                 if (properties == null) {
                     properties = blobClient.getProperties();

@@ -48,7 +48,6 @@ public class NiFiTable implements Closeable {
     private volatile ResettableDataSource dataSource;
     private volatile int maxRecordsRead;
 
-
     /**
      * Created a NiFi table with a datasource already established. The table's schema will be established as the schema
      * of the datasource.
@@ -143,12 +142,12 @@ public class NiFiTable implements Closeable {
         return "NiFiTable[name=" + name + "]";
     }
 
+    @Override
     public void close() {
         for (final NiFiTableEnumerator enumerator : enumerators) {
             enumerator.close();
         }
     }
-
 
     private class NiFiTableEnumerable extends AbstractEnumerable<Object> {
         private final int[] fields;
@@ -157,6 +156,7 @@ public class NiFiTable implements Closeable {
             this.fields = fields;
         }
 
+        @Override
         public Enumerator<Object> enumerator() {
             final NiFiTableEnumerator flowFileEnumerator = new NiFiTableEnumerator(dataSource, logger, fields, this::onFinish, enumerators::remove);
             enumerators.add(flowFileEnumerator);

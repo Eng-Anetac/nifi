@@ -46,7 +46,6 @@ import org.apache.nifi.stream.io.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLSocket;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -67,6 +66,7 @@ import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.Checksum;
 import java.util.zip.GZIPInputStream;
+import javax.net.ssl.SSLSocket;
 
 import static org.apache.nifi.controller.queue.clustered.protocol.LoadBalanceProtocolConstants.ABORT_PROTOCOL_NEGOTIATION;
 import static org.apache.nifi.controller.queue.clustered.protocol.LoadBalanceProtocolConstants.ABORT_TRANSACTION;
@@ -109,7 +109,6 @@ public class StandardLoadBalanceProtocol implements LoadBalanceProtocol {
         this.authorizer = authorizer;
     }
 
-
     @Override
     public void receiveFlowFiles(final Socket socket, final InputStream in, final OutputStream out) throws IOException {
         String peerDescription = socket.getInetAddress().getHostName();
@@ -135,7 +134,6 @@ public class StandardLoadBalanceProtocol implements LoadBalanceProtocol {
 
         receiveFlowFiles(in, out, peerDescription, version);
     }
-
 
     protected int negotiateProtocolVersion(final InputStream in, final OutputStream out, final String peerDescription, final String channelDescription) throws IOException {
         final VersionNegotiator negotiator = new StandardVersionNegotiator(1);
@@ -187,7 +185,6 @@ public class StandardLoadBalanceProtocol implements LoadBalanceProtocol {
         }
     }
 
-
     protected void receiveFlowFiles(final InputStream in, final OutputStream out, final String peerDescription, final int protocolVersion) throws IOException {
         logger.debug("Receiving FlowFiles from {}", peerDescription);
         final long startTimestamp = System.currentTimeMillis();
@@ -226,7 +223,7 @@ public class StandardLoadBalanceProtocol implements LoadBalanceProtocol {
                 logger.debug("Received a 'Check Space' request from Peer {} for Connection with ID {}; responding with QUEUE_FULL", peerDescription, connectionId);
                 out.write(QUEUE_FULL);
                 out.flush();
-                return; // we're finished receiving flowfiles for now, and we'll restart the communication process.
+                return; // we're finished receiving FlowFiles for now, and we'll restart the communication process.
             } else {
                 logger.debug("Received a 'Check Space' request from Peer {} for Connection with ID {}; responding with SPACE_AVAILABLE", peerDescription, connectionId);
                 out.write(SPACE_AVAILABLE);
@@ -454,7 +451,7 @@ public class StandardLoadBalanceProtocol implements LoadBalanceProtocol {
 
     private long readChecksum(final InputStream in) throws IOException {
         final byte[] buffer = getDataBuffer();
-        StreamUtils.read(in, buffer, 8 );
+        StreamUtils.read(in, buffer, 8);
         return ByteBuffer.wrap(buffer, 0, 8).getLong();
     }
 

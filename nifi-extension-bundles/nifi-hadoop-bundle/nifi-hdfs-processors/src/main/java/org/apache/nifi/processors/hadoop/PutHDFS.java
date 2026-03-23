@@ -56,6 +56,7 @@ import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.fileresource.service.api.FileResource;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.flowfile.attributes.CoreAttributes;
+import org.apache.nifi.migration.PropertyConfiguration;
 import org.apache.nifi.processor.DataUnit;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
@@ -162,8 +163,7 @@ public class PutHDFS extends AbstractHadoopProcessor {
             .build();
 
     protected static final PropertyDescriptor WRITING_STRATEGY = new PropertyDescriptor.Builder()
-            .name("writing-strategy")
-            .displayName("Writing Strategy")
+            .name("Writing Strategy")
             .description("Defines the approach for writing the FlowFile data.")
             .required(true)
             .defaultValue(WRITE_AND_RENAME_AV)
@@ -198,7 +198,7 @@ public class PutHDFS extends AbstractHadoopProcessor {
             .build();
 
     public static final PropertyDescriptor UMASK = new PropertyDescriptor.Builder()
-            .name("Permissions umask")
+            .name("Permissions Umask")
             .description(
                    "A umask represented as an octal number which determines the permissions of files written to HDFS. " +
                            "This overrides the Hadoop property \"fs.permissions.umask-mode\". " +
@@ -225,7 +225,6 @@ public class PutHDFS extends AbstractHadoopProcessor {
 
     public static final PropertyDescriptor IGNORE_LOCALITY = new PropertyDescriptor.Builder()
             .name("Ignore Locality")
-            .displayName("Ignore Locality")
             .description(
                     "Directs the HDFS system to ignore locality rules so that data is distributed randomly throughout the cluster")
             .required(false)
@@ -553,6 +552,13 @@ public class PutHDFS extends AbstractHadoopProcessor {
                 });
             }
         });
+    }
+
+    @Override
+    public void migrateProperties(PropertyConfiguration config) {
+        super.migrateProperties(config);
+        config.renameProperty("writing-strategy", WRITING_STRATEGY.getName());
+        config.renameProperty("Permissions umask", UMASK.getName());
     }
 
     protected Relationship getSuccessRelationship() {

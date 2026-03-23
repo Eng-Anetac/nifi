@@ -18,8 +18,8 @@
 package org.apache.nifi.json;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.nifi.logging.ComponentLog;
 import org.apache.nifi.NullSuppression;
+import org.apache.nifi.logging.ComponentLog;
 import org.apache.nifi.schema.access.SchemaNameAsAttribute;
 import org.apache.nifi.schema.inference.TimeValueInference;
 import org.apache.nifi.serialization.SimpleRecordSchema;
@@ -193,7 +193,6 @@ class TestWriteJsonResult {
         final String expected = new String(Files.readAllBytes(Paths.get("src/test/resources/json/output/dataTypes.json")));
         assertEquals(StringUtils.deleteWhitespace(expected), StringUtils.deleteWhitespace(output));
     }
-
 
     @Test
     void testWriteSerializedForm() throws IOException {
@@ -540,7 +539,6 @@ class TestWriteJsonResult {
         values2.put("timestamp", new java.sql.Timestamp(37293999L));
         values2.put("time", new java.sql.Time(37293999L));
         values2.put("date", date);
-
 
         final Record record2 = new MapRecord(schema, values2);
 

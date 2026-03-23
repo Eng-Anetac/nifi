@@ -30,6 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.POST;
@@ -45,6 +46,7 @@ import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.core.UriBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.authorization.AuthorizableLookup;
+import org.apache.nifi.authorization.AuthorizeComponentReference;
 import org.apache.nifi.authorization.AuthorizeControllerServiceReference;
 import org.apache.nifi.authorization.AuthorizeParameterProviders;
 import org.apache.nifi.authorization.AuthorizeParameterReference;
@@ -68,19 +70,19 @@ import org.apache.nifi.flow.VersionedProcessGroup;
 import org.apache.nifi.flow.VersionedPropertyDescriptor;
 import org.apache.nifi.groups.VersionedComponentAdditions;
 import org.apache.nifi.parameter.ParameterContext;
-import org.apache.nifi.registry.client.NiFiRegistryException;
 import org.apache.nifi.registry.flow.FlowRegistryBucket;
 import org.apache.nifi.registry.flow.FlowRegistryUtils;
 import org.apache.nifi.registry.flow.FlowSnapshotContainer;
 import org.apache.nifi.registry.flow.RegisteredFlow;
 import org.apache.nifi.registry.flow.RegisteredFlowSnapshot;
 import org.apache.nifi.registry.flow.VersionedFlowState;
-import org.apache.nifi.remote.util.SiteToSiteRestApiClient;
+import org.apache.nifi.remote.util.ClusterUrlParser;
 import org.apache.nifi.util.FormatUtils;
 import org.apache.nifi.web.ResourceNotFoundException;
 import org.apache.nifi.web.Revision;
 import org.apache.nifi.web.api.concurrent.AsyncRequestManager;
 import org.apache.nifi.web.api.concurrent.RequestManager;
+import org.apache.nifi.web.api.dto.BundleDTO;
 import org.apache.nifi.web.api.dto.ConnectionDTO;
 import org.apache.nifi.web.api.dto.ControllerServiceDTO;
 import org.apache.nifi.web.api.dto.DropRequestDTO;
@@ -128,7 +130,6 @@ import org.apache.nifi.web.api.entity.RemoteProcessGroupsEntity;
 import org.apache.nifi.web.api.request.ClientIdParameter;
 import org.apache.nifi.web.api.request.LongParameter;
 import org.apache.nifi.web.util.ParameterContextReplacer;
-import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,6 +138,7 @@ import org.springframework.stereotype.Controller;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -157,8 +159,6 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessGroupResource.class);
 
-    private static final String FLOW_ANALYSIS_REQUEST_TYPE = "flow-analysis-requests";
-
     private ProcessorResource processorResource;
     private InputPortResource inputPortResource;
     private OutputPortResource outputPortResource;
@@ -169,15 +169,13 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
     private ControllerServiceResource controllerServiceResource;
     private ParameterContextReplacer parameterContextReplacer;
 
-
     public RequestManager<String, Void> flowAnalysisAsyncRequestManager =
             new AsyncRequestManager<>(100, TimeUnit.MINUTES.toMillis(1L), "On-demand Flow Analysis");
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     static {
-        MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        MAPPER.setDefaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_NULL));
+        MAPPER.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
         MAPPER.setAnnotationIntrospector(new JakartaXmlBindAnnotationIntrospector(MAPPER.getTypeFactory()));
         MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
@@ -205,7 +203,6 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
         processGroupEntity.setUri(generateResourceUri("process-groups", processGroupEntity.getId()));
         return processGroupEntity;
     }
-
 
     /**
      * Populates the remaining content of the specified snippet.
@@ -438,7 +435,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
     )
     public Response getLocalModifications(
             @Parameter(description = "The process group id.")
-            @PathParam("id") final String groupId) throws IOException, NiFiRegistryException {
+            @PathParam("id") final String groupId) throws IOException {
 
         // authorize access
         serviceFacade.authorizeAccess(lookup -> {
@@ -699,7 +696,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
     }
 
     /**
-     * Creates a request to drop the flowfiles from all connection queues within a process group (recursively).
+     * Creates a request to drop the FlowFiles from all connection queues within a process group (recursively).
      *
      * @param processGroupId The id of the process group to be removed.
      * @return A dropRequestEntity.
@@ -709,7 +706,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}/empty-all-connections-requests")
     @Operation(
-            summary = "Creates a request to drop all flowfiles of all connection queues in this process group.",
+            summary = "Creates a request to drop all FlowFiles of all connection queues in this process group.",
             responses = {
                     @ApiResponse(
                             responseCode = "202", description = "The request has been accepted. An HTTP response header will contain the URI where the status can be polled.",
@@ -762,7 +759,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
     }
 
     /**
-     * Checks the status of an outstanding request for dropping all flowfiles within a process group.
+     * Checks the status of an outstanding request for dropping all FlowFiles within a process group.
      *
      * @param processGroupId The id of the process group
      * @param dropRequestId The id of the drop request
@@ -773,7 +770,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}/empty-all-connections-requests/{drop-request-id}")
     @Operation(
-            summary = "Gets the current status of a drop all flowfiles request.",
+            summary = "Gets the current status of a drop all FlowFiles request.",
             responses = {
                     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = DropRequestEntity.class))),
                     @ApiResponse(responseCode = "400", description = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
@@ -818,7 +815,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
     }
 
     /**
-     * Cancels the specified request for dropping all flowfiles within a process group.
+     * Cancels the specified request for dropping all FlowFiles within a process group.
      *
      * @param processGroupId The process group id
      * @param dropRequestId The drop request id
@@ -829,7 +826,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}/empty-all-connections-requests/{drop-request-id}")
     @Operation(
-            summary = "Cancels and/or removes a request to drop all flowfiles.",
+            summary = "Cancels and/or removes a request to drop all FlowFiles.",
             responses = {
                     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = DropRequestEntity.class))),
                     @ApiResponse(responseCode = "400", description = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
@@ -1076,6 +1073,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
 
             // Step 5: Resolve Bundle info
             serviceFacade.discoverCompatibleBundles(flowSnapshot.getFlowContents());
+            serviceFacade.discoverCompatibleBundles(flowSnapshot.getParameterProviders());
 
             // If there are any Controller Services referenced that are inherited from the parent group, resolve those to point to the appropriate Controller Service, if we are able to.
             unresolvedControllerServices.addAll(serviceFacade.resolveInheritedControllerServices(flowSnapshotContainer, groupId, NiFiUserUtils.getNiFiUser()));
@@ -1172,7 +1170,6 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
 
         return flowSnapshotContainer;
     }
-
 
     /**
      * Retrieves all the child process groups of the process group with the given id.
@@ -1316,28 +1313,11 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
                     processGroup.authorize(authorizer, RequestAction.WRITE, user);
 
                     final Authorizable parameterContext = groupAuthorizable.getProcessGroup().getParameterContext();
-                    final ProcessorConfigDTO configDto = requestProcessor.getConfig();
-                    if (parameterContext != null && configDto != null) {
-                        AuthorizeParameterReference.authorizeParameterReferences(configDto.getProperties(), authorizer, parameterContext, user);
-                    }
-
-                    ComponentAuthorizable authorizable = null;
-                    try {
-                        authorizable = lookup.getConfigurableComponent(requestProcessor.getType(), requestProcessor.getBundle());
-
-                        if (authorizable.isRestricted()) {
-                            authorizeRestrictions(authorizer, authorizable);
-                        }
-
-                        final ProcessorConfigDTO config = requestProcessor.getConfig();
-                        if (config != null && config.getProperties() != null) {
-                            AuthorizeControllerServiceReference.authorizeControllerServiceReferences(config.getProperties(), authorizable, authorizer, lookup);
-                        }
-                    } finally {
-                        if (authorizable != null) {
-                            authorizable.cleanUpResources();
-                        }
-                    }
+                    final ProcessorConfigDTO config = requestProcessor.getConfig();
+                    final Map<String, String> properties = config == null ? Collections.emptyMap() : config.getProperties();
+                    final String componentType = requestProcessor.getType();
+                    final BundleDTO bundle = requestProcessor.getBundle();
+                    AuthorizeComponentReference.authorizeComponentConfiguration(authorizer, lookup, componentType, bundle, properties, parameterContext);
                 },
                 () -> serviceFacade.verifyCreateProcessor(requestProcessor),
                 processorEntity -> {
@@ -2058,7 +2038,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
 
                     // parse the uri to check if the uri is valid
                     final String targetUris = remoteProcessGroupDTO.getTargetUris();
-                    SiteToSiteRestApiClient.parseClusterUrls(targetUris);
+                    ClusterUrlParser.parseClusterUrls(targetUris);
 
                     // since the uri is valid, use it
                     remoteProcessGroupDTO.setTargetUris(targetUris);
@@ -2544,26 +2524,10 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
                     processGroup.authorize(authorizer, RequestAction.WRITE, user);
 
                     final Authorizable parameterContext = groupAuthorizable.getProcessGroup().getParameterContext();
-                    if (parameterContext != null) {
-                        AuthorizeParameterReference.authorizeParameterReferences(requestControllerService.getProperties(), authorizer, parameterContext, user);
-                    }
-
-                    ComponentAuthorizable authorizable = null;
-                    try {
-                        authorizable = lookup.getConfigurableComponent(requestControllerService.getType(), requestControllerService.getBundle());
-
-                        if (authorizable.isRestricted()) {
-                            authorizeRestrictions(authorizer, authorizable);
-                        }
-
-                        if (requestControllerService.getProperties() != null) {
-                            AuthorizeControllerServiceReference.authorizeControllerServiceReferences(requestControllerService.getProperties(), authorizable, authorizer, lookup);
-                        }
-                    } finally {
-                        if (authorizable != null) {
-                            authorizable.cleanUpResources();
-                        }
-                    }
+                    final String componentType = requestControllerService.getType();
+                    final BundleDTO bundle = requestControllerService.getBundle();
+                    final Map<String, String> properties = requestControllerService.getProperties();
+                    AuthorizeComponentReference.authorizeComponentConfiguration(authorizer, lookup, componentType, bundle, properties, parameterContext);
                 },
                 () -> serviceFacade.verifyCreateControllerService(requestControllerService),
                 controllerServiceEntity -> {
@@ -2619,8 +2583,12 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
                     @SecurityRequirement(name = "Read - /parameter-contexts/{uuid} - For any Parameter Context that is referenced by a Property that is changed, added, or removed")
             }
     )
-    public Response initiateReplaceProcessGroup(@Parameter(description = "The process group id.", required = true) @PathParam("id") final String groupId,
-                                                @Parameter(description = "The process group replace request entity", required = true) final ProcessGroupImportEntity importEntity) {
+    public Response initiateReplaceProcessGroup(
+            @Parameter(description = "The process group id.", required = true)
+            @PathParam("id") final String groupId,
+            @Parameter(description = "The process group replace request entity", required = true)
+            final ProcessGroupImportEntity importEntity
+    ) {
         if (importEntity == null) {
             throw new IllegalArgumentException("Process Group Import Entity is required");
         }
@@ -2694,25 +2662,26 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
                     description = "The process group name.",
                     required = true
             )
-            @FormDataParam("groupName") final String groupName,
+            @FormParam("groupName") final String groupName,
             @Parameter(
                     description = "The process group X position.",
                     required = true
             )
-            @FormDataParam("positionX") final Double positionX,
+            @FormParam("positionX") final Double positionX,
             @Parameter(
                     description = "The process group Y position.",
                     required = true
             )
-            @FormDataParam("positionY") final Double positionY,
+            @FormParam("positionY") final Double positionY,
             @Parameter(
                     description = "The client id.",
                     required = true
             )
-            @FormDataParam("clientId") final String clientId,
+            @FormParam("clientId") final String clientId,
             @Parameter(description = "Acknowledges that this node is disconnected to allow for mutable requests to proceed.")
-            @FormDataParam(DISCONNECTED_NODE_ACKNOWLEDGED) @DefaultValue("false") final Boolean disconnectedNodeAcknowledged,
-            @FormDataParam("file") final InputStream in) throws InterruptedException {
+            @FormParam(DISCONNECTED_NODE_ACKNOWLEDGED) @DefaultValue("false") final Boolean disconnectedNodeAcknowledged,
+            @Parameter(description = "The flow definition content")
+            @FormParam("file") final InputStream in) throws InterruptedException {
 
         // ensure the group name is specified
         if (StringUtils.isBlank(groupName)) {
@@ -2750,6 +2719,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
 
         // resolve Bundle info
         serviceFacade.discoverCompatibleBundles(deserializedSnapshot.getFlowContents());
+        serviceFacade.discoverCompatibleBundles(deserializedSnapshot.getParameterProviders());
 
         // if there are any Controller Services referenced that are inherited from the parent group,
         // resolve those to point to the appropriate Controller Service, if we are able to.
@@ -2835,6 +2805,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
                     required = true
             )
             @PathParam("id") final String groupId,
+            @Parameter(description = "The Process Group Upload import details")
             final ProcessGroupUploadEntity processGroupUploadEntity) {
 
         // verify the process group was specified
@@ -2849,6 +2820,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
 
         // resolve Bundle info
         serviceFacade.discoverCompatibleBundles(versionedFlowSnapshot.getFlowContents());
+        serviceFacade.discoverCompatibleBundles(versionedFlowSnapshot.getParameterProviders());
 
         // if there are any Controller Services referenced that are inherited from the parent group,
         // resolve those to point to the appropriate Controller Service, if we are able to.
@@ -2987,6 +2959,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
 
         // resolve Bundle info
         serviceFacade.discoverCompatibleBundles(versionedProcessGroup);
+        serviceFacade.discoverCompatibleBundles(copyResponseEntity.getParameterProviders());
 
         // prep a pasted flow snapshot to attempt to resolve external services and referenced parameter providers
         final RegisteredFlowSnapshot pastedFlowSnapshot = new RegisteredFlowSnapshot();
@@ -3280,8 +3253,12 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
                     @SecurityRequirement(name = "Write - /process-groups/{uuid}")
             }
     )
-    public Response replaceProcessGroup(@Parameter(description = "The process group id.", required = true) @PathParam("id") final String groupId,
-                                        @Parameter(description = "The process group replace request entity.", required = true) final ProcessGroupImportEntity importEntity) {
+    public Response replaceProcessGroup(
+            @Parameter(description = "The process group id.", required = true)
+            @PathParam("id") final String groupId,
+            @Parameter(description = "The process group replace request entity.", required = true)
+            final ProcessGroupImportEntity importEntity
+    ) {
         // Verify the request
         if (importEntity == null) {
             throw new IllegalArgumentException("Process Group Import Entity is required");
@@ -3397,7 +3374,7 @@ public class ProcessGroupResource extends FlowUpdateResource<ProcessGroupImportE
             @Parameter(description = "The ID of the Update Request")
             @PathParam("id") final String replaceRequestId
     ) {
-        return deleteFlowUpdateRequest("replace-requests", replaceRequestId, disconnectedNodeAcknowledged.booleanValue());
+        return deleteFlowUpdateRequest("replace-requests", replaceRequestId, disconnectedNodeAcknowledged);
     }
 
     /**

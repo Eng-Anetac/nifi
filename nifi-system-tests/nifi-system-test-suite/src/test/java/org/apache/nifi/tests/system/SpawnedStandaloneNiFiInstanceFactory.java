@@ -30,10 +30,10 @@ import org.apache.nifi.util.file.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,11 +46,19 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.SSLContext;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SpawnedStandaloneNiFiInstanceFactory implements NiFiInstanceFactory {
     private static final Logger logger = LoggerFactory.getLogger(SpawnedStandaloneNiFiInstanceFactory.class);
+
+    /**
+     * Environment variable name for JaCoCo agent JAR path.
+     * When set, enables code coverage collection for spawned NiFi instances.
+     */
+    private static final String JACOCO_AGENT_PATH_ENV = "JACOCO_AGENT_PATH";
+
     private final InstanceConfiguration instanceConfig;
 
     public SpawnedStandaloneNiFiInstanceFactory(final InstanceConfiguration instanceConfig) {
@@ -158,6 +166,9 @@ public class SpawnedStandaloneNiFiInstanceFactory implements NiFiInstanceFactory
             copyContents(bootstrapConfigFile.getParentFile(), destinationConf);
             bootstrapConfigFile = new File(destinationConf, bootstrapConfigFile.getName());
 
+            // Configure JaCoCo agent for code coverage if environment variable is set
+            configureJacocoAgent(bootstrapConfigFile);
+
             final File destinationLib = new File(instanceDirectory, "lib");
             copyContents(new File("target/nifi-lib-assembly/lib"), destinationLib);
 
@@ -241,6 +252,56 @@ public class SpawnedStandaloneNiFiInstanceFactory implements NiFiInstanceFactory
             }
         }
 
+        /**
+         * Configures JaCoCo agent for code coverage collection if JACOCO_AGENT_PATH environment variable is set.
+         * Appends JaCoCo agent JVM argument to the bootstrap configuration file with a unique destfile
+         * based on the instance directory name.
+         *
+         * @param bootstrapConfig The bootstrap configuration file to modify
+         * @throws IOException if unable to write to the bootstrap configuration file
+         */
+        private void configureJacocoAgent(final File bootstrapConfig) throws IOException {
+            final String jacocoAgentPath = System.getenv(JACOCO_AGENT_PATH_ENV);
+            if (jacocoAgentPath == null || jacocoAgentPath.isBlank()) {
+                return;
+            }
+
+            final File jacocoAgentFile = new File(jacocoAgentPath);
+            if (!jacocoAgentFile.exists()) {
+                logger.warn("JaCoCo agent path specified but file not found: {}", jacocoAgentPath);
+                return;
+            }
+
+            // Create coverage output directory in instance directory
+            final File coverageDir = new File(instanceDirectory, "coverage");
+            if (!coverageDir.exists()) {
+                assertTrue(coverageDir.mkdirs());
+            }
+
+            // Use instance directory name to create unique coverage file
+            final String instanceName = instanceDirectory.getName();
+            final File coverageFile = new File(coverageDir, "jacoco.exec");
+
+            // Build JaCoCo agent argument with options:
+            // - destfile: unique file per instance to avoid conflicts
+            // - output=file: write coverage on JVM exit
+            // - append=true: append to existing coverage data if file exists
+            final String jacocoArg = String.format(
+                    "-javaagent:%s=destfile=%s,output=file,append=true",
+                    jacocoAgentFile.getAbsolutePath(),
+                    coverageFile.getAbsolutePath()
+            );
+
+            // Append JaCoCo agent argument to bootstrap.conf
+            try (final FileWriter writer = new FileWriter(bootstrapConfig, true)) {
+                writer.write(System.lineSeparator());
+                writer.write("# JaCoCo agent for code coverage (auto-configured)" + System.lineSeparator());
+                writer.write("java.arg.jacoco=" + jacocoArg + System.lineSeparator());
+            }
+
+            logger.info("Configured JaCoCo agent for NiFi instance [{}]: destfile={}", instanceName, coverageFile.getAbsolutePath());
+        }
+
         @Override
         public boolean isAccessible() {
             if (process == null) {
@@ -270,9 +331,10 @@ public class SpawnedStandaloneNiFiInstanceFactory implements NiFiInstanceFactory
                         }
 
                         try {
-                            Thread.sleep(1000L);
-                        } catch (InterruptedException ex) {
-                            logger.debug("NiFi Startup sleep interrupted", ex);
+                            TimeUnit.SECONDS.sleep(1);
+                        } catch (InterruptedException interrupted) {
+                            logger.warn("NiFi Startup sleep interrupted", interrupted);
+                            break;
                         }
                     }
                 }
@@ -282,7 +344,7 @@ public class SpawnedStandaloneNiFiInstanceFactory implements NiFiInstanceFactory
         @Override
         public void stop() {
             if (process == null) {
-                logger.info("NiFi Shutdown Ignored (runNiFi==null) [{}]", instanceDirectory.getName());
+                logger.debug("NiFi Shutdown request ignored [{}]", instanceDirectory.getName());
                 return;
             }
 
@@ -376,9 +438,12 @@ public class SpawnedStandaloneNiFiInstanceFactory implements NiFiInstanceFactory
 
         @Override
         public void quarantineTroubleshootingInfo(final File destinationDir, final Throwable cause) throws IOException {
-            final String[] dirsToCopy = new String[] {"conf", "logs"};
+            final String[] dirsToCopy = new String[] {"conf", "logs", "coverage"};
             for (final String dirToCopy : dirsToCopy) {
-                copyContents(new File(getInstanceDirectory(), dirToCopy), new File(destinationDir, dirToCopy));
+                final File sourceDir = new File(getInstanceDirectory(), dirToCopy);
+                if (sourceDir.exists()) {
+                    copyContents(sourceDir, new File(destinationDir, dirToCopy));
+                }
             }
 
             if (process == null) {

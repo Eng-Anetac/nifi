@@ -19,6 +19,7 @@ package org.apache.nifi.registry.flow;
 import org.apache.nifi.authorization.Resource;
 import org.apache.nifi.authorization.resource.Authorizable;
 import org.apache.nifi.bundle.BundleCoordinate;
+import org.apache.nifi.components.ConfigVerificationResult;
 import org.apache.nifi.components.ConfigurableComponent;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.ValidationContext;
@@ -37,6 +38,9 @@ import org.apache.nifi.flow.VersionedParameterContext;
 import org.apache.nifi.flow.VersionedProcessGroup;
 import org.apache.nifi.flowanalysis.EnforcementPolicy;
 import org.apache.nifi.groups.ProcessGroup;
+import org.apache.nifi.logging.ComponentLog;
+import org.apache.nifi.migration.ControllerServiceFactory;
+import org.apache.nifi.nar.ExtensionManager;
 import org.apache.nifi.parameter.ParameterContext;
 import org.apache.nifi.parameter.ParameterLookup;
 import org.apache.nifi.parameter.ParameterUpdate;
@@ -452,6 +456,12 @@ public final class FlowAnalyzingRegistryClientNode implements FlowRegistryClient
     }
 
     @Override
+    public List<ConfigVerificationResult> verifyConfiguration(final Map<String, String> properties, final Map<String, String> variables,
+                                                               final ComponentLog logger, final ExtensionManager extensionManager) {
+        return node.verifyConfiguration(properties, variables, logger, extensionManager);
+    }
+
+    @Override
     public Set<RegisteredFlowSnapshotMetadata> getFlowVersions(final FlowRegistryClientUserContext context, final FlowLocation flowLocation) throws FlowRegistryException, IOException {
         return node.getFlowVersions(context, flowLocation);
     }
@@ -469,5 +479,10 @@ public final class FlowAnalyzingRegistryClientNode implements FlowRegistryClient
     @Override
     public void setComponent(final LoggableComponent<FlowRegistryClient> component) {
         node.setComponent(component);
+    }
+
+    @Override
+    public void migrateConfiguration(final Map<String, String> originalPropertyValues, final ControllerServiceFactory controllerServiceFactory) {
+        node.migrateConfiguration(originalPropertyValues, controllerServiceFactory);
     }
 }

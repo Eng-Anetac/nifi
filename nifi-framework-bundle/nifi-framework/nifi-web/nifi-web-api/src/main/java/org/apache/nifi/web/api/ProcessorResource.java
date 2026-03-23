@@ -39,8 +39,8 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.nifi.authorization.AuthorizeComponentReference;
 import org.apache.nifi.authorization.AuthorizeControllerServiceReference;
-import org.apache.nifi.authorization.AuthorizeParameterReference;
 import org.apache.nifi.authorization.Authorizer;
 import org.apache.nifi.authorization.ComponentAuthorizable;
 import org.apache.nifi.authorization.RequestAction;
@@ -70,6 +70,8 @@ import org.apache.nifi.web.api.dto.ProcessorConfigDTO;
 import org.apache.nifi.web.api.dto.ProcessorDTO;
 import org.apache.nifi.web.api.dto.PropertyDescriptorDTO;
 import org.apache.nifi.web.api.dto.VerifyConfigRequestDTO;
+import org.apache.nifi.web.api.entity.ClearBulletinsRequestEntity;
+import org.apache.nifi.web.api.entity.ClearBulletinsResultEntity;
 import org.apache.nifi.web.api.entity.ComponentStateEntity;
 import org.apache.nifi.web.api.entity.ConfigurationAnalysisEntity;
 import org.apache.nifi.web.api.entity.ProcessorDiagnosticsEntity;
@@ -86,6 +88,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -231,9 +234,8 @@ public class ProcessorResource extends ApplicationResource {
         return generateOkResponse(entity).build();
     }
 
-
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/run-status-details/queries")
     @Operation(
@@ -271,7 +273,6 @@ public class ProcessorResource extends ApplicationResource {
                     return generateOkResponse(entity).build();
                 });
     }
-
 
     @DELETE
     @Consumes(MediaType.WILDCARD)
@@ -489,7 +490,7 @@ public class ProcessorResource extends ApplicationResource {
      * @throws InterruptedException if interrupted
      */
     @POST
-    @Consumes(MediaType.WILDCARD)
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}/state/clear-requests")
     @Operation(
@@ -511,10 +512,18 @@ public class ProcessorResource extends ApplicationResource {
                     description = "The processor id.",
                     required = true
             )
-            @PathParam("id") final String id) throws InterruptedException {
+            @PathParam("id") final String id,
+            @Parameter(
+                    description = "Optional component state to perform a selective key removal. If omitted, clears all state.",
+                    required = false
+            ) final ComponentStateEntity componentStateEntity) throws InterruptedException {
 
         if (isReplicateRequest()) {
-            return replicate(HttpMethod.POST);
+            if (componentStateEntity == null) {
+                return replicate(HttpMethod.POST);
+            } else {
+                return replicate(HttpMethod.POST, componentStateEntity);
+            }
         }
 
         final ProcessorEntity requestProcessorEntity = new ProcessorEntity();
@@ -529,11 +538,13 @@ public class ProcessorResource extends ApplicationResource {
                 },
                 () -> serviceFacade.verifyCanClearProcessorState(id),
                 (processorEntity) -> {
-                    // get the component state
-                    serviceFacade.clearProcessorState(processorEntity.getId());
+                    // clear state
+                    final ComponentStateDTO expectedState = componentStateEntity == null ? null : componentStateEntity.getComponentState();
+                    final ComponentStateDTO state = serviceFacade.clearProcessorState(processorEntity.getId(), expectedState);
 
                     // generate the response entity
                     final ComponentStateEntity entity = new ComponentStateEntity();
+                    entity.setComponentState(state);
 
                     // generate the response
                     return generateOkResponse(entity).build();
@@ -541,6 +552,76 @@ public class ProcessorResource extends ApplicationResource {
         );
     }
 
+    /**
+     * Clears bulletins for a processor.
+     *
+     * @param id The id of the processor
+     * @param clearBulletinsRequestEntity The clear bulletin request
+     * @return a clearBulletinsResultEntity
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{id}/bulletins/clear-requests")
+    @Operation(
+            summary = "Clears bulletins for a processor",
+            responses = {
+                    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = ClearBulletinsResultEntity.class))),
+                    @ApiResponse(responseCode = "400", description = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
+                    @ApiResponse(responseCode = "401", description = "Client could not be authenticated."),
+                    @ApiResponse(responseCode = "403", description = "Client is not authorized to make this request."),
+                    @ApiResponse(responseCode = "404", description = "The specified resource could not be found."),
+                    @ApiResponse(responseCode = "409", description = "The request was valid but NiFi was not in the appropriate state to process it.")
+            },
+            security = {
+                    @SecurityRequirement(name = "Write - /processors/{uuid}")
+            }
+    )
+    public Response clearBulletins(
+            @Parameter(
+                    description = "The processor id.",
+                    required = true
+            )
+            @PathParam("id") final String id,
+            @Parameter(
+                    description = "The clear bulletin request specifying the timestamp from which to clear bulletins.",
+                    required = true
+            ) final ClearBulletinsRequestEntity clearBulletinsRequestEntity) {
+
+        if (clearBulletinsRequestEntity == null) {
+            throw new IllegalArgumentException("Clear bulletin request must be specified.");
+        }
+
+        // Validate the request
+        if (clearBulletinsRequestEntity.getFromTimestamp() == null) {
+            throw new IllegalArgumentException("From timestamp must be specified in the clear bulletin request.");
+        }
+
+        if (isReplicateRequest()) {
+            return replicate(HttpMethod.POST, clearBulletinsRequestEntity);
+        }
+
+        final ProcessorEntity requestProcessorEntity = new ProcessorEntity();
+        requestProcessorEntity.setId(id);
+
+        return withWriteLock(
+                serviceFacade,
+                requestProcessorEntity,
+                lookup -> {
+                    final Authorizable processor = lookup.getProcessor(id).getAuthorizable();
+                    processor.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
+                },
+                () -> { },
+                (processorEntity) -> {
+                    final Instant fromTimestamp = clearBulletinsRequestEntity.getFromTimestamp();
+
+                    // Clear bulletins for the processor
+                    final ClearBulletinsResultEntity entity = serviceFacade.clearBulletinsForComponent(processorEntity.getId(), fromTimestamp);
+
+                    return generateOkResponse(entity).build();
+                }
+        );
+    }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -601,7 +682,6 @@ public class ProcessorResource extends ApplicationResource {
                 }
         );
     }
-
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -705,7 +785,6 @@ public class ProcessorResource extends ApplicationResource {
         return generateOkResponse(updateRequestEntity).build();
     }
 
-
     @DELETE
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
@@ -763,7 +842,6 @@ public class ProcessorResource extends ApplicationResource {
             throw new IllegalStateException("This request does not appear to be part of the two phase commit.");
         }
     }
-
 
     /**
      * Updates the specified processor with the specified values.
@@ -862,10 +940,9 @@ public class ProcessorResource extends ApplicationResource {
                     authorizable.getAuthorizable().authorize(authorizer, RequestAction.WRITE, user);
 
                     final ProcessorConfigDTO config = requestProcessorDTO.getConfig();
-                    if (config != null) {
-                        AuthorizeControllerServiceReference.authorizeControllerServiceReferences(config.getProperties(), authorizable, authorizer, lookup);
-                        AuthorizeParameterReference.authorizeParameterReferences(config.getProperties(), authorizer, authorizable.getParameterContext(), user);
-                    }
+                    final Map<String, String> properties = config == null ? Collections.emptyMap() : config.getProperties();
+                    final Authorizable parameterContext = authorizable.getParameterContext();
+                    AuthorizeComponentReference.authorizeComponentConfiguration(authorizer, lookup, authorizable, properties, parameterContext);
                 },
                 () -> serviceFacade.verifyUpdateProcessor(requestProcessorDTO),
                 (revision, processorEntity) -> {

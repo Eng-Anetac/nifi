@@ -379,6 +379,7 @@ public abstract class AbstractComponentNode implements ComponentNode {
         return getClassLoaderIsolationKey(validationContext);
     }
 
+    @Override
     public void verifyCanUpdateProperties(final Map<String, String> properties) {
         verifyModifiable();
 
@@ -644,6 +645,7 @@ public abstract class AbstractComponentNode implements ComponentNode {
         return true;
     }
 
+    @Override
     public Map<PropertyDescriptor, PropertyConfiguration> getProperties() {
         try (final NarCloseable ignored = NarCloseable.withComponentNarLoader(extensionManager, getComponent().getClass(), getIdentifier())) {
             final List<PropertyDescriptor> supported = getComponent().getPropertyDescriptors();
@@ -768,11 +770,13 @@ public abstract class AbstractComponentNode implements ComponentNode {
     public synchronized boolean isReloadAdditionalResourcesNecessary() {
         // Components that don't have any PropertyDescriptors marked `dynamicallyModifiesClasspath`
         // won't have the fingerprint i.e. will be null, in such cases do nothing
-        if (additionalResourcesFingerprint == null) {
+        final Set<PropertyDescriptor> descriptors = this.getProperties().keySet();
+        final boolean dynamicallyModifiesClasspath = descriptors.stream()
+                .anyMatch(PropertyDescriptor::isDynamicClasspathModifier);
+        if (!dynamicallyModifiesClasspath) {
             return false;
         }
 
-        final Set<PropertyDescriptor> descriptors = this.getProperties().keySet();
         final Set<URL> additionalUrls = this.getAdditionalClasspathResources(descriptors);
 
         final String newFingerprint = ClassLoaderUtils.generateAdditionalUrlsFingerprint(additionalUrls, determineClasloaderIsolationKey());
@@ -1085,7 +1089,6 @@ public abstract class AbstractComponentNode implements ComponentNode {
         return validationResults;
     }
 
-
     private ValidationResult validateControllerServiceApi(final PropertyDescriptor descriptor, final ControllerServiceNode controllerServiceNode) {
         final Class<? extends ControllerService> controllerServiceApiClass = descriptor.getControllerServiceDefinition();
         // If a processor accepts any service don't validate it.
@@ -1213,7 +1216,6 @@ public abstract class AbstractComponentNode implements ComponentNode {
             return getComponent().getPropertyDescriptors();
         }
     }
-
 
     protected void onPropertyModified(final PropertyDescriptor descriptor, final String oldValue, final String newValue) {
         try (final NarCloseable ignored = NarCloseable.withComponentNarLoader(extensionManager, getComponent().getClass(), getComponent().getIdentifier())) {

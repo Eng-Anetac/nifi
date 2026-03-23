@@ -27,6 +27,7 @@ on:
       - '**/test/**/IT*.java'
       - 'nifi-mock/**'
       - 'nifi-extension-bundles/nifi-kafka-bundle/**'
+      - 'nifi-registry/nifi-registry-core/nifi-registry-web-api/**'
   pull_request:
     paths:
       - '.github/workflows/integration-tests.yml'
@@ -38,6 +39,7 @@ on:
       - '**/test/**/IT*.java'
       - 'nifi-mock/**'
       - 'nifi-extension-bundles/nifi-kafka-bundle/**'
+      - 'nifi-registry/nifi-registry-core/nifi-registry-web-api/**'
 
 env:
   DEFAULT_MAVEN_OPTS: >-
@@ -82,6 +84,8 @@ env:
     -pl -:nifi-processor-bundle-archetype
     -pl -:nifi-service-bundle-archetype
 
+  DEVELOCITY_ACCESS_KEY: ${{ secrets.NIFI_DEVELOCITY_ACCESS_KEY }}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -90,15 +94,15 @@ permissions:
   contents: read
 
 jobs:
-  build_and_test:
+  build:
     timeout-minutes: 120
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Ubuntu Java 21
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Java Zulu 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: 21
@@ -109,8 +113,6 @@ jobs:
           cat /proc/cpuinfo
           cat /proc/meminfo
           df
-          docker info
-
       - name: Build and Run Tests
         env:
           MAVEN_OPTS: >-
@@ -121,9 +123,9 @@ jobs:
           ${{ env.MAVEN_BUILD_EXCLUDE_PROJECTS }}
       - name: Upload Troubleshooting Logs
         if: failure() || cancelled()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
-          name: ubuntu-21-failsafe-logs
+          name: integration-tests-failsafe-logs
           path: |
             **/target/failsafe-reports/**/*.txt
           retention-days: 7

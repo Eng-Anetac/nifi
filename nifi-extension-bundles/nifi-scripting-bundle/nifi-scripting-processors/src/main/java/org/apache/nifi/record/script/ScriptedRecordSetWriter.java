@@ -33,16 +33,16 @@ import org.apache.nifi.serialization.RecordSetWriter;
 import org.apache.nifi.serialization.RecordSetWriterFactory;
 import org.apache.nifi.serialization.record.RecordSchema;
 
-import javax.script.Invocable;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import javax.script.Invocable;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 
 /**
  * A RecordSetWriter implementation that allows the user to script the RecordWriter instance
@@ -100,7 +100,6 @@ public class ScriptedRecordSetWriter extends AbstractScriptedRecordFactory<Recor
         }
     }
 
-
     @Override
     public RecordSetWriter createWriter(ComponentLog logger, RecordSchema schema, OutputStream out, Map<String, String> variables) throws SchemaNotFoundException, IOException {
         if (recordFactory.get() != null) {
@@ -112,7 +111,6 @@ public class ScriptedRecordSetWriter extends AbstractScriptedRecordFactory<Recor
         }
         return null;
     }
-
 
     /**
      * Reloads the script RecordSetWriterFactory. This must be called within the lock.
@@ -144,7 +142,6 @@ public class ScriptedRecordSetWriter extends AbstractScriptedRecordFactory<Recor
 
                 // evaluate the script
                 scriptRunner.run(scriptEngine.getBindings(ScriptContext.ENGINE_SCOPE));
-
 
                 // get configured processor from the script (if it exists)
                 final Object obj = scriptRunner.getScriptEngine().get("writer");

@@ -39,11 +39,11 @@ public class Group { // TODO rename to UserGroup
         this.name = builder.name;
         this.users = Collections.unmodifiableSet(new HashSet<>(builder.users));
 
-        if (this.identifier == null || this.identifier.trim().isEmpty()) {
+        if (this.identifier == null || this.identifier.isBlank()) {
             throw new IllegalArgumentException("Identifier can not be null or empty");
         }
 
-        if (this.name == null || this.name.trim().isEmpty()) {
+        if (this.name == null || this.name.isBlank()) {
             throw new IllegalArgumentException("Name can not be null or empty");
         }
     }
@@ -91,7 +91,6 @@ public class Group { // TODO rename to UserGroup
     public String toString() {
         return String.format("identifier[%s], name[%s], users[%s]", getIdentifier(), getName(), String.join(", ", users));
     }
-
 
     /**
      * Builder for creating Groups.

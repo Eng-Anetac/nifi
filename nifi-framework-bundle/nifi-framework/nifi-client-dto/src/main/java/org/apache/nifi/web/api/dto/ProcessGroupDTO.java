@@ -17,10 +17,9 @@
 package org.apache.nifi.web.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.xml.bind.annotation.XmlType;
 import org.apache.nifi.web.api.dto.util.NumberUtil;
 import org.apache.nifi.web.api.entity.ParameterContextReferenceEntity;
-
-import jakarta.xml.bind.annotation.XmlType;
 
 /**
  * The details for a process group within this NiFi flow.
@@ -64,10 +63,6 @@ public class ProcessGroupDTO extends ComponentDTO {
     private String statelessGroupScheduledState;
 
     private FlowSnippetDTO contents;
-
-    public ProcessGroupDTO() {
-        super();
-    }
 
     /**
      * The name of this Process Group.

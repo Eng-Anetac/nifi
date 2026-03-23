@@ -44,6 +44,7 @@ public interface ControllerServiceNode extends ComponentNode, VersionedComponent
      * @return the Process Group that this Controller Service belongs to, or <code>null</code> if the Controller Service
      *         does not belong to any Process Group
      */
+    @Override
     ProcessGroup getProcessGroup();
 
     /**
@@ -98,7 +99,7 @@ public interface ControllerServiceNode extends ComponentNode, VersionedComponent
      */
     ControllerServiceState getState();
 
-     /**
+    /**
      * Enables this service, calling any method annotated with @OnEnabled and updating the state of the service
      *
      * @param scheduler implementation of {@link ScheduledExecutorService} used to initiate service enabling task as well as its retries
@@ -212,7 +213,6 @@ public interface ControllerServiceNode extends ComponentNode, VersionedComponent
      * @throws InterruptedException if interrupted while waiting for the service complete its enabling
      */
     boolean awaitEnabled(long timePeriod, TimeUnit timeUnit) throws InterruptedException;
-
 
     /**
      * Waits up to the given amount of time for the Controller Service to transition to a DISABLED state.

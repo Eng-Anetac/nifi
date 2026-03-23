@@ -379,6 +379,12 @@ public class AffectedComponentSet {
             }
         }
 
+        // With DEEP comparison, configuration differences for newly added components may reference a null local component (Component A).
+        // These do not affect any existing local components, so ignore them.
+        if (difference.getComponentA() == null) {
+            return;
+        }
+
         if (differenceType == DifferenceType.COMPONENT_REMOVED && difference.getComponentA().getComponentType() == ComponentType.PROCESS_GROUP) {
             // If a Process Group is removed, we need to consider any component within the Process Group as affected also
             addAllComponentsWithinGroup(difference.getComponentA().getInstanceIdentifier());
@@ -403,7 +409,8 @@ public class AffectedComponentSet {
 
     private void addComponentsForInheritedParameterContextChange(final FlowDifference difference) {
         // If the inherited parameter contexts have changed, any component referencing a parameter in that context is affected.
-        final String parameterContextId = difference.getComponentA().getInstanceIdentifier();
+        final VersionedComponent vc = difference.getComponentA() == null ? difference.getComponentB() : difference.getComponentA();
+        final String parameterContextId = vc.getInstanceIdentifier();
         final ParameterContext context = flowManager.getParameterContextManager().getParameterContext(parameterContextId);
         if (context == null) {
             return;
@@ -429,7 +436,8 @@ public class AffectedComponentSet {
 
     private void addComponentsForParameterContextChange(final FlowDifference difference) {
         // When the parameter context that a PG is bound to is updated, any component referencing a parameter is affected.
-        final String groupId = difference.getComponentA().getInstanceIdentifier();
+        final VersionedComponent vc = difference.getComponentA() == null ? difference.getComponentB() : difference.getComponentA();
+        final String groupId = vc.getInstanceIdentifier();
         final ProcessGroup group = flowManager.getGroup(groupId);
         if (group == null) {
             return;
@@ -508,6 +516,7 @@ public class AffectedComponentSet {
             case OUTPUT_PORT -> flowManager.getOutputPort(identifier);
             case PROCESSOR -> flowManager.getProcessorNode(identifier);
             case REMOTE_INPUT_PORT, REMOTE_OUTPUT_PORT -> flowManager.getRootGroup().findRemoteGroupPort(identifier);
+            default -> throw new IllegalArgumentException("Unexpected ConnectableComponentType: " + type);
         };
     }
 
@@ -548,7 +557,7 @@ public class AffectedComponentSet {
                 break;
             case FLOW_REGISTRY_CLIENT:
                 addFlowRegistryClient(flowManager.getFlowRegistryClient(componentId));
-            // fallthrough
+                break;
             case REMOTE_PROCESS_GROUP:
                 addRemoteProcessGroup(flowManager.getRootGroup().findRemoteProcessGroup(componentId));
                 break;
@@ -705,7 +714,6 @@ public class AffectedComponentSet {
         return existing;
     }
 
-
     /**
      * Returns a new AffectedComponentSet that represents only those components that currently can be started. When a set of dataflow updates have occurred, it is very possible
      * that one or more components referred to by the AffectedComponentSet can no longer be started (for example, there was a dataflow update that disabled a Processor that previously was running).
@@ -851,7 +859,6 @@ public class AffectedComponentSet {
 
         return true;
     }
-
 
     @Override
     public String toString() {

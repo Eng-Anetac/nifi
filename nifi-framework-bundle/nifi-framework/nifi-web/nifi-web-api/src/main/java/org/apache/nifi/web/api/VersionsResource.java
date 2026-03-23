@@ -120,7 +120,8 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
                     @SecurityRequirement(name = "Read - /process-groups/{uuid}")
             }
     )
-    public Response getVersionInformation(@Parameter(description = "The process group id.", required = true) @PathParam("id") final String groupId) {
+    public Response getVersionInformation(
+            @Parameter(description = "The process group id.", required = true) @PathParam("id") final String groupId) {
 
         if (isReplicateRequest()) {
             return replicate(HttpMethod.GET);
@@ -161,7 +162,9 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
                     @SecurityRequirement(name = "Read - /process-groups/{uuid}")
             }
     )
-    public Response exportFlowVersion(@Parameter(description = "The process group id.", required = true) @PathParam("id") final String groupId) {
+    public Response exportFlowVersion(
+            @Parameter(description = "The process group id.", required = true) @PathParam("id") final String groupId) {
+
         // authorize access
         serviceFacade.authorizeAccess(lookup -> {
             final ProcessGroupAuthorizable groupAuthorizable = lookup.getProcessGroup(groupId);
@@ -270,7 +273,6 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
                 });
     }
 
-
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -290,8 +292,9 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
                     @SecurityRequirement(name = "Only the user that submitted the request can update it")
             }
     )
-    public Response updateVersionControlRequest(@Parameter(description = "The request ID.") @PathParam("id") final String requestId,
-                                                @Parameter(description = "The version control component mapping.", required = true) final VersionControlComponentMappingEntity requestEntity) {
+    public Response updateVersionControlRequest(
+            @Parameter(description = "The request ID.") @PathParam("id") final String requestId,
+            @Parameter(description = "The version control component mapping.", required = true) final VersionControlComponentMappingEntity requestEntity) {
 
         if (requestEntity == null) {
             throw new IllegalArgumentException("Version control information must be specified.");
@@ -388,7 +391,6 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
         }
     }
 
-
     @DELETE
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
@@ -454,7 +456,6 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
                     });
         }
     }
-
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -548,7 +549,6 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
             } catch (final URISyntaxException e) {
                 throw new RuntimeException(e);
             }
-
 
             // Now that we have the Request, we know that no other thread is updating the Flow Registry. So we can now
             // create the Flow in the Flow Registry and push the Process Group as the first version of the Flow. Once we've
@@ -653,8 +653,7 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
                     "Failed to create a Version Control Request across all nodes in the cluster. Received response code " + clusterResponse.getStatus() + " with content: " + errorResponse);
         }
 
-        final String requestId = getResponseEntity(clusterResponse, String.class);
-        return requestId;
+        return getResponseEntity(clusterResponse, String.class);
     }
 
     private void replicateVersionControlMapping(final VersionControlComponentMappingEntity mappingEntity, final StartVersionControlRequestEntity requestEntity,
@@ -711,7 +710,6 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
             }
         }
     }
-
 
     @DELETE
     @Consumes(MediaType.WILDCARD)
@@ -778,7 +776,6 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
                 });
     }
 
-
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -801,8 +798,9 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
                     @SecurityRequirement(name = "Write - /process-groups/{uuid}")
             }
     )
-    public Response updateFlowVersion(@Parameter(description = "The process group id.") @PathParam("id") final String groupId,
-                                      @Parameter(description = "The controller service configuration details.", required = true) final VersionedFlowSnapshotEntity requestEntity) {
+    public Response updateFlowVersion(
+            @Parameter(description = "The process group id.") @PathParam("id") final String groupId,
+            @Parameter(description = "The controller service configuration details.", required = true) final VersionedFlowSnapshotEntity requestEntity) {
 
         if (requestEntity == null) {
             throw new IllegalArgumentException("Version control information must be specified.");
@@ -878,7 +876,6 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
                 });
     }
 
-
     @GET
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
@@ -901,7 +898,9 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
                     @SecurityRequirement(name = "Only the user that submitted the request can get it")
             }
     )
-    public Response getUpdateRequest(@Parameter(description = "The ID of the Update Request") @PathParam("id") final String updateRequestId) {
+    public Response getUpdateRequest(
+            @Parameter(description = "The ID of the Update Request") @PathParam("id") final String updateRequestId) {
+
         return retrieveFlowUpdateRequest("update-requests", updateRequestId);
     }
 
@@ -927,7 +926,9 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
                     @SecurityRequirement(name = "Only the user that submitted the request can get it")
             }
     )
-    public Response getRevertRequest(@Parameter(description = "The ID of the Revert Request") @PathParam("id") final String revertRequestId) {
+    public Response getRevertRequest(
+            @Parameter(description = "The ID of the Revert Request") @PathParam("id") final String revertRequestId) {
+
         return retrieveFlowUpdateRequest("revert-requests", revertRequestId);
     }
 
@@ -960,7 +961,7 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
             @QueryParam(DISCONNECTED_NODE_ACKNOWLEDGED) @DefaultValue("false") final Boolean disconnectedNodeAcknowledged,
             @Parameter(description = "The ID of the Update Request") @PathParam("id") final String updateRequestId) {
 
-        return deleteFlowUpdateRequest("update-requests", updateRequestId, disconnectedNodeAcknowledged.booleanValue());
+        return deleteFlowUpdateRequest("update-requests", updateRequestId, disconnectedNodeAcknowledged);
     }
 
     @DELETE
@@ -992,7 +993,7 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
             @QueryParam(DISCONNECTED_NODE_ACKNOWLEDGED) @DefaultValue("false") final Boolean disconnectedNodeAcknowledged,
             @Parameter(description = "The ID of the Revert Request") @PathParam("id") final String revertRequestId) {
 
-        return deleteFlowUpdateRequest("revert-requests", revertRequestId, disconnectedNodeAcknowledged.booleanValue());
+        return deleteFlowUpdateRequest("revert-requests", revertRequestId, disconnectedNodeAcknowledged);
     }
 
     @POST
@@ -1095,8 +1096,9 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
                     @SecurityRequirement(name = "Read - /parameter-contexts/{uuid} - For any Parameter Context that is referenced by a Property that is changed, added, or removed")
             }
     )
-    public Response initiateRevertFlowVersion(@Parameter(description = "The process group id.") @PathParam("id") final String groupId,
-                                              @Parameter(description = "The Version Control Information to revert to.", required = true) final VersionControlInformationEntity requestEntity) {
+    public Response initiateRevertFlowVersion(
+            @Parameter(description = "The process group id.") @PathParam("id") final String groupId,
+            @Parameter(description = "The Version Control Information to revert to.", required = true) final VersionControlInformationEntity requestEntity) {
 
         if (requestEntity == null) {
             throw new IllegalArgumentException("Version control information must be specified.");
@@ -1149,6 +1151,7 @@ public class VersionsResource extends FlowUpdateResource<VersionControlInformati
         // The flow in the registry may not contain the same versions of components that we have in our flow. As a result, we need to update
         // the flow snapshot to contain compatible bundles.
         serviceFacade.discoverCompatibleBundles(flowSnapshot.getFlowContents());
+        serviceFacade.discoverCompatibleBundles(flowSnapshot.getParameterProviders());
 
         // If there are any Controller Services referenced that are inherited from the parent group, resolve those to point to the appropriate Controller Service, if we are able to.
         final Set<String> unresolvedControllerServices = serviceFacade.resolveInheritedControllerServices(flowSnapshotContainer, groupId, NiFiUserUtils.getNiFiUser());

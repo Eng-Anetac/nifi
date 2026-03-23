@@ -26,7 +26,6 @@ import org.apache.nifi.controller.ProcessScheduler;
 import org.apache.nifi.controller.queue.AbstractFlowFileQueue;
 import org.apache.nifi.controller.queue.DropFlowFileRequest;
 import org.apache.nifi.controller.queue.DropFlowFileState;
-import org.apache.nifi.controller.status.FlowFileAvailability;
 import org.apache.nifi.controller.queue.FlowFileQueueContents;
 import org.apache.nifi.controller.queue.IllegalClusterStateException;
 import org.apache.nifi.controller.queue.LoadBalanceStrategy;
@@ -60,6 +59,7 @@ import org.apache.nifi.controller.repository.StandardRepositoryRecord;
 import org.apache.nifi.controller.repository.SwapSummary;
 import org.apache.nifi.controller.repository.claim.ContentClaim;
 import org.apache.nifi.controller.repository.claim.ResourceClaim;
+import org.apache.nifi.controller.status.FlowFileAvailability;
 import org.apache.nifi.controller.swap.StandardSwapSummary;
 import org.apache.nifi.events.EventReporter;
 import org.apache.nifi.flowfile.FlowFilePrioritizer;
@@ -122,7 +122,6 @@ public class SocketLoadBalancedFlowFileQueue extends AbstractFlowFileQueue imple
     private boolean stopped = true;
     private volatile boolean offloaded = false;
 
-
     public SocketLoadBalancedFlowFileQueue(final String identifier, final ProcessScheduler scheduler, final FlowFileRepository flowFileRepo,
                                            final ProvenanceEventRepository provRepo, final ContentRepository contentRepo,
                                            final ClusterCoordinator clusterCoordinator, final AsyncLoadBalanceClientRegistry clientRegistry, final FlowFileSwapManager swapManager,
@@ -184,7 +183,6 @@ public class SocketLoadBalancedFlowFileQueue extends AbstractFlowFileQueue imple
 
         rebalancingPartition.start(partitioner);
     }
-
 
     @Override
     public synchronized void setLoadBalanceStrategy(final LoadBalanceStrategy strategy, final String partitioningAttribute) {
@@ -426,7 +424,6 @@ public class SocketLoadBalancedFlowFileQueue extends AbstractFlowFileQueue imple
             partitionReadLock.unlock();
         }
     }
-
 
     @Override
     public SwapSummary recoverSwappedFlowFiles() {
@@ -774,7 +771,6 @@ public class SocketLoadBalancedFlowFileQueue extends AbstractFlowFileQueue imple
                 }
             }
 
-
             this.nodeIdentifiers.clear();
             this.nodeIdentifiers.addAll(updatedNodeIdentifiers);
 
@@ -801,7 +797,6 @@ public class SocketLoadBalancedFlowFileQueue extends AbstractFlowFileQueue imple
     public void put(final FlowFileRecord flowFile) {
         putAndGetPartition(flowFile);
     }
-
 
     protected QueuePartition putAndGetPartition(final FlowFileRecord flowFile) {
         final QueuePartition partition;
@@ -1050,7 +1045,6 @@ public class SocketLoadBalancedFlowFileQueue extends AbstractFlowFileQueue imple
                     "that point.", expiredRecords.size(), e);
         }
     }
-
 
     @Override
     protected List<FlowFileRecord> getListableFlowFiles() {

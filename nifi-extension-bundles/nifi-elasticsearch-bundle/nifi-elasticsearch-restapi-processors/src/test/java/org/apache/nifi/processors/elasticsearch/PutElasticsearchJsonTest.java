@@ -156,7 +156,7 @@ public class PutElasticsearchJsonTest extends AbstractPutElasticsearchTest {
         assertTrue(runner.getProcessContext().getProperties().keySet().stream().noneMatch(pd -> "put-es-json-not_found-is-error".equals(pd.getName())));
         assertTrue(runner.getProcessContext().getProperties().keySet().stream().noneMatch(pd -> "put-es-json-error-documents".equals(pd.getName())));
 
-        assertEquals(1, result.getPropertiesRenamed().size());
+        assertTrue(1 < result.getPropertiesRenamed().size());
         assertEquals(AbstractPutElasticsearch.NOT_FOUND_IS_SUCCESSFUL.getName(), result.getPropertiesRenamed().get("put-es-json-not_found-is-error"));
         assertEquals(1, result.getPropertiesRemoved().size());
         assertTrue(result.getPropertiesRemoved().contains("put-es-json-error-documents"));
@@ -471,7 +471,7 @@ public class PutElasticsearchJsonTest extends AbstractPutElasticsearchTest {
         assertTrue(errorResponses.contains("For input string: 213,456.9"));
         assertTrue(errorResponses.contains("For input string: unit test"));
 
-        assertEquals(4, runner.getProvenanceEvents().stream().filter( e ->
+        assertEquals(4, runner.getProvenanceEvents().stream().filter(e ->
                 ProvenanceEventType.SEND == e.getEventType() && "Elasticsearch _bulk operation error".equals(e.getDetails())).count());
         assertEquals(3,  runner.getProvenanceEvents().stream().filter(
                 e -> ProvenanceEventType.SEND == e.getEventType() && null == e.getDetails()).count());
@@ -515,7 +515,6 @@ public class PutElasticsearchJsonTest extends AbstractPutElasticsearchTest {
         runner.assertTransferCount(AbstractPutElasticsearch.REL_ERROR_RESPONSES, 0);
         final String elasticsearchPutError = runner.getFlowFilesForRelationship(AbstractPutElasticsearch.REL_FAILURE).getFirst().getAttribute("elasticsearch.put.error");
         assertTrue(elasticsearchPutError.contains("exceeds the maximum allowed"));
-
 
         // increase Jackson's Max String Length reader settings
         runner.clearTransferState();

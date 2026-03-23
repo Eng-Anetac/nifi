@@ -244,7 +244,6 @@ public interface ProcessGroup extends ComponentAuthorizable, Positionable, Versi
      */
     void enableOutputPort(Port port);
 
-
     /**
      * Starts the given Processor
      *
@@ -1200,6 +1199,13 @@ public interface ProcessGroup extends ComponentAuthorizable, Positionable, Versi
      * @return the QueueSize of this Process Group and all child Process Groups
      */
     QueueSize getQueueSize();
+
+    /**
+     * Get Map of Attribute Names and Values to provide additional context for logging
+     *
+     * @return Map of Attribute Names and Values
+     */
+    Map<String, String> getLoggingAttributes();
 
     /**
      * @return the log file suffix of the ProcessGroup for dedicated logging

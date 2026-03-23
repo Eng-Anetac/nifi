@@ -42,7 +42,6 @@ public class StandardRepositoryRecord implements RepositoryRecord {
     private final long startNanos = System.nanoTime();
     private boolean contentModified;
 
-
     /**
      * Creates a new record which has no original claim or flow file - it is entirely new
      *
@@ -255,7 +254,7 @@ public class StandardRepositoryRecord implements RepositoryRecord {
 
     @Override
     public List<ContentClaim> getTransientClaims() {
-        return transientClaims == null ? Collections.<ContentClaim> emptyList() : Collections.unmodifiableList(transientClaims);
+        return transientClaims == null ? Collections.<ContentClaim>emptyList() : Collections.unmodifiableList(transientClaims);
     }
 
     void addTransientClaim(final ContentClaim claim) {
@@ -273,6 +272,7 @@ public class StandardRepositoryRecord implements RepositoryRecord {
         return startNanos;
     }
 
+    @Override
     public boolean isContentModified() {
         return contentModified;
     }

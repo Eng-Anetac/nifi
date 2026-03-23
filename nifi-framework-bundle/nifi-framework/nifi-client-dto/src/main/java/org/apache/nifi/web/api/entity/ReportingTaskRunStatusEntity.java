@@ -17,7 +17,6 @@
 package org.apache.nifi.web.api.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import jakarta.xml.bind.annotation.XmlType;
 
 /**
@@ -26,7 +25,7 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlType(name = "reportingTaskRunStatus")
 public class ReportingTaskRunStatusEntity extends ComponentRunStatusEntity {
 
-    private static String[] SUPPORTED_STATE = {"RUNNING", "STOPPED"};
+    private static final String[] SUPPORTED_STATE = {"RUNNING", "STOPPED"};
 
     @Override
     protected String[] getSupportedState() {
@@ -38,8 +37,8 @@ public class ReportingTaskRunStatusEntity extends ComponentRunStatusEntity {
      * @return The run status
      */
     @Schema(description = "The run status of the ReportingTask.",
-            allowableValues = {"RUNNING", "STOPPED"}
-    )
+            allowableValues = {"RUNNING", "STOPPED"})
+    @Override
     public String getState() {
         return super.getState();
     }

@@ -46,7 +46,6 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -74,9 +73,7 @@ public class TestNodeClusterCoordinator {
     private final RevisionSnapshot emptyRevisionSnapshot = new RevisionSnapshot(Collections.emptyList(), 0L);
 
     private NiFiProperties createProperties() {
-        final Map<String, String> addProps = new HashMap<>();
-        addProps.put("nifi.zookeeper.connect.string", "localhost:2181");
-        return NiFiProperties.createBasicNiFiProperties(null, addProps);
+        return NiFiProperties.createBasicNiFiProperties(null, Map.of());
     }
 
     @BeforeEach
@@ -90,7 +87,6 @@ public class TestNodeClusterCoordinator {
         final StateManager stateManager = Mockito.mock(StateManager.class);
         when(stateManager.getState(any(Scope.class))).thenReturn(new MockStateMap(Collections.emptyMap(), 1));
         when(stateManagerProvider.getStateManager(anyString())).thenReturn(stateManager);
-
 
         final EventReporter eventReporter = Mockito.mock(EventReporter.class);
         final RevisionManager revisionManager = Mockito.mock(RevisionManager.class);
@@ -507,7 +503,6 @@ public class TestNodeClusterCoordinator {
         requestMsg.setConnectionRequest(request);
         return coordinator.handle(requestMsg, Collections.emptySet());
     }
-
 
     private static class FirstVoteWinsFlowElection implements FlowElection {
         private DataFlow dataFlow;

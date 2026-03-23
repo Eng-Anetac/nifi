@@ -247,7 +247,6 @@ public class StandardParameterContext implements ParameterContext {
             .build();
     }
 
-
     private ParameterDescriptor getFullyPopulatedDescriptor(final Parameter proposedParameter) {
         final ParameterDescriptor descriptor = proposedParameter.getDescriptor();
         if (descriptor.getDescription() != null) {
@@ -524,7 +523,7 @@ public class StandardParameterContext implements ParameterContext {
      * @param parameterContexts A list of proposed ParameterContexts
      */
     private void verifyNoCycles(final List<ParameterContext> parameterContexts) {
-        final Stack<String> traversedIds = new Stack<>();
+        final Stack<String> traversedIds = new Stack<>(); //NOPMD
         traversedIds.push(id);
         verifyNoCycles(traversedIds, parameterContexts);
     }
@@ -536,7 +535,7 @@ public class StandardParameterContext implements ParameterContext {
      * @param parameterContexts The ParameterContexts for which to check for cycles
      * @throws IllegalStateException If a cycle was detected
      */
-    private void verifyNoCycles(final Stack<String> traversedIds, final List<ParameterContext> parameterContexts) {
+    private void verifyNoCycles(final Stack<String> traversedIds, final List<ParameterContext> parameterContexts) { //NOPMD
         for (final ParameterContext parameterContext : parameterContexts) {
             final String id = parameterContext.getIdentifier();
             if (traversedIds.contains(id)) {
@@ -776,6 +775,10 @@ public class StandardParameterContext implements ParameterContext {
         final boolean isDeletion = (parameter == null);
         final String action = isDeletion ? "remove" : "update";
         for (final ProcessorNode procNode : parameterReferenceManager.getProcessorsReferencing(this, parameterName)) {
+            if (procNode.isExtensionMissing()) {
+                continue;
+            }
+
             if (procNode.isRunning() && (isDeletion || duringUpdate)) {
                 throw new IllegalStateException("Cannot " + action + " parameter '" + parameterName + "' because it is referenced by " + procNode + ", which is currently running");
             }
@@ -786,6 +789,10 @@ public class StandardParameterContext implements ParameterContext {
         }
 
         for (final ControllerServiceNode serviceNode : parameterReferenceManager.getControllerServicesReferencing(this, parameterName)) {
+            if (serviceNode.isExtensionMissing()) {
+                continue;
+            }
+
             final ControllerServiceState serviceState = serviceNode.getState();
             if (serviceState != ControllerServiceState.DISABLED && (isDeletion || duringUpdate)) {
                 throw new IllegalStateException("Cannot " + action + " parameter '" + parameterName + "' because it is referenced by "

@@ -126,7 +126,6 @@ public class StandardExecutionProgress implements ExecutionProgress {
         createdSessions.clear();
     }
 
-
     @Override
     public boolean isCanceled() {
         if (canceled) {
@@ -173,6 +172,7 @@ public class StandardExecutionProgress implements ExecutionProgress {
         return completionAction;
     }
 
+    @Override
     public void enqueueTriggerResult(final Runnable onAcknowledge, final Consumer<Throwable> onFailure) {
         if (isCanceled()) {
             onFailure.accept(new RuntimeException("Dataflow canceled"));

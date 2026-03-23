@@ -85,7 +85,7 @@ import {
     selectCurrentParameterContext,
     selectCurrentProcessGroupId,
     selectCurrentProcessGroupRevision,
-    selectFlowLoadingStatus,
+    selectHasFlowData,
     selectInputPort,
     selectMaxZIndex,
     selectOutputPort,
@@ -180,34 +180,34 @@ import { ParameterContextService } from '../../../parameter-contexts/service/par
 
 @Injectable()
 export class FlowEffects {
+    private actions$ = inject(Actions);
+    private store = inject<Store<NiFiState>>(Store);
+    private storage = inject(Storage);
+    private flowService = inject(FlowService);
+    private controllerServiceService = inject(ControllerServiceService);
+    private registryService = inject(RegistryService);
+    private client = inject(Client);
+    private canvasUtils = inject(CanvasUtils);
+    private canvasView = inject(CanvasView);
+    private birdseyeView = inject(BirdseyeView);
+    private connectionManager = inject(ConnectionManager);
+    private clusterConnectionService = inject(ClusterConnectionService);
+    private snippetService = inject(SnippetService);
+    private router = inject(Router);
+    private dialog = inject(MatDialog);
+    private propertyTableHelperService = inject(PropertyTableHelperService);
+    private parameterHelperService = inject(ParameterHelperService);
+    private parameterContextService = inject(ParameterContextService);
+    private extensionTypesService = inject(ExtensionTypesService);
+    private errorHelper = inject(ErrorHelper);
+    private copyPasteService = inject(CopyPasteService);
+
     private createProcessGroupDialogRef: MatDialogRef<CreateProcessGroup, any> | undefined;
     private editProcessGroupDialogRef: MatDialogRef<EditProcessGroup, any> | undefined;
     private destroyRef = inject(DestroyRef);
     private lastReload: number = 0;
 
-    constructor(
-        private actions$: Actions,
-        private store: Store<NiFiState>,
-        private storage: Storage,
-        private flowService: FlowService,
-        private controllerServiceService: ControllerServiceService,
-        private registryService: RegistryService,
-        private client: Client,
-        private canvasUtils: CanvasUtils,
-        private canvasView: CanvasView,
-        private birdseyeView: BirdseyeView,
-        private connectionManager: ConnectionManager,
-        private clusterConnectionService: ClusterConnectionService,
-        private snippetService: SnippetService,
-        private router: Router,
-        private dialog: MatDialog,
-        private propertyTableHelperService: PropertyTableHelperService,
-        private parameterHelperService: ParameterHelperService,
-        private parameterContextService: ParameterContextService,
-        private extensionTypesService: ExtensionTypesService,
-        private errorHelper: ErrorHelper,
-        private copyPasteService: CopyPasteService
-    ) {
+    constructor() {
         this.store
             .select(selectDocumentVisibilityState)
             .pipe(
@@ -249,11 +249,11 @@ export class FlowEffects {
             ofType(FlowActions.loadProcessGroup),
             map((action) => action.request),
             concatLatestFrom(() => [
-                this.store.select(selectFlowLoadingStatus),
+                this.store.select(selectHasFlowData),
                 this.store.select(selectConnectedStateChanged)
             ]),
             tap(() => this.store.dispatch(resetConnectedStateChanged())),
-            switchMap(([request, status, connectedStateChanged]) =>
+            switchMap(([request, hasFlowData, connectedStateChanged]) =>
                 combineLatest([
                     this.flowService.getFlow(request.id),
                     this.flowService.getFlowStatus(),
@@ -274,7 +274,7 @@ export class FlowEffects {
                         });
                     }),
                     catchError((errorResponse: HttpErrorResponse) =>
-                        of(this.errorHelper.handleLoadingError(status, errorResponse))
+                        of(this.errorHelper.handleLoadingError(hasFlowData, errorResponse))
                     )
                 )
             )
@@ -1671,7 +1671,6 @@ export class FlowEffects {
                                 stopComponent({
                                     request: {
                                         id: stopComponentRequest.id,
-                                        uri: stopComponentRequest.uri,
                                         type: ComponentType.Processor,
                                         revision: stopComponentRequest.revision,
                                         errorStrategy: 'snackbar'
@@ -1688,7 +1687,6 @@ export class FlowEffects {
                                 disableComponent({
                                     request: {
                                         id: disableComponentsRequest.id,
-                                        uri: disableComponentsRequest.uri,
                                         type: ComponentType.Processor,
                                         revision: disableComponentsRequest.revision,
                                         errorStrategy: 'snackbar'
@@ -1705,7 +1703,6 @@ export class FlowEffects {
                                 enableComponent({
                                     request: {
                                         id: enableComponentsRequest.id,
-                                        uri: enableComponentsRequest.uri,
                                         type: ComponentType.Processor,
                                         revision: enableComponentsRequest.revision,
                                         errorStrategy: 'snackbar'
@@ -1722,7 +1719,6 @@ export class FlowEffects {
                                 startComponent({
                                     request: {
                                         id: startComponentRequest.id,
-                                        uri: startComponentRequest.uri,
                                         type: ComponentType.Processor,
                                         revision: startComponentRequest.revision,
                                         errorStrategy: 'snackbar'
@@ -2945,6 +2941,28 @@ export class FlowEffects {
         { dispatch: false }
     );
 
+    navigateToComponents$ = createEffect(
+        () =>
+            this.actions$.pipe(
+                ofType(FlowActions.navigateToComponents),
+                map((action) => action.request),
+                concatLatestFrom(() => this.store.select(selectCurrentProcessGroupId)),
+                tap(([request, currentProcessGroupId]) => {
+                    if (request.processGroupId) {
+                        this.router.navigate([
+                            '/process-groups',
+                            request.processGroupId,
+                            'bulk',
+                            request.ids.join(',')
+                        ]);
+                    } else {
+                        this.router.navigate(['/process-groups', currentProcessGroupId, 'bulk', request.ids.join(',')]);
+                    }
+                })
+            ),
+        { dispatch: false }
+    );
+
     navigateWithoutTransform$ = createEffect(
         () =>
             this.actions$.pipe(
@@ -3124,7 +3142,7 @@ export class FlowEffects {
                     case ComponentType.InputPort:
                     case ComponentType.OutputPort:
                     case ComponentType.Processor:
-                        if ('uri' in request && 'revision' in request) {
+                        if ('revision' in request) {
                             return from(this.flowService.enableComponent(request)).pipe(
                                 map((response) => {
                                     return FlowActions.enableComponentSuccess({
@@ -3150,7 +3168,7 @@ export class FlowEffects {
                         }
                         return of(
                             FlowActions.flowSnackbarError({
-                                error: `Enabling ${request.type} requires both uri and revision properties`
+                                error: `Enabling ${request.type} requires a revision property`
                             })
                         );
                     case ComponentType.ProcessGroup:
@@ -3260,7 +3278,7 @@ export class FlowEffects {
                     case ComponentType.InputPort:
                     case ComponentType.OutputPort:
                     case ComponentType.Processor:
-                        if ('uri' in request && 'revision' in request) {
+                        if ('revision' in request) {
                             return from(this.flowService.disableComponent(request)).pipe(
                                 map((response) => {
                                     return FlowActions.disableComponentSuccess({
@@ -3286,7 +3304,7 @@ export class FlowEffects {
                         }
                         return of(
                             FlowActions.flowSnackbarError({
-                                error: `Disabling ${request.type} requires both uri and revision properties`
+                                error: `Disabling ${request.type} requires a revision property`
                             })
                         );
                     case ComponentType.ProcessGroup:
@@ -3397,7 +3415,7 @@ export class FlowEffects {
                     case ComponentType.OutputPort:
                     case ComponentType.Processor:
                     case ComponentType.RemoteProcessGroup:
-                        if ('uri' in request && 'revision' in request) {
+                        if ('revision' in request) {
                             return from(this.flowService.startComponent(request)).pipe(
                                 map((response) => {
                                     return FlowActions.startComponentSuccess({
@@ -3423,7 +3441,7 @@ export class FlowEffects {
                         }
                         return of(
                             FlowActions.flowSnackbarError({
-                                error: `Starting ${request.type} requires both uri and revision properties`
+                                error: `Starting ${request.type} requires a revision property`
                             })
                         );
                     case ComponentType.ProcessGroup:
@@ -3597,7 +3615,7 @@ export class FlowEffects {
                     case ComponentType.OutputPort:
                     case ComponentType.Processor:
                     case ComponentType.RemoteProcessGroup:
-                        if ('uri' in request && 'revision' in request) {
+                        if ('revision' in request) {
                             return from(this.flowService.stopComponent(request)).pipe(
                                 map((response) => {
                                     return FlowActions.stopComponentSuccess({
@@ -3623,7 +3641,7 @@ export class FlowEffects {
                         }
                         return of(
                             FlowActions.flowSnackbarError({
-                                error: `Stopping ${request.type} requires both uri and revision properties`
+                                error: `Stopping ${request.type} requires a revision property`
                             })
                         );
                     case ComponentType.ProcessGroup:
@@ -4617,5 +4635,72 @@ export class FlowEffects {
                 })
             ),
         { dispatch: false }
+    );
+
+    /*
+        Clear Bulletins Effects
+    */
+
+    clearBulletinsForComponent$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(FlowActions.clearBulletinsForComponent),
+            map((action) => action.request),
+            switchMap((request) =>
+                from(this.flowService.clearBulletinForComponent(request)).pipe(
+                    map((response) =>
+                        FlowActions.clearBulletinsForComponentSuccess({
+                            response: {
+                                componentId: response.componentId,
+                                bulletinsCleared: response.bulletinsCleared,
+                                bulletins: response.bulletins || [],
+                                componentType: request.componentType
+                            }
+                        })
+                    ),
+                    catchError((errorResponse: HttpErrorResponse) => of(this.snackBarOrFullScreenError(errorResponse)))
+                )
+            )
+        )
+    );
+
+    clearBulletinsForProcessGroup$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(FlowActions.clearBulletinsForProcessGroup),
+            map((action) => action.request),
+            switchMap((request) =>
+                from(this.flowService.clearBulletinsForProcessGroup(request)).pipe(
+                    map((response) =>
+                        FlowActions.clearBulletinsForProcessGroupSuccess({
+                            response: {
+                                processGroupId: request.processGroupId,
+                                bulletinsCleared: response.bulletinsCleared
+                            }
+                        })
+                    ),
+                    catchError((errorResponse: HttpErrorResponse) => of(this.snackBarOrFullScreenError(errorResponse)))
+                )
+            )
+        )
+    );
+
+    clearBulletinsForProcessGroupSuccess$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(FlowActions.clearBulletinsForProcessGroupSuccess),
+            map((action) => action.response),
+            concatLatestFrom(() => this.store.select(selectCurrentProcessGroupId)),
+            switchMap(([response, currentProcessGroupId]) => {
+                // If we cleared bulletins for the currently viewed process group, reload the entire flow
+                if (response.processGroupId === currentProcessGroupId) {
+                    return of(FlowActions.reloadFlow());
+                } else {
+                    // If it's a child process group visible on the canvas, reload just that child
+                    return of(
+                        FlowActions.loadChildProcessGroup({
+                            request: { id: response.processGroupId }
+                        })
+                    );
+                }
+            })
+        )
     );
 }

@@ -32,6 +32,7 @@ import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.RequiredPermission;
 import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
+import org.apache.nifi.migration.PropertyConfiguration;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
 import org.apache.nifi.processor.Relationship;
@@ -56,7 +57,7 @@ import java.util.stream.Stream;
         + "or a statically set path that is periodically removed. If this processor has an incoming connection, it"
         + "will ignore running on a periodic basis and instead rely on incoming FlowFiles to trigger a delete. "
         + "Note that you may use a wildcard character to match multiple files or directories. If there are"
-        + " no incoming connections no flowfiles will be transfered to any output relationships.  If there is an incoming"
+        + " no incoming connections no FlowFiles will be transfered to any output relationships.  If there is an incoming"
         + " flowfile then provided there are no detected failures it will be transferred to success otherwise it will be sent to false. If"
         + " knowledge of globbed files deleted is necessary use ListHDFS first to produce a specific list of files to delete. ")
 @Restricted(restrictions = {
@@ -86,8 +87,7 @@ public class DeleteHDFS extends AbstractHadoopProcessor {
             .build();
 
     public static final PropertyDescriptor FILE_OR_DIRECTORY = new PropertyDescriptor.Builder()
-            .name("file_or_directory")
-            .displayName("Path")
+            .name("Path")
             .description("The HDFS file or directory to delete. A wildcard expression may be used to only delete certain files")
             .required(true)
             .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
@@ -95,8 +95,7 @@ public class DeleteHDFS extends AbstractHadoopProcessor {
             .build();
 
     public static final PropertyDescriptor RECURSIVE = new PropertyDescriptor.Builder()
-            .name("recursive")
-            .displayName("Recursive")
+            .name("Recursive")
             .description("Remove contents of a non-empty directory recursively")
             .allowableValues("true", "false")
             .required(true)
@@ -104,8 +103,8 @@ public class DeleteHDFS extends AbstractHadoopProcessor {
             .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
             .build();
 
-    protected final Pattern GLOB_PATTERN = Pattern.compile("\\[|\\]|\\*|\\?|\\^|\\{|\\}|\\\\c");
-    protected final Matcher GLOB_MATCHER = GLOB_PATTERN.matcher("");
+    protected static final Pattern GLOB_PATTERN = Pattern.compile("\\[|\\]|\\*|\\?|\\^|\\{|\\}|\\\\c");
+    protected final Matcher globMatcher = GLOB_PATTERN.matcher("");
 
     private static final Set<Relationship> RELATIONSHIPS = Set.of(
             REL_SUCCESS,
@@ -151,7 +150,7 @@ public class DeleteHDFS extends AbstractHadoopProcessor {
             try {
                 // Check if the user has supplied a file or directory pattern
                 List<Path> pathList = new ArrayList<>();
-                if (GLOB_MATCHER.reset(fileOrDirectoryName).find()) {
+                if (globMatcher.reset(fileOrDirectoryName).find()) {
                     FileStatus[] fileStatuses = fileSystem.globStatus(new Path(fileOrDirectoryName));
                     if (fileStatuses != null) {
                         for (FileStatus fileStatus : fileStatuses) {
@@ -221,6 +220,13 @@ public class DeleteHDFS extends AbstractHadoopProcessor {
             return null;
         });
 
+    }
+
+    @Override
+    public void migrateProperties(PropertyConfiguration config) {
+        super.migrateProperties(config);
+        config.renameProperty("file_or_directory", FILE_OR_DIRECTORY.getName());
+        config.renameProperty("recursive", RECURSIVE.getName());
     }
 
     protected Relationship getSuccessRelationship() {

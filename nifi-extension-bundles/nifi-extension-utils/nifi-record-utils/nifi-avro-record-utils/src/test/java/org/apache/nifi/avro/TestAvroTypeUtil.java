@@ -18,23 +18,6 @@
 package org.apache.nifi.avro;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.File;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.sql.Date;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
@@ -42,6 +25,7 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.file.DataFileStream;
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.GenericDatumReader;
@@ -61,6 +45,28 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.sql.Blob;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -73,6 +79,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class TestAvroTypeUtil {
     private static final Logger logger = LoggerFactory.getLogger(TestAvroTypeUtil.class);
 
+    private static final String NAMESPACE = TestAvroTypeUtil.class.getSimpleName();
+
     @Test
     @EnabledIfSystemProperty(
         named = "nifi.test.metrics",
@@ -80,7 +88,7 @@ public class TestAvroTypeUtil {
         disabledReason = "Performance test meant for manually testing only " +
                 "before/after changes in order to measure performance difference caused by changes."
     )
-    public void testCreateAvroRecordPerformance() throws IOException {
+    public void testCreateAvroRecordPerformance() {
         final List<RecordField> fields = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
             fields.add(new RecordField("field" + i, RecordFieldType.STRING.getDataType(), true));
@@ -114,7 +122,7 @@ public class TestAvroTypeUtil {
     }
 
     @Test
-    public void testAvroDefaultValueWithNoFieldInRecordOrSchema() throws IOException {
+    public void testAvroDefaultValueWithNoFieldInRecordOrSchema() {
         final List<RecordField> fields = new ArrayList<>();
         fields.add(new RecordField("name", RecordFieldType.STRING.getDataType()));
         final RecordSchema personSchema = new SimpleRecordSchema(fields);
@@ -155,7 +163,7 @@ public class TestAvroTypeUtil {
     }
 
     @Test
-    public void testAvroDefaultValueWithFieldInSchemaButNotRecord() throws IOException {
+    public void testAvroDefaultValueWithFieldInSchemaButNotRecord() {
         final List<RecordField> fields = new ArrayList<>();
         fields.add(new RecordField("name", RecordFieldType.STRING.getDataType()));
         fields.add(new RecordField("color", RecordFieldType.STRING.getDataType()));
@@ -174,7 +182,7 @@ public class TestAvroTypeUtil {
     }
 
     @Test
-    public void testAvroDefaultedLong() throws IOException {
+    public void testAvroDefaultedLong() {
         final List<RecordField> fields = new ArrayList<>();
         fields.add(new RecordField("name", RecordFieldType.STRING.getDataType()));
         final RecordSchema personSchema = new SimpleRecordSchema(fields);
@@ -304,7 +312,7 @@ public class TestAvroTypeUtil {
         GenericRecordBuilder builder = new GenericRecordBuilder(avroSchema);
         Record r = builder.build();
         @SuppressWarnings("unchecked")
-        GenericData.Array<Integer> values = (GenericData.Array<Integer>) r.get("listOfInt");
+        GenericArray<Integer> values = (GenericArray<Integer>) r.get("listOfInt");
         assertEquals(values.size(), 1);
         RecordSchema record = AvroTypeUtil.createSchema(avroSchema);
         RecordField field = record.getField("listOfInt").get();
@@ -326,7 +334,7 @@ public class TestAvroTypeUtil {
         GenericRecordBuilder builder = new GenericRecordBuilder(avroSchema);
         Record r = builder.build();
         @SuppressWarnings("unchecked")
-        GenericData.Array<Integer> values = (GenericData.Array<Integer>) r.get("listOfInt");
+        GenericArray<Integer> values = (GenericArray<Integer>) r.get("listOfInt");
         assertArrayEquals(new Object[] {1, 2}, values.toArray());
         RecordSchema record = AvroTypeUtil.createSchema(avroSchema);
         RecordField field = record.getField("listOfInt").get();
@@ -351,8 +359,7 @@ public class TestAvroTypeUtil {
         Record r = builder.build();
 
         @SuppressWarnings("unchecked")
-        GenericData.Array<Integer> values = (GenericData.Array<Integer>) ((GenericRecord) r.get("field1"))
-                .get("listOfInt");
+        GenericArray<Integer> values = (GenericArray<Integer>) ((GenericRecord) r.get("field1")).get("listOfInt");
         assertArrayEquals(new Object[] {0}, values.toArray());
         RecordSchema record = AvroTypeUtil.createSchema(avroSchema);
         RecordField field = record.getField("field1").get();
@@ -372,28 +379,27 @@ public class TestAvroTypeUtil {
     * @throws IOException
     *             schema not found.
     */
-   @Test
-   public void testDefaultArrayValuesInRecordsCase2() throws IOException {
-       Schema avroSchema = new Schema.Parser().parse(getClass().getResourceAsStream("defaultArrayInRecords2.json"));
-       GenericRecordBuilder builder = new GenericRecordBuilder(avroSchema);
-       Record field1Record = new GenericRecordBuilder(avroSchema.getField("field1").schema()).build();
-       builder.set("field1", field1Record);
-       Record r = builder.build();
+    @Test
+    public void testDefaultArrayValuesInRecordsCase2() throws IOException {
+        Schema avroSchema = new Schema.Parser().parse(getClass().getResourceAsStream("defaultArrayInRecords2.json"));
+        GenericRecordBuilder builder = new GenericRecordBuilder(avroSchema);
+        Record field1Record = new GenericRecordBuilder(avroSchema.getField("field1").schema()).build();
+        builder.set("field1", field1Record);
+        Record r = builder.build();
 
-       @SuppressWarnings("unchecked")
-       GenericData.Array<Integer> values = (GenericData.Array<Integer>) ((GenericRecord) r.get("field1"))
-               .get("listOfInt");
-       assertArrayEquals(new Object[] {1, 2, 3}, values.toArray());
-       RecordSchema record = AvroTypeUtil.createSchema(avroSchema);
-       RecordField field = record.getField("field1").get();
-       assertEquals(RecordFieldType.RECORD, field.getDataType().getFieldType());
-       RecordDataType data = (RecordDataType) field.getDataType();
-       RecordSchema childSchema = data.getChildSchema();
-       RecordField childField = childSchema.getField("listOfInt").get();
-       assertEquals(RecordFieldType.ARRAY, childField.getDataType().getFieldType());
-       assertInstanceOf(Object[].class, childField.getDefaultValue());
-       assertArrayEquals(new Object[] {1, 2, 3}, ((Object[]) childField.getDefaultValue()));
-   }
+        @SuppressWarnings("unchecked")
+        GenericArray<Integer> values = (GenericArray<Integer>) ((GenericRecord) r.get("field1")).get("listOfInt");
+        assertArrayEquals(new Object[] {1, 2, 3}, values.toArray());
+        RecordSchema record = AvroTypeUtil.createSchema(avroSchema);
+        RecordField field = record.getField("field1").get();
+        assertEquals(RecordFieldType.RECORD, field.getDataType().getFieldType());
+        RecordDataType data = (RecordDataType) field.getDataType();
+        RecordSchema childSchema = data.getChildSchema();
+        RecordField childField = childSchema.getField("listOfInt").get();
+        assertEquals(RecordFieldType.ARRAY, childField.getDataType().getFieldType());
+        assertInstanceOf(Object[].class, childField.getDefaultValue());
+        assertArrayEquals(new Object[] {1, 2, 3}, ((Object[]) childField.getDefaultValue()));
+    }
     @Test
     // Simple recursion is a record A composing itself (similar to a LinkedList Node
     // referencing 'next')
@@ -533,8 +539,6 @@ public class TestAvroTypeUtil {
         assertEquals(48, map.get("favoriteNumber"));
     }
 
-
-
     @Test
     public void testToDecimalConversion() {
         final LogicalTypes.Decimal decimalType = LogicalTypes.decimal(26, 8);
@@ -602,8 +606,8 @@ public class TestAvroTypeUtil {
 
     @Test
     public void testConvertAvroRecordToMapWithFieldTypeOfFixedAndLogicalTypeDecimal() {
-       // Create a field schema like {"type":"fixed","name":"amount","size":16,"logicalType":"decimal","precision":18,"scale":8}
-       final LogicalTypes.Decimal decimalType = LogicalTypes.decimal(18, 8);
+        // Create a field schema like {"type":"fixed","name":"amount","size":16,"logicalType":"decimal","precision":18,"scale":8}
+        final LogicalTypes.Decimal decimalType = LogicalTypes.decimal(18, 8);
         final Schema fieldSchema = Schema.createFixed("amount", null, null, 16);
         decimalType.addToSchema(fieldSchema);
 
@@ -728,6 +732,82 @@ public class TestAvroTypeUtil {
     }
 
     @Test
+    public void testBlobToByteBuffer() {
+        final byte[] bytes = String.class.getName().getBytes(StandardCharsets.UTF_8);
+        final ByteBuffer inputBuffer = ByteBuffer.wrap(bytes);
+
+        final Blob blob = new Blob() {
+            @Override
+            public long length() {
+                return bytes.length;
+            }
+
+            @Override
+            public byte[] getBytes(final long pos, final int length) {
+                final byte[] selected = new byte[length];
+                final int index = Math.toIntExact(pos);
+                inputBuffer.get(index, selected);
+                return selected;
+            }
+
+            @Override
+            public InputStream getBinaryStream() {
+                return new ByteArrayInputStream(bytes);
+            }
+
+            @Override
+            public long position(final byte[] pattern, final long start) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public long position(final Blob pattern, final long start) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public int setBytes(final long pos, final byte[] bytes) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public int setBytes(final long pos, final byte[] bytes, final int offset, final int len) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public OutputStream setBinaryStream(final long pos) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void truncate(final long len) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void free() {
+
+            }
+
+            @Override
+            public InputStream getBinaryStream(final long pos, final long length) {
+                final int selectedLength = Math.toIntExact(length);
+                final byte[] selected = new byte[selectedLength];
+                final int index = Math.toIntExact(pos);
+                inputBuffer.get(index, selected);
+                return new ByteArrayInputStream(selected);
+            }
+        };
+
+        final Schema fixedSchema = Schema.createFixed("blob", "blob", NAMESPACE, bytes.length);
+        final Object converted = AvroTypeUtil.convertToAvroObject(blob, fixedSchema, StandardCharsets.UTF_8);
+        assertInstanceOf(GenericFixed.class, converted);
+        final GenericFixed genericFixed = (GenericFixed) converted;
+        assertEquals(inputBuffer, ByteBuffer.wrap(genericFixed.bytes()));
+    }
+
+    @Test
     public void testAliasCreatedForInvalidField() {
         final List<RecordField> fields = new ArrayList<>();
         fields.add(new RecordField("valid", RecordFieldType.STRING.getDataType()));
@@ -800,7 +880,7 @@ public class TestAvroTypeUtil {
         Object o = AvroTypeUtil.convertToAvroObject(obj, s);
         assertInstanceOf(Record.class, o);
         List innerList = (List) ((Record) o).get("List");
-        assertNotNull( innerList );
+        assertNotNull(innerList);
         assertEquals(10, innerList.size());
         for (Object inner : innerList) {
             assertInstanceOf(Record.class, inner);
@@ -900,7 +980,7 @@ public class TestAvroTypeUtil {
     }
 
     @Test
-    public void testConvertNifiRecordIntoAvroRecord() throws IOException {
+    public void testConvertNifiRecordIntoAvroRecord() {
         // given
         final MapRecord nifiRecord = givenRecordContainingNumericMap();
         final Schema avroSchema = givenAvroSchemaContainingNumericMap();
@@ -909,13 +989,13 @@ public class TestAvroTypeUtil {
         final GenericRecord result = AvroTypeUtil.createAvroRecord(nifiRecord, avroSchema);
 
         // then
-        final HashMap<String, Object> numbers = (HashMap<String, Object>) result.get("numbers");
+        final Map<String, Object> numbers = (HashMap<String, Object>) result.get("numbers");
         assertInstanceOf(Long.class, numbers.get("number1"));
         assertInstanceOf(Long.class, numbers.get("number2"));
     }
 
     @Test
-    public void testSchemaWithReoccurringFieldNameWithDifferentFieldNameInChildSchema() throws Exception {
+    public void testSchemaWithReoccurringFieldNameWithDifferentFieldNameInChildSchema() {
         // GIVEN
         String reoccurringFieldName = "reoccurringFieldNameWithDifferentChildSchema";
 
@@ -973,7 +1053,7 @@ public class TestAvroTypeUtil {
     }
 
     @Test
-    public void testSchemaWithReoccurringFieldNameWithDifferentTypeInChildSchema() throws Exception {
+    public void testSchemaWithReoccurringFieldNameWithDifferentTypeInChildSchema() {
         // GIVEN
         String reoccurringFieldName = "reoccurringFieldNameWithDifferentChildSchema";
         String reoccurringFieldNameInChildSchema = "childRecordField";
@@ -1159,7 +1239,7 @@ public class TestAvroTypeUtil {
     }
 
     @Test
-    public void testSchemaWithMultiLevelRecord() throws Exception {
+    public void testSchemaWithMultiLevelRecord() {
         // GIVEN
         final List<RecordField> fields = new ArrayList<>();
 
@@ -1254,7 +1334,7 @@ public class TestAvroTypeUtil {
     }
 
     private Schema givenAvroSchemaContainingNumericMap() {
-       Map<String, Long> defaultLongMap = new HashMap<>();
+        Map<String, Long> defaultLongMap = new HashMap<>();
         final List<Field> avroFields = Arrays.asList(
                 new Field("id", Schema.create(Type.INT), "", 0),
                 new Field("numbers", Schema.createMap(Schema.create(Type.LONG)), "", defaultLongMap)

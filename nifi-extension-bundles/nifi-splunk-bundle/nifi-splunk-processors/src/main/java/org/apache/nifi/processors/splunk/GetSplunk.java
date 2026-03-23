@@ -131,6 +131,20 @@ public class GetSplunk extends AbstractProcessor implements ClassloaderIsolation
             .required(true)
             .build();
 
+    public static final AllowableValue API_VERSION_V2 = new AllowableValue("V2", "API Version 2",
+            "Enables the Splunk Search API Version 2, which offers improved performance and features.");
+    public static final AllowableValue API_VERSION_V1 = new AllowableValue("V1", "API Version 1",
+            "Uses the Splunk Search API Version 1 (legacy).");
+
+    public static final PropertyDescriptor API_VERSION = new PropertyDescriptor.Builder()
+            .name("API Version")
+            .description(
+                    "Select which version of the Splunk Search API to use for search operations. Version 2 is recommended for newer Splunk instances.")
+            .allowableValues(API_VERSION_V2, API_VERSION_V1)
+            .defaultValue(API_VERSION_V2.getValue())
+            .required(true)
+            .build();
+
     public static final AllowableValue EVENT_TIME_VALUE = new AllowableValue("Event Time", "Event Time",
             "Search based on the time of the event which may be different than when the event was indexed.");
     public static final AllowableValue INDEX_TIME_VALUE = new AllowableValue("Index Time", "Index Time",
@@ -271,26 +285,26 @@ public class GetSplunk extends AbstractProcessor implements ClassloaderIsolation
     );
 
     private static final List<PropertyDescriptor> PROPERTY_DESCRIPTORS = List.of(
-        SCHEME,
-        HOSTNAME,
-        PORT,
-        CONNECT_TIMEOUT,
-        READ_TIMEOUT,
-        QUERY,
-        TIME_FIELD_STRATEGY,
-        TIME_RANGE_STRATEGY,
-        EARLIEST_TIME,
-        LATEST_TIME,
-        TIME_ZONE,
-        APP,
-        OWNER,
-        TOKEN,
-        USERNAME,
-        PASSWORD,
-        SECURITY_PROTOCOL,
-        OUTPUT_MODE,
-        SSL_CONTEXT_SERVICE
-    );
+            SCHEME,
+            HOSTNAME,
+            PORT,
+            CONNECT_TIMEOUT,
+            READ_TIMEOUT,
+            QUERY,
+            API_VERSION,
+            TIME_FIELD_STRATEGY,
+            TIME_RANGE_STRATEGY,
+            EARLIEST_TIME,
+            LATEST_TIME,
+            TIME_ZONE,
+            APP,
+            OWNER,
+            TOKEN,
+            USERNAME,
+            PASSWORD,
+            SECURITY_PROTOCOL,
+            OUTPUT_MODE,
+            SSL_CONTEXT_SERVICE);
 
     private volatile String transitUri;
     private volatile boolean resetState = false;
@@ -334,14 +348,13 @@ public class GetSplunk extends AbstractProcessor implements ClassloaderIsolation
 
     @Override
     public void onPropertyModified(PropertyDescriptor descriptor, String oldValue, String newValue) {
-        if ( ((oldValue != null && !oldValue.equals(newValue)))
+        if (((oldValue != null && !oldValue.equals(newValue)))
                 && (descriptor.equals(QUERY)
                 || descriptor.equals(TIME_FIELD_STRATEGY)
                 || descriptor.equals(TIME_RANGE_STRATEGY)
                 || descriptor.equals(EARLIEST_TIME)
                 || descriptor.equals(LATEST_TIME)
-                || descriptor.equals(HOSTNAME))
-                ) {
+                || descriptor.equals(HOSTNAME))) {
             getLogger().debug("A property that require resetting state was modified - {} oldValue {} newValue {}",
                     descriptor.getDisplayName(), oldValue, newValue);
             resetState = true;
@@ -381,7 +394,7 @@ public class GetSplunk extends AbstractProcessor implements ClassloaderIsolation
         try {
             context.getStateManager().clear(Scope.CLUSTER);
         } catch (IOException e) {
-           getLogger().error("Unable to clear processor state due to {}", e.getMessage(), e);
+            getLogger().error("Unable to clear processor state due to {}", e.getMessage(), e);
         }
     }
 
@@ -402,7 +415,7 @@ public class GetSplunk extends AbstractProcessor implements ClassloaderIsolation
         final String timeZone = context.getProperty(TIME_ZONE).getValue();
         final String timeFieldStrategy = context.getProperty(TIME_FIELD_STRATEGY).getValue();
 
-        final JobExportArgs exportArgs = new JobExportArgs();
+        final JobExportArgs exportArgs = new JobExportArgs(); //NOPMD
         exportArgs.setSearchMode(JobExportArgs.SearchMode.NORMAL);
         exportArgs.setOutputMode(JobExportArgs.OutputMode.valueOf(outputMode));
 
@@ -445,7 +458,7 @@ public class GetSplunk extends AbstractProcessor implements ClassloaderIsolation
                         earliestTime = dateTimeFormatter.format(previousLastDate.plusSeconds(1));
                         latestTime = dateTimeFormatter.format(currentTime);
                     } catch (DateTimeParseException e) {
-                       throw new ProcessException(e);
+                        throw new ProcessException(e);
                     }
                 }
 
@@ -523,7 +536,7 @@ public class GetSplunk extends AbstractProcessor implements ClassloaderIsolation
     }
 
     protected Service createSplunkService(final ProcessContext context) {
-        final ServiceArgs serviceArgs = new ServiceArgs();
+        final ServiceArgs serviceArgs = new ServiceArgs(); //NOPMD
 
         final String scheme = context.getProperty(SCHEME).getValue();
         serviceArgs.setScheme(scheme);
@@ -534,11 +547,11 @@ public class GetSplunk extends AbstractProcessor implements ClassloaderIsolation
         final int port = context.getProperty(PORT).asInteger();
         serviceArgs.setPort(port);
 
-        final int connect_timeout = context.getProperty(CONNECT_TIMEOUT).asTimePeriod(TimeUnit.MILLISECONDS).intValue();
-        serviceArgs.add("connectTimeout", connect_timeout);
+        final int connectTimeout = context.getProperty(CONNECT_TIMEOUT).asTimePeriod(TimeUnit.MILLISECONDS).intValue();
+        serviceArgs.add("connectTimeout", connectTimeout);
 
-        final int read_timeout = context.getProperty(READ_TIMEOUT).asTimePeriod(TimeUnit.MILLISECONDS).intValue();
-        serviceArgs.add("readTimeout", read_timeout);
+        final int readTimeout = context.getProperty(READ_TIMEOUT).asTimePeriod(TimeUnit.MILLISECONDS).intValue();
+        serviceArgs.add("readTimeout", readTimeout);
 
         final String app = context.getProperty(APP).getValue();
         if (!StringUtils.isBlank(app)) {
@@ -574,6 +587,11 @@ public class GetSplunk extends AbstractProcessor implements ClassloaderIsolation
         if (sslContextProvider != null) {
             Service.setSSLSocketFactory(sslContextProvider.createContext().getSocketFactory());
         }
+
+        final String chosenApiVersion = context.getProperty(API_VERSION).getValue();
+        final boolean enableV2SearchApi = API_VERSION_V2.getValue().equals(chosenApiVersion);
+
+        serviceArgs.add("enableV2SearchApi", enableV2SearchApi);
 
         return Service.connect(serviceArgs);
     }

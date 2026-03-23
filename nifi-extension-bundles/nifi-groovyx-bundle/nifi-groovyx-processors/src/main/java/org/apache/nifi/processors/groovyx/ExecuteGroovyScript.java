@@ -18,16 +18,6 @@ package org.apache.nifi.processors.groovyx;
 
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
-import java.io.File;
-import java.lang.reflect.Method;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.apache.nifi.annotation.behavior.DynamicProperty;
 import org.apache.nifi.annotation.behavior.InputRequirement;
 import org.apache.nifi.annotation.behavior.Restricted;
@@ -50,6 +40,7 @@ import org.apache.nifi.components.state.Scope;
 import org.apache.nifi.controller.ControllerService;
 import org.apache.nifi.dbcp.DBCPService;
 import org.apache.nifi.expression.ExpressionLanguageScope;
+import org.apache.nifi.migration.PropertyConfiguration;
 import org.apache.nifi.processor.AbstractProcessor;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
@@ -65,12 +56,24 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.runtime.ResourceGroovyMethods;
 import org.codehaus.groovy.runtime.StackTraceUtils;
 
+import java.io.File;
+import java.lang.reflect.Method;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.time.Duration;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 @InputRequirement(InputRequirement.Requirement.INPUT_ALLOWED)
 @Tags({"script", "groovy", "groovyx"})
-@CapabilityDescription(
-        "Experimental Extended Groovy script processor. The script is responsible for "
-        + "handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as any flow files created by "
-        + "the script. If the handling is incomplete or incorrect, the session will be rolled back.")
+@CapabilityDescription("""
+        Execute custom Groovy script to handle input FlowFiles and route to standard relationships.
+        Script validation includes a timeout of 5 minutes to avoid potential issues with dynamic dependency resolution.
+        """
+)
 @Restricted(
         restrictions = {
                 @Restriction(
@@ -96,8 +99,7 @@ public class ExecuteGroovyScript extends AbstractProcessor {
             + "import org.apache.nifi.processor.util.*;" + "import org.apache.nifi.processors.script.*;" + "import org.apache.nifi.logging.ComponentLog;";
 
     public static final PropertyDescriptor SCRIPT_FILE = new PropertyDescriptor.Builder()
-            .name("groovyx-script-file")
-            .displayName("Script File")
+            .name("Script File")
             .required(false)
             .description("Path to script file to execute. Only one of Script File or Script Body may be used")
             .identifiesExternalResource(ResourceCardinality.SINGLE, ResourceType.FILE)
@@ -105,18 +107,16 @@ public class ExecuteGroovyScript extends AbstractProcessor {
             .build();
 
     public static final PropertyDescriptor SCRIPT_BODY = new PropertyDescriptor.Builder()
-            .name("groovyx-script-body")
-            .displayName("Script Body")
+            .name("Script Body")
             .required(false)
             .description("Body of script to execute. Only one of Script File or Script Body may be used")
             .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
             .expressionLanguageSupported(ExpressionLanguageScope.NONE)
             .build();
 
-    public static String[] VALID_FAIL_STRATEGY = {"rollback", "transfer to failure"};
+    public static final String[] VALID_FAIL_STRATEGY = {"rollback", "transfer to failure"};
     public static final PropertyDescriptor FAIL_STRATEGY = new PropertyDescriptor.Builder()
-            .name("groovyx-failure-strategy")
-            .displayName("Failure strategy")
+            .name("Failure Strategy")
             .description("What to do with unhandled exceptions. If you want to manage exception by code then keep the default value `rollback`."
                     + " If `transfer to failure` selected and unhandled exception occurred then all flowFiles received from incoming queues in this session"
                     + " will be transferred to `failure` relationship with additional attributes set: ERROR_MESSAGE and ERROR_STACKTRACE."
@@ -129,8 +129,7 @@ public class ExecuteGroovyScript extends AbstractProcessor {
             .build();
 
     public static final PropertyDescriptor ADD_CLASSPATH = new PropertyDescriptor.Builder()
-            .name("groovyx-additional-classpath")
-            .displayName("Additional classpath")
+            .name("Additional Classpath")
             .required(false)
             .description("Classpath list separated by semicolon or comma. You can use masks like `*`, `*.jar` in file name.")
             .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
@@ -214,13 +213,29 @@ public class ExecuteGroovyScript extends AbstractProcessor {
         this.addClasspath = context.getProperty(ADD_CLASSPATH).evaluateAttributeExpressions().getValue(); //ADD_CLASSPATH
         this.groovyClasspath = context.newPropertyValue(GROOVY_CLASSPATH).evaluateAttributeExpressions().getValue(); //evaluated from ${groovy.classes.path} global property
 
-        final Collection<ValidationResult> results = new HashSet<>();
+        final ValidationResult.Builder builder = new ValidationResult.Builder()
+                .subject("GroovyScript")
+                .input(scriptFile == null ? null : scriptFile.toString());
+
+        final Thread validationThread = Thread.startVirtualThread(() -> {
+            try {
+                getGroovyScript();
+                builder.valid(true);
+            } catch (final Throwable e) {
+                builder.explanation(e.toString());
+                builder.valid(false);
+            }
+        });
+
         try {
-            getGroovyScript();
-        } catch (Throwable t) {
-            results.add(new ValidationResult.Builder().subject("GroovyScript").input(this.scriptFile != null ? this.scriptFile.toString() : null).valid(false).explanation(t.toString()).build());
+            validationThread.join(Duration.ofMinutes(5));
+        } catch (final InterruptedException e) {
+            builder.valid(false);
+            builder.explanation("Groovy Script validation interrupted after 5 minutes");
         }
-        return results;
+
+        final ValidationResult result = builder.build();
+        return List.of(result);
     }
 
     /**
@@ -304,7 +319,7 @@ public class ExecuteGroovyScript extends AbstractProcessor {
             conf.setDebug(true);
             shell = new GroovyShell(conf);
             if (addClasspath != null && !addClasspath.isEmpty()) {
-                for (File fcp : Files.listPathsFiles(addClasspath)) {
+                for (File fcp : Files.listPathsFiles(addClasspath, getLogger())) {
                     if (!fcp.exists()) {
                         throw new ProcessException("Path not found `" + fcp + "` for `" + ADD_CLASSPATH.getDisplayName() + "`");
                     }
@@ -342,11 +357,19 @@ public class ExecuteGroovyScript extends AbstractProcessor {
         return script;
     }
 
+    @Override
+    public void migrateProperties(PropertyConfiguration config) {
+        config.renameProperty("groovyx-script-file", SCRIPT_FILE.getName());
+        config.renameProperty("groovyx-script-body", SCRIPT_BODY.getName());
+        config.renameProperty("groovyx-failure-strategy", FAIL_STRATEGY.getName());
+        config.renameProperty("groovyx-additional-classpath", ADD_CLASSPATH.getName());
+    }
+
     /**
      * init SQL variables from DBCP services
      */
-    private void onInitSQL(Map<String, Object> SQL, Map<String, String> attributes) throws SQLException {
-        for (Map.Entry<String, Object> e : SQL.entrySet()) {
+    private void onInitSQL(Map<String, Object> sqlMap, Map<String, String> attributes) throws SQLException {
+        for (Map.Entry<String, Object> e : sqlMap.entrySet()) {
             DBCPService s = (DBCPService) e.getValue();
             OSql sql = new OSql(s.getConnection(attributes));
             //try to set autocommit to false
@@ -368,8 +391,8 @@ public class ExecuteGroovyScript extends AbstractProcessor {
     /**
      * before commit SQL services
      */
-    private void onCommitSQL(Map<String, Object> SQL) throws SQLException {
-        for (Map.Entry<String, Object> e : SQL.entrySet()) {
+    private void onCommitSQL(Map<String, Object> sqlMap) throws SQLException {
+        for (Map.Entry<String, Object> e : sqlMap.entrySet()) {
             OSql sql = (OSql) e.getValue();
             if (!sql.getConnection().getAutoCommit()) {
                 sql.commit();
@@ -380,8 +403,8 @@ public class ExecuteGroovyScript extends AbstractProcessor {
     /**
      * finalize SQL services. no exceptions should be thrown.
      */
-    private void onFinitSQL(Map<String, Object> SQL) {
-        for (Map.Entry<String, Object> e : SQL.entrySet()) {
+    private void onFinitSQL(Map<String, Object> sqlMap) {
+        for (Map.Entry<String, Object> e : sqlMap.entrySet()) {
             OSql sql = (OSql) e.getValue();
             try {
                 if (!sql.getConnection().getAutoCommit()) {
@@ -406,8 +429,8 @@ public class ExecuteGroovyScript extends AbstractProcessor {
     /**
      * exception SQL services
      */
-    private void onFailSQL(Map<String, Object> SQL) {
-        for (Map.Entry<String, Object> e : SQL.entrySet()) {
+    private void onFailSQL(Map<String, Object> sqlMap) {
+        for (Map.Entry<String, Object> e : sqlMap.entrySet()) {
             OSql sql = (OSql) e.getValue();
             try {
                 if (!sql.getConnection().getAutoCommit()) {
@@ -420,16 +443,16 @@ public class ExecuteGroovyScript extends AbstractProcessor {
     }
 
     @Override
-    public void onTrigger(final ProcessContext context, final ProcessSession _session) throws ProcessException {
+    public void onTrigger(final ProcessContext context, final ProcessSession processSession) throws ProcessException {
         boolean toFailureOnError = VALID_FAIL_STRATEGY[1].equals(context.getProperty(FAIL_STRATEGY).getValue());
         //create wrapped session to control list of newly created and files got from this session.
         //so transfer original input to failure will be possible
-        GroovyProcessSessionWrap session = new GroovyProcessSessionWrap(_session, toFailureOnError);
+        GroovyProcessSessionWrap session = new GroovyProcessSessionWrap(processSession, toFailureOnError);
 
-        Map<String, Object> CTL = new AccessMap("CTL");
-        Map<String, Object> SQL = new AccessMap("SQL");
-        Map<String, Object> RECORD_READER = new AccessMap("RecordReader");
-        Map<String, Object> RECORD_SET_WRITER = new AccessMap("RecordSetWriter");
+        Map<String, Object> ctl = new AccessMap("CTL");
+        Map<String, Object> sql = new AccessMap("SQL");
+        Map<String, Object> recordReader = new AccessMap("RecordReader");
+        Map<String, Object> recordSetWriter = new AccessMap("RecordSetWriter");
 
         try {
             Script script = getGroovyScript(); //compilation must be moved to validation
@@ -443,19 +466,19 @@ public class ExecuteGroovyScript extends AbstractProcessor {
                 if (property.getKey().isDynamic()) {
                     if (property.getKey().getName().startsWith("CTL.")) {
                         //get controller service
-                        ControllerService ctl = context.getProperty(property.getKey()).asControllerService(ControllerService.class);
-                        CTL.put(property.getKey().getName().substring(4), ctl);
+                        ControllerService ctlService = context.getProperty(property.getKey()).asControllerService(ControllerService.class);
+                        ctl.put(property.getKey().getName().substring(4), ctlService);
                     } else if (property.getKey().getName().startsWith("SQL.")) {
                         DBCPService dbcp = context.getProperty(property.getKey()).asControllerService(DBCPService.class);
-                        SQL.put(property.getKey().getName().substring(4), dbcp);
+                        sql.put(property.getKey().getName().substring(4), dbcp);
                     } else if (property.getKey().getName().startsWith("RecordReader.")) {
                         // Get RecordReaderFactory controller service
-                        RecordReaderFactory recordReader = context.getProperty(property.getKey()).asControllerService(RecordReaderFactory.class);
-                        RECORD_READER.put(property.getKey().getName().substring(13), recordReader);
+                        RecordReaderFactory readerFactory = context.getProperty(property.getKey()).asControllerService(RecordReaderFactory.class);
+                        recordReader.put(property.getKey().getName().substring(13), readerFactory);
                     } else if (property.getKey().getName().startsWith("RecordWriter.")) {
                         // Get RecordWriterFactory controller service
                         RecordSetWriterFactory recordWriter = context.getProperty(property.getKey()).asControllerService(RecordSetWriterFactory.class);
-                        RECORD_SET_WRITER.put(property.getKey().getName().substring(13), recordWriter);
+                        recordSetWriter.put(property.getKey().getName().substring(13), recordWriter);
                     } else {
                         // Add the dynamic property bound to its full PropertyValue to the script engine
                         if (property.getValue() != null) {
@@ -465,26 +488,26 @@ public class ExecuteGroovyScript extends AbstractProcessor {
                     }
                 }
             }
-            onInitSQL(SQL, attributes);
+            onInitSQL(sql, attributes);
 
             bindings.put("session", session);
             bindings.put("context", context);
             bindings.put("log", getLogger());
             bindings.put("REL_SUCCESS", REL_SUCCESS);
             bindings.put("REL_FAILURE", REL_FAILURE);
-            bindings.put("CTL", CTL);
-            bindings.put("SQL", SQL);
-            bindings.put("RecordReader", RECORD_READER);
-            bindings.put("RecordWriter", RECORD_SET_WRITER);
+            bindings.put("CTL", ctl);
+            bindings.put("SQL", sql);
+            bindings.put("RecordReader", recordReader);
+            bindings.put("RecordWriter", recordSetWriter);
 
             script.run();
             bindings.clear();
 
-            onCommitSQL(SQL);
+            onCommitSQL(sql);
             session.commitAsync();
         } catch (Throwable t) {
             getLogger().error(t.toString(), t);
-            onFailSQL(SQL);
+            onFailSQL(sql);
             if (toFailureOnError) {
                 //transfer all received to failure with two new attributes: ERROR_MESSAGE and ERROR_STACKTRACE.
                 session.revertReceivedTo(REL_FAILURE, StackTraceUtils.deepSanitize(t));
@@ -492,7 +515,7 @@ public class ExecuteGroovyScript extends AbstractProcessor {
                 session.rollback(true);
             }
         } finally {
-            onFinitSQL(SQL);
+            onFinitSQL(sql);
         }
 
     }

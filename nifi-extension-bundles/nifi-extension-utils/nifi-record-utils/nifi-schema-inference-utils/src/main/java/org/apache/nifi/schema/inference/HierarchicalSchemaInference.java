@@ -37,6 +37,7 @@ import java.util.function.Consumer;
 
 public abstract class HierarchicalSchemaInference<T> implements SchemaInferenceEngine<T> {
 
+    @Override
     public RecordSchema inferSchema(final RecordSource<T> recordSource) throws IOException {
         final Map<String, FieldTypeInference> typeMap = new LinkedHashMap<>();
         String rootElementName = null;
@@ -216,7 +217,6 @@ public abstract class HierarchicalSchemaInference<T> implements SchemaInferenceE
         final RecordSchema schema = createSchema(typeMap, getRootName(rawRecord));
         return schema;
     }
-
 
     protected abstract DataType getDataType(T value);
 

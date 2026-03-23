@@ -60,7 +60,6 @@ public class ReaderLookup extends AbstractControllerService implements RecordRea
 
     static final PropertyDescriptor SERVICE_TO_USE = new Builder()
         .name("Service to Use")
-        .displayName("Service to Use")
         .description("Specifies the name of the user-defined property whose associated Controller Service should be used.")
         .required(true)
         .defaultValue("${recordreader.name}")
@@ -147,13 +146,12 @@ public class ReaderLookup extends AbstractControllerService implements RecordRea
         serviceToUseValue = context.getProperty(SERVICE_TO_USE);
     }
 
-
     @Override
     public RecordReader createRecordReader(final Map<String, String> variables, final InputStream in, final long inputLength, final ComponentLog logger)
                 throws MalformedRecordException, IOException, SchemaNotFoundException {
 
         final String serviceName = serviceToUseValue.evaluateAttributeExpressions(variables).getValue();
-        if (serviceName.trim().isEmpty()) {
+        if (serviceName.isBlank()) {
             throw new ProcessException("Unable to determine which Record Reader to use: after evaluating the property value against supplied variables, got an empty value");
         }
 

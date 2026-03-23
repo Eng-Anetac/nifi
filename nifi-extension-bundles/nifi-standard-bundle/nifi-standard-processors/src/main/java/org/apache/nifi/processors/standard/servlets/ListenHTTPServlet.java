@@ -54,7 +54,7 @@ import org.apache.nifi.util.FlowFileUnpackager;
 import org.apache.nifi.util.FlowFileUnpackagerV1;
 import org.apache.nifi.util.FlowFileUnpackagerV2;
 import org.apache.nifi.util.FlowFileUnpackagerV3;
-import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
+import org.eclipse.jetty.ee11.servlet.ServletContextRequest;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -352,19 +352,20 @@ public class ListenHTTPServlet extends HttpServlet {
                 }
             }
 
-
             final long transferNanos = System.nanoTime() - startNanos;
             final long transferMillis = TimeUnit.MILLISECONDS.convert(transferNanos, TimeUnit.NANOSECONDS);
 
             // put metadata on flowfile
             final String nameVal = request.getHeader(CoreAttributes.FILENAME.key());
-            if (StringUtils.isNotBlank(nameVal)) {
+            // Favor filename extracted from unpackager over filename in header
+            if (StringUtils.isBlank(attributes.get(CoreAttributes.FILENAME.key())) && StringUtils.isNotBlank(nameVal)) {
                 attributes.put(CoreAttributes.FILENAME.key(), nameVal);
             }
 
-            String sourceSystemFlowFileIdentifier = attributes.remove(CoreAttributes.UUID.key());
+            String sourceSystemFlowFileIdentifier = request.getHeader(CoreAttributes.UUID.key()) == null
+                    ? attributes.remove(CoreAttributes.UUID.key()) : request.getHeader(CoreAttributes.UUID.key());
             if (sourceSystemFlowFileIdentifier != null) {
-                sourceSystemFlowFileIdentifier = "urn:nifi:" + sourceSystemFlowFileIdentifier;
+                sourceSystemFlowFileIdentifier = "urn:nifi:" + sourceSystemFlowFileIdentifier; //NOPMD
             }
 
             flowFile = session.putAllAttributes(flowFile, attributes);
@@ -413,15 +414,14 @@ public class ListenHTTPServlet extends HttpServlet {
 
             final AsyncContext asyncContext = request.startAsync();
             session.commitAsync(() -> {
-                        response.setStatus(this.returnCode);
-                        asyncContext.complete();
-                    }, t -> {
-                        logger.error("Failed to commit session. Returning error response to Remote Host: [{}] Port [{}] SubjectDN [{}] IssuerDN [{}]",
-                                request.getRemoteHost(), request.getRemotePort(), foundSubject, foundIssuer, t);
-                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                        asyncContext.complete();
-                    }
-            );
+                response.setStatus(this.returnCode);
+                asyncContext.complete();
+            }, t -> {
+                logger.error("Failed to commit session. Returning error response to Remote Host: [{}] Port [{}] SubjectDN [{}] IssuerDN [{}]",
+                        request.getRemoteHost(), request.getRemotePort(), foundSubject, foundIssuer, t);
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                asyncContext.complete();
+            });
         }
     }
 
@@ -467,7 +467,7 @@ public class ListenHTTPServlet extends HttpServlet {
     private void addMatchingRequestHeaders(final HttpServletRequest request, final Map<String, String> attributes) {
         // put arbitrary headers on flow file
         for (Enumeration<String> headerEnum = request.getHeaderNames();
-             headerEnum.hasMoreElements(); ) {
+             headerEnum.hasMoreElements();) {
             String headerName = headerEnum.nextElement();
             if (headerPattern != null && headerPattern.matcher(headerName).matches()) {
                 String headerValue = request.getHeader(headerName);
@@ -475,8 +475,6 @@ public class ListenHTTPServlet extends HttpServlet {
             }
         }
     }
-
-
 
     private void putAttribute(final Map<String, String> map, final String key, final Object value) {
         if (value == null) {

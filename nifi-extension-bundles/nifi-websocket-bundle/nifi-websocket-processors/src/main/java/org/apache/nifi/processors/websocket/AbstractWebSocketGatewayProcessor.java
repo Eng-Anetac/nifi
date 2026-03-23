@@ -17,7 +17,6 @@
 
 package org.apache.nifi.processors.websocket;
 
-import org.apache.nifi.util.StringUtils;
 import org.apache.nifi.annotation.behavior.TriggerSerially;
 import org.apache.nifi.annotation.lifecycle.OnStopped;
 import org.apache.nifi.flowfile.FlowFile;
@@ -29,6 +28,7 @@ import org.apache.nifi.processor.ProcessSessionFactory;
 import org.apache.nifi.processor.ProcessorInitializationContext;
 import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.processor.exception.ProcessException;
+import org.apache.nifi.util.StringUtils;
 import org.apache.nifi.websocket.BinaryMessageConsumer;
 import org.apache.nifi.websocket.ConnectedListener;
 import org.apache.nifi.websocket.TextMessageConsumer;
@@ -41,6 +41,7 @@ import org.apache.nifi.websocket.WebSocketService;
 import org.apache.nifi.websocket.WebSocketSessionInfo;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -236,7 +237,6 @@ public abstract class AbstractWebSocketGatewayProcessor extends AbstractSessionF
         }
     }
 
-
     private void enqueueMessage(final WebSocketMessage incomingMessage) {
         final ProcessSession session = processSessionFactory.createSession();
         try {
@@ -247,8 +247,13 @@ public abstract class AbstractWebSocketGatewayProcessor extends AbstractSessionF
             final WebSocketSessionInfo sessionInfo = incomingMessage.getSessionInfo();
             attrs.put(ATTR_WS_SESSION_ID, sessionInfo.getSessionId());
             attrs.put(ATTR_WS_ENDPOINT_ID, endpointId);
-            attrs.put(ATTR_WS_LOCAL_ADDRESS, sessionInfo.getLocalAddress().toString());
-            attrs.put(ATTR_WS_REMOTE_ADDRESS, sessionInfo.getRemoteAddress().toString());
+            // Handle the case where local address might be null during disconnection
+            final InetSocketAddress localAddress = sessionInfo.getLocalAddress();
+            attrs.put(ATTR_WS_LOCAL_ADDRESS, localAddress != null ? localAddress.toString() : "unknown");
+
+            // Handle the case where remote address might be null during disconnection
+            final InetSocketAddress remoteAddress = sessionInfo.getRemoteAddress();
+            attrs.put(ATTR_WS_REMOTE_ADDRESS, remoteAddress != null ? remoteAddress.toString() : "unknown");
             final WebSocketMessage.Type messageType = incomingMessage.getType();
             if (messageType != null) {
                 attrs.put(ATTR_WS_MESSAGE_TYPE, messageType.name());
@@ -258,9 +263,7 @@ public abstract class AbstractWebSocketGatewayProcessor extends AbstractSessionF
 
             final byte[] payload = incomingMessage.getPayload();
             if (payload != null) {
-                messageFlowFile = session.write(messageFlowFile, out ->
-                        out.write(payload, incomingMessage.getOffset(), incomingMessage.getLength())
-                );
+                messageFlowFile = session.write(messageFlowFile, out -> out.write(payload, incomingMessage.getOffset(), incomingMessage.getLength()));
             }
 
             session.getProvenanceReporter().receive(messageFlowFile, getTransitUri(sessionInfo));

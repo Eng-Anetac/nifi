@@ -42,6 +42,7 @@ import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.flowfile.attributes.CoreAttributes;
 import org.apache.nifi.logging.ComponentLog;
+import org.apache.nifi.migration.PropertyConfiguration;
 import org.apache.nifi.processor.AbstractProcessor;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
@@ -75,7 +76,7 @@ import java.util.regex.Pattern;
 
 /**
  * <p>
- * This processor executes an external command on the contents of a flow file, and creates a new flow file with the results of the command.
+ * This processor executes an external command on the contents of a FlowFile, and creates a new FlowFile with the results of the command.
  * </p>
  * <p>
  * <strong>Properties:</strong>
@@ -113,8 +114,8 @@ import java.util.regex.Pattern;
  * </li>
  * <li>Ignore STDIN
  * <ul>
- * <li>Indicates whether or not the flowfile's contents should be streamed as part of STDIN</li>
- * <li>Default value: false (this means that the contents of a flowfile will be sent as STDIN to your command</li>
+ * <li>Indicates whether or not the FlowFile's contents should be streamed as part of STDIN</li>
+ * <li>Default value: false (this means that the contents of a FlowFile will be sent as STDIN to your command</li>
  * <li>Supports expression language: false</li>
  * </ul>
  * </li>
@@ -126,17 +127,17 @@ import java.util.regex.Pattern;
  * <ul>
  * <li>original
  * <ul>
- * <li>The destination path for the original incoming flow file</li>
+ * <li>The destination path for the original incoming FlowFile</li>
  * </ul>
  * </li>
  * <li>output-stream
  * <ul>
- * <li>The destination path for the flow file created from the command's output, if the exit code is zero</li>
+ * <li>The destination path for the FlowFile created from the command's output, if the exit code is zero</li>
  * </ul>
  * </li>
  * <li>nonzero-status
  * <ul>
- * <li>The destination path for the flow file created from the command's output, if the exit code is non-zero</li>
+ * <li>The destination path for the FlowFile created from the command's output, if the exit code is non-zero</li>
  * </ul>
  * </li>
  * </ul>
@@ -176,21 +177,21 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             .build();
     public static final Relationship OUTPUT_STREAM_RELATIONSHIP = new Relationship.Builder()
             .name("output stream")
-            .description("The destination path for the flow file created from the command's output, if the returned status code is zero.")
+            .description("The destination path for the FlowFile created from the command's output, if the returned status code is zero.")
             .build();
     public static final Relationship NONZERO_STATUS_RELATIONSHIP = new Relationship.Builder()
             .name("nonzero status")
-            .description("The destination path for the flow file created from the command's output, if the returned status code is non-zero. "
-                    + "All flow files routed to this relationship will be penalized.")
+            .description("The destination path for the FlowFile created from the command's output, if the returned status code is non-zero. "
+                    + "All FlowFiles routed to this relationship will be penalized.")
             .build();
     private final AtomicReference<Set<Relationship>> relationships = new AtomicReference<>();
 
-    private final static Set<Relationship> OUTPUT_STREAM_RELATIONSHIP_SET = Set.of(
+    private static final Set<Relationship> OUTPUT_STREAM_RELATIONSHIP_SET = Set.of(
             OUTPUT_STREAM_RELATIONSHIP,
             ORIGINAL_RELATIONSHIP,
             NONZERO_STATUS_RELATIONSHIP
     );
-    private final static Set<Relationship> ATTRIBUTE_RELATIONSHIP_SET = Set.of(ORIGINAL_RELATIONSHIP);
+    private static final Set<Relationship> ATTRIBUTE_RELATIONSHIP_SET = Set.of(ORIGINAL_RELATIONSHIP);
 
     private static final Pattern COMMAND_ARGUMENT_PATTERN = Pattern.compile("command\\.argument\\.(?<commandIndex>[0-9]+)$");
 
@@ -200,7 +201,7 @@ public class ExecuteStreamCommand extends AbstractProcessor {
     static final AllowableValue DYNAMIC_PROPERTY_ARGUMENTS_STRATEGY = new AllowableValue("Dynamic Property Arguments", "Dynamic Property Arguments",
             "Arguments to be supplied to the executable are taken from dynamic properties with pattern of 'command.argument.<commandIndex>'");
 
-   static final PropertyDescriptor WORKING_DIR = new PropertyDescriptor.Builder()
+    static final PropertyDescriptor WORKING_DIR = new PropertyDescriptor.Builder()
             .name("Working Directory")
             .description("The directory to use as the current working directory when executing the command")
             .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
@@ -218,8 +219,7 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             .build();
 
     static final PropertyDescriptor ARGUMENTS_STRATEGY = new PropertyDescriptor.Builder()
-            .name("argumentsStrategy")
-            .displayName("Command Arguments Strategy")
+            .name("Command Arguments Strategy")
             .description("Strategy for configuring arguments to be supplied to the command.")
             .expressionLanguageSupported(ExpressionLanguageScope.NONE)
             .required(false)
@@ -246,7 +246,7 @@ public class ExecuteStreamCommand extends AbstractProcessor {
                 return result;
             }).build();
 
-   static final PropertyDescriptor ARG_DELIMITER = new PropertyDescriptor.Builder()
+    static final PropertyDescriptor ARG_DELIMITER = new PropertyDescriptor.Builder()
             .name("Argument Delimiter")
             .description("Delimiter to use to separate arguments for a command [default: ;]. Must be a single character")
             .dependsOn(ARGUMENTS_STRATEGY, COMMAND_ARGUMENTS_PROPERTY_STRATEGY)
@@ -257,7 +257,7 @@ public class ExecuteStreamCommand extends AbstractProcessor {
 
     static final PropertyDescriptor IGNORE_STDIN = new PropertyDescriptor.Builder()
             .name("Ignore STDIN")
-            .description("If true, the contents of the incoming flowfile will not be passed to the executing command")
+            .description("If true, the contents of the incoming FlowFile will not be passed to the executing command")
             .addValidator(Validator.VALID)
             .allowableValues("true", "false")
             .defaultValue("false")
@@ -281,7 +281,6 @@ public class ExecuteStreamCommand extends AbstractProcessor {
 
     static final PropertyDescriptor MIME_TYPE = new PropertyDescriptor.Builder()
             .name("Output MIME Type")
-            .displayName("Output MIME Type")
             .description("Specifies the value to set for the \"mime.type\" attribute. This property is ignored if 'Output Destination Attribute' is set.")
             .required(false)
             .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
@@ -360,8 +359,8 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             return;
         }
 
-        final ArrayList<String> args = new ArrayList<>();
-        final ArrayList<String> argumentAttributeValue = new ArrayList<>();
+        final List<String> args = new ArrayList<>();
+        final List<String> argumentAttributeValue = new ArrayList<>();
         final boolean putToAttribute = context.getProperty(PUT_OUTPUT_IN_ATTRIBUTE).isSet();
         final PropertyValue argumentsStrategyPropertyValue = context.getProperty(ARGUMENTS_STRATEGY);
         final boolean useDynamicPropertyArguments = argumentsStrategyPropertyValue.isSet() && argumentsStrategyPropertyValue.getValue().equals(DYNAMIC_PROPERTY_ARGUMENTS_STRATEGY.getValue());
@@ -538,6 +537,11 @@ public class ExecuteStreamCommand extends AbstractProcessor {
             FileUtils.deleteQuietly(errorOut);
             process.destroy(); // last ditch effort to clean up that process.
         }
+    }
+
+    @Override
+    public void migrateProperties(PropertyConfiguration config) {
+        config.renameProperty("argumentsStrategy", ARGUMENTS_STRATEGY.getName());
     }
 
     static class ProcessStreamWriterCallback implements InputStreamCallback {

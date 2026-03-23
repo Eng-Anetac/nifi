@@ -511,6 +511,11 @@ export interface NavigateToComponentRequest {
     processGroupId?: string;
 }
 
+export interface NavigateToComponentsRequest {
+    ids: string[];
+    processGroupId?: string;
+}
+
 export interface ReplayLastProvenanceEventRequest {
     componentId: string;
     nodes: string;
@@ -673,7 +678,7 @@ export interface FlowState {
 }
 
 export interface RunOnceRequest {
-    uri: string;
+    id: string;
     revision: Revision;
 }
 
@@ -689,7 +694,6 @@ export interface EnableProcessGroupRequest {
 
 export interface EnableComponentRequest {
     id: string;
-    uri: string;
     type: ComponentType;
     revision: Revision;
     errorStrategy: 'snackbar' | 'banner';
@@ -720,7 +724,6 @@ export interface DisableProcessGroupRequest {
 
 export interface DisableComponentRequest {
     id: string;
-    uri: string;
     type: ComponentType;
     revision: Revision;
     errorStrategy: 'snackbar' | 'banner';
@@ -751,7 +754,6 @@ export interface StartProcessGroupRequest {
 
 export interface StartComponentRequest {
     id: string;
-    uri: string;
     type: ComponentType;
     revision: Revision;
     errorStrategy: 'snackbar' | 'banner';
@@ -796,7 +798,6 @@ export interface ProcessGroupRunStatusRequest {
 
 export interface StopComponentRequest {
     id: string;
-    uri: string;
     type: ComponentType;
     revision: Revision;
     errorStrategy: 'snackbar' | 'banner';
@@ -836,6 +837,20 @@ export interface LoadChildProcessGroupRequest {
     id: string;
 }
 
+/*
+  Clear Bulletins
+*/
+
+export interface ClearBulletinsForGroupRequest {
+    processGroupId: string;
+    fromTimestamp: string;
+}
+
+export interface ClearBulletinsForGroupResponse {
+    processGroupId: string;
+    bulletinsCleared: number;
+}
+
 export interface FlowUpdateRequest {
     requestId: string;
     processGroupId: string;
@@ -855,6 +870,7 @@ export interface FlowUpdateRequestEntity {
 export interface Difference {
     differenceType: string;
     difference: string;
+    environmental?: boolean;
 }
 
 export interface ComponentDifference {

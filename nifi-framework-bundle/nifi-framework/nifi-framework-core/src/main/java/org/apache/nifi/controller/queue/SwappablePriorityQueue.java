@@ -53,7 +53,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-
 public class SwappablePriorityQueue {
     private static final Logger logger = LoggerFactory.getLogger(SwappablePriorityQueue.class);
     private static final int SWAP_RECORD_POLL_SIZE = 10_000;
@@ -82,8 +81,8 @@ public class SwappablePriorityQueue {
     // keeping these separate, we are able to guarantee that FlowFiles are swapped in in the same order
     // that they are swapped out.
     // Guarded by lock.
-    private PriorityQueue<FlowFileRecord> activeQueue;
-    private ArrayList<FlowFileRecord> swapQueue;
+    private Queue<FlowFileRecord> activeQueue;
+    private List<FlowFileRecord> swapQueue;
     private boolean swapMode = false;
     private volatile long topPenaltyExpiration = -1L;
 
@@ -122,14 +121,13 @@ public class SwappablePriorityQueue {
         try {
             this.priorities = new ArrayList<>(newPriorities);
 
-            final PriorityQueue<FlowFileRecord> newQueue = new PriorityQueue<>(Math.max(20, activeQueue.size()), new QueuePrioritizer(newPriorities));
+            final Queue<FlowFileRecord> newQueue = new PriorityQueue<>(Math.max(20, activeQueue.size()), new QueuePrioritizer(newPriorities));
             newQueue.addAll(activeQueue);
             activeQueue = newQueue;
         } finally {
             writeLock.unlock("setPriorities");
         }
     }
-
 
     public LocalQueuePartitionDiagnostics getQueueDiagnostics() {
         readLock.lock();
@@ -181,7 +179,7 @@ public class SwappablePriorityQueue {
         // whatever data we don't write out to a swap file (because there isn't enough to fill a swap file) will be added back to the swap queue.
         // Since the swap queue cannot be processed until all swap files, we want to ensure that only the lowest priority data goes back onto it. Which means
         // that we must swap out the highest priority data that is currently on the swap queue.
-        final PriorityQueue<FlowFileRecord> tempQueue = new PriorityQueue<>(swapQueue.size(), new QueuePrioritizer(getPriorities()));
+        final Queue<FlowFileRecord> tempQueue = new PriorityQueue<>(swapQueue.size(), new QueuePrioritizer(getPriorities()));
         tempQueue.addAll(swapQueue);
 
         long bytesSwappedOut = 0L;
@@ -318,7 +316,7 @@ public class SwappablePriorityQueue {
         }
 
         // Swap Queue is not currently ordered. We want to migrate the highest priority FlowFiles to the Active Queue, then re-queue the lowest priority items.
-        final PriorityQueue<FlowFileRecord> tempQueue = new PriorityQueue<>(swapQueue.size(), new QueuePrioritizer(getPriorities()));
+        final Queue<FlowFileRecord> tempQueue = new PriorityQueue<>(swapQueue.size(), new QueuePrioritizer(getPriorities()));
         tempQueue.addAll(swapQueue);
 
         int recordsMigrated = 0;
@@ -406,7 +404,7 @@ public class SwappablePriorityQueue {
         incrementSwapQueueSize(-flowFileCount, -contentSize, -1);
 
         if (partialContents) {
-            // if we have partial results, we need to calculate the content size of the flowfiles
+            // if we have partial results, we need to calculate the content size of the FlowFiles
             // actually swapped back in.
             long contentSizeSwappedIn = 0L;
             for (final FlowFileRecord swappedIn : swapContents.getFlowFiles()) {
@@ -466,7 +464,6 @@ public class SwappablePriorityQueue {
         final long totalSize = flowFiles.stream().mapToLong(FlowFileRecord::getSize).sum();
         directlyIncrementUnacknowledgedQueueSize(-flowFiles.size(), -totalSize);
     }
-
 
     public void put(final FlowFileRecord flowFile) {
         writeLock.lock();
@@ -538,7 +535,6 @@ public class SwappablePriorityQueue {
             writeLock.unlock("poll(Set)");
         }
     }
-
 
     private FlowFileRecord doPoll(final Set<FlowFileRecord> expiredRecords, final long expirationMillis, final PollStrategy pollStrategy) {
         FlowFileRecord flowFile;
@@ -710,7 +706,6 @@ public class SwappablePriorityQueue {
         }
     }
 
-
     protected boolean isExpired(final FlowFile flowFile, final long expirationMillis) {
         return isLaterThan(getExpirationDate(flowFile, expirationMillis));
     }
@@ -736,7 +731,6 @@ public class SwappablePriorityQueue {
         }
     }
 
-
     private long drainQueue(final Queue<FlowFileRecord> sourceQueue, final List<FlowFileRecord> destination,
                             int maxResults, final Set<FlowFileRecord> expiredRecords, final long expirationMillis,
                             final PollStrategy pollStrategy) {
@@ -761,7 +755,6 @@ public class SwappablePriorityQueue {
         return drainedSize;
     }
 
-
     public FlowFileRecord getFlowFile(final String flowFileUuid) {
         if (flowFileUuid == null) {
             return null;
@@ -781,7 +774,6 @@ public class SwappablePriorityQueue {
 
         return null;
     }
-
 
     public void dropFlowFiles(final DropFlowFileRequest dropRequest, final String requestor) {
         final String requestIdentifier = dropRequest.getRequestIdentifier();
@@ -901,8 +893,6 @@ public class SwappablePriorityQueue {
             writeLock.unlock("Drop FlowFiles");
         }
     }
-
-
 
     public SwapSummary recoverSwappedFlowFiles() {
         int swapFlowFileCount = 0;
@@ -1129,7 +1119,6 @@ public class SwappablePriorityQueue {
             logger.error("Updated Size of Queue {} from {} to {}", counterName, original, newSize, new RuntimeException("Cannot create negative queue size"));
         }
     }
-
 
     protected boolean updateSize(final FlowFileQueueSize expected, final FlowFileQueueSize updated) {
         return size.compareAndSet(expected, updated);

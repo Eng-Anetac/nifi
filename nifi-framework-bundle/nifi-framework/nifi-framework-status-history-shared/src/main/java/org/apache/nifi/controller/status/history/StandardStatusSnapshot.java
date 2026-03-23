@@ -31,7 +31,6 @@ public class StandardStatusSnapshot implements StatusSnapshot {
     private Date timestamp = new Date();
     private Set<MetricDescriptor<?>> metricDescriptorsWithCounters = null;
 
-
     public StandardStatusSnapshot(final Set<MetricDescriptor<?>> metricDescriptors) {
         this.metricDescriptors = metricDescriptors;
         values = new long[metricDescriptors.size()];
@@ -75,7 +74,6 @@ public class StandardStatusSnapshot implements StatusSnapshot {
         this.timestamp = timestamp;
     }
 
-
     public void addStatusMetric(final MetricDescriptor<?> metric, final Long value) {
         if (metric.isCounter()) {
             addCounterStatusMetric(metric, value);
@@ -93,6 +91,7 @@ public class StandardStatusSnapshot implements StatusSnapshot {
         counterValues.put(metric, value);
     }
 
+    @Override
     public StandardStatusSnapshot withoutCounters() {
         if (counterValues == null || counterValues.isEmpty()) {
             return this;

@@ -25,8 +25,10 @@ import org.apache.nifi.controller.AbstractControllerService;
 import org.apache.nifi.controller.ConfigurationContext;
 import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.migration.PropertyConfiguration;
+import org.apache.nifi.migration.ProxyServiceMigration;
 import org.apache.nifi.processors.azure.AzureServiceEndpoints;
 import org.apache.nifi.processors.azure.storage.utils.AzureStorageUtils;
+import org.apache.nifi.services.azure.AzureIdentityFederationTokenProvider;
 
 import java.util.List;
 import java.util.Map;
@@ -87,6 +89,7 @@ public class ADLSCredentialsControllerService extends AbstractControllerService 
             SERVICE_PRINCIPAL_TENANT_ID,
             SERVICE_PRINCIPAL_CLIENT_ID,
             SERVICE_PRINCIPAL_CLIENT_SECRET,
+            AzureStorageUtils.IDENTITY_FEDERATION_TOKEN_PROVIDER,
             PROXY_CONFIGURATION_SERVICE
     );
 
@@ -99,6 +102,16 @@ public class ADLSCredentialsControllerService extends AbstractControllerService 
 
     @Override
     public void migrateProperties(PropertyConfiguration config) {
+        config.renameProperty(AzureStorageUtils.OLD_CREDENTIALS_TYPE_DESCRIPTOR_NAME, AzureStorageUtils.CREDENTIALS_TYPE.getName());
+        config.renameProperty(AzureStorageUtils.STORAGE_ACCOUNT_KEY_PROPERTY_DESCRIPTOR_NAME, ACCOUNT_KEY.getName());
+        config.renameProperty(AzureStorageUtils.STORAGE_ACCOUNT_NAME_PROPERTY_DESCRIPTOR_NAME, ACCOUNT_NAME.getName());
+        config.renameProperty(AzureStorageUtils.STORAGE_ENDPOINT_SUFFIX_PROPERTY_DESCRIPTOR_NAME, ENDPOINT_SUFFIX.getName());
+        config.renameProperty(AzureStorageUtils.STORAGE_SAS_TOKEN_PROPERTY_DESCRIPTOR_NAME, SAS_TOKEN.getName());
+        config.renameProperty(AzureStorageUtils.OLD_MANAGED_IDENTITY_CLIENT_ID_DESCRIPTOR_NAME, MANAGED_IDENTITY_CLIENT_ID.getName());
+        config.renameProperty(AzureStorageUtils.OLD_SERVICE_PRINCIPAL_TENANT_ID_DESCRIPTOR_NAME, SERVICE_PRINCIPAL_TENANT_ID.getName());
+        config.renameProperty(AzureStorageUtils.OLD_SERVICE_PRINCIPAL_CLIENT_ID_DESCRIPTOR_NAME, SERVICE_PRINCIPAL_CLIENT_ID.getName());
+        config.renameProperty(AzureStorageUtils.OLD_SERVICE_PRINCIPAL_CLIENT_SECRET_DESCRIPTOR_NAME, SERVICE_PRINCIPAL_CLIENT_SECRET.getName());
+
         if (!config.hasProperty(CREDENTIALS_TYPE)) {
             final String propNameUseManagedIdentity = "storage-use-managed-identity";
 
@@ -118,6 +131,8 @@ public class ADLSCredentialsControllerService extends AbstractControllerService 
 
             config.removeProperty(propNameUseManagedIdentity);
         }
+
+        ProxyServiceMigration.renameProxyConfigurationServiceProperty(config);
     }
 
     @OnEnabled
@@ -139,6 +154,12 @@ public class ADLSCredentialsControllerService extends AbstractControllerService 
         setValue(credentialsBuilder, SERVICE_PRINCIPAL_TENANT_ID, PropertyValue::getValue, ADLSCredentialsDetails.Builder::setServicePrincipalTenantId, attributes);
         setValue(credentialsBuilder, SERVICE_PRINCIPAL_CLIENT_ID, PropertyValue::getValue, ADLSCredentialsDetails.Builder::setServicePrincipalClientId, attributes);
         setValue(credentialsBuilder, SERVICE_PRINCIPAL_CLIENT_SECRET, PropertyValue::getValue, ADLSCredentialsDetails.Builder::setServicePrincipalClientSecret, attributes);
+
+        if (context.getProperty(CREDENTIALS_TYPE).asAllowableValue(AzureStorageCredentialsType.class) == AzureStorageCredentialsType.IDENTITY_FEDERATION) {
+            final AzureIdentityFederationTokenProvider identityTokenProvider = context.getProperty(AzureStorageUtils.IDENTITY_FEDERATION_TOKEN_PROVIDER)
+                    .asControllerService(AzureIdentityFederationTokenProvider.class);
+            credentialsBuilder.setIdentityTokenProvider(identityTokenProvider);
+        }
 
         credentialsBuilder.setProxyOptions(AzureStorageUtils.getProxyOptions(context));
 

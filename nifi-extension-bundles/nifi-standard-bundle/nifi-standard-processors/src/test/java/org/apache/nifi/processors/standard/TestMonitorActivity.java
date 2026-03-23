@@ -667,7 +667,7 @@ public class TestMonitorActivity {
         runner.enqueue("Incoming data");
 
         // Set future timestamp in state
-        final HashMap<String, String> existingState = new HashMap<>();
+        final Map<String, String> existingState = new HashMap<>();
         final long existingTimestamp = currentTimeMillis() - 1_000;
         existingState.put(MonitorActivity.STATE_KEY_COMMON_FLOW_ACTIVITY_INFO,
                 String.valueOf(existingTimestamp));
@@ -701,7 +701,7 @@ public class TestMonitorActivity {
         runner.enqueue("Incoming data");
 
         // Set future timestamp in state
-        final HashMap<String, String> existingState = new HashMap<>();
+        final Map<String, String> existingState = new HashMap<>();
         final long existingTimestamp = currentTimeMillis() + 10_000;
         existingState.put(MonitorActivity.STATE_KEY_COMMON_FLOW_ACTIVITY_INFO,
                 String.valueOf(existingTimestamp));
@@ -733,7 +733,7 @@ public class TestMonitorActivity {
         runner.setProperty(MonitorActivity.THRESHOLD, "1 ms");
         runner.setProperty(MonitorActivity.COPY_ATTRIBUTES, "true");
 
-        final HashMap<String, String> attributes = new HashMap<>();
+        final Map<String, String> attributes = new HashMap<>();
         attributes.put("key1", "value1");
         attributes.put("key2", "value2");
         runner.enqueue("Incoming data", attributes);
@@ -855,7 +855,7 @@ public class TestMonitorActivity {
         runner.clearTransferState();
 
         // Activity restored
-        final HashMap<String, String> attributes = new HashMap<>();
+        final Map<String, String> attributes = new HashMap<>();
         attributes.put("key1", "value1");
         attributes.put("key2", "value2");
         runner.enqueue("Incoming data", attributes);
@@ -893,7 +893,7 @@ public class TestMonitorActivity {
         runner.clearTransferState();
 
         // Activity restored
-        final HashMap<String, String> attributes = new HashMap<>();
+        final Map<String, String> attributes = new HashMap<>();
         attributes.put("key1", "value1");
         attributes.put("key2", "value2");
         runner.enqueue("Incoming data", attributes);
@@ -928,7 +928,7 @@ public class TestMonitorActivity {
         runner.clearTransferState();
 
         // Activity restored
-        final HashMap<String, String> attributes = new HashMap<>();
+        final Map<String, String> attributes = new HashMap<>();
         attributes.put("key1", "value1");
         attributes.put("key2", "value2");
         runner.enqueue("Incoming data", attributes);
@@ -967,7 +967,7 @@ public class TestMonitorActivity {
         runner.clearTransferState();
 
         // Activity restored
-        final HashMap<String, String> attributes = new HashMap<>();
+        final Map<String, String> attributes = new HashMap<>();
         attributes.put("key1", "value1");
         attributes.put("key2", "value2");
         runner.enqueue("Incoming data", attributes);
@@ -1002,7 +1002,7 @@ public class TestMonitorActivity {
         runner.clearTransferState();
 
         // Activity restored, even if this node doesn't have activity, other node updated the cluster state.
-        final HashMap<String, String> clusterState = new HashMap<>();
+        final Map<String, String> clusterState = new HashMap<>();
         clusterState.put(MonitorActivity.STATE_KEY_COMMON_FLOW_ACTIVITY_INFO, String.valueOf(currentTimeMillis()));
         clusterState.put("key1", "value1");
         clusterState.put("key2", "value2");
@@ -1042,7 +1042,7 @@ public class TestMonitorActivity {
         runner.clearTransferState();
 
         // Activity restored, even if this node doesn't have activity, other node updated the cluster state.
-        final HashMap<String, String> clusterState = new HashMap<>();
+        final Map<String, String> clusterState = new HashMap<>();
         clusterState.put(MonitorActivity.STATE_KEY_COMMON_FLOW_ACTIVITY_INFO, String.valueOf(currentTimeMillis()));
         clusterState.put("key1", "value1");
         clusterState.put("key2", "value2");
@@ -1078,7 +1078,7 @@ public class TestMonitorActivity {
         runner.clearTransferState();
 
         // Activity restored, even if this node doesn't have activity, other node updated the cluster state.
-        final HashMap<String, String> clusterState = new HashMap<>();
+        final Map<String, String> clusterState = new HashMap<>();
         clusterState.put(MonitorActivity.STATE_KEY_COMMON_FLOW_ACTIVITY_INFO, String.valueOf(currentTimeMillis()));
         clusterState.put("key1", "value1");
         clusterState.put("key2", "value2");
@@ -1367,7 +1367,7 @@ public class TestMonitorActivity {
         runner.assertAllFlowFilesTransferred(MonitorActivity.REL_INACTIVE);
         runner.clearTransferState();
 
-        // Adding flow files
+        // Adding FlowFiles
         runner.enqueue("Incoming data 1");
         runner.enqueue("Incoming data 2");
         runner.enqueue("Incoming data 3");
@@ -1380,9 +1380,9 @@ public class TestMonitorActivity {
 
     @Test
     public void testInfrequentFlowFilesTriggerImmediateSynchronization() throws IOException, InterruptedException {
-        final long threshold_seconds = 30;
-        final long startup_time_seconds = 1;
-        final AtomicLong nowProvider = new AtomicLong(TimeUnit.SECONDS.toMillis(startup_time_seconds));
+        final long thresholdSeconds = 30;
+        final long startupTimeSeconds = 1;
+        final AtomicLong nowProvider = new AtomicLong(TimeUnit.SECONDS.toMillis(startupTimeSeconds));
         final TestRunner runner = TestRunners.newTestRunner(new MonitorActivity() {
             @Override
             protected long nowMillis() {
@@ -1393,25 +1393,25 @@ public class TestMonitorActivity {
         runner.setConnected(true);
         runner.setPrimaryNode(false);
         runner.setProperty(MonitorActivity.MONITORING_SCOPE, MonitorActivity.SCOPE_CLUSTER);
-        runner.setProperty(MonitorActivity.THRESHOLD, threshold_seconds + " seconds");
+        runner.setProperty(MonitorActivity.THRESHOLD, thresholdSeconds + " seconds");
 
         // Initialize
         runner.run(1, false);
-        final String state_0 = runner.getStateManager().getState(Scope.CLUSTER).get(MonitorActivity.STATE_KEY_COMMON_FLOW_ACTIVITY_INFO);
-        assertNull(state_0);
+        final String state0 = runner.getStateManager().getState(Scope.CLUSTER).get(MonitorActivity.STATE_KEY_COMMON_FLOW_ACTIVITY_INFO);
+        assertNull(state0);
 
         // First ever FlowFile triggers sync
         runner.enqueue("Incoming data 1");
         runNext(runner);
-        final String state_1 = runner.getStateManager().getState(Scope.CLUSTER).get(MonitorActivity.STATE_KEY_COMMON_FLOW_ACTIVITY_INFO);
-        assertNotNull(state_1);
+        final String state1 = runner.getStateManager().getState(Scope.CLUSTER).get(MonitorActivity.STATE_KEY_COMMON_FLOW_ACTIVITY_INFO);
+        assertNotNull(state1);
 
         // Wait > (2/3 * T)
-        nowProvider.set(TimeUnit.SECONDS.toMillis(startup_time_seconds + ((2 * threshold_seconds) / 3) + 1));
+        nowProvider.set(TimeUnit.SECONDS.toMillis(startupTimeSeconds + ((2 * thresholdSeconds) / 3) + 1));
         runNext(runner);
         runner.enqueue("Incoming data 2");
         runNext(runner);
-        final String state_2 = runner.getStateManager().getState(Scope.CLUSTER).get(MonitorActivity.STATE_KEY_COMMON_FLOW_ACTIVITY_INFO);
-        assertNotEquals(state_1, state_2);
+        final String state2 = runner.getStateManager().getState(Scope.CLUSTER).get(MonitorActivity.STATE_KEY_COMMON_FLOW_ACTIVITY_INFO);
+        assertNotEquals(state1, state2);
     }
 }

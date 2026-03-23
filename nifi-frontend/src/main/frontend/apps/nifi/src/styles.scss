@@ -19,7 +19,6 @@
 @use 'sass:map';
 
 @use 'libs/shared/src/assets/styles/app' as app;
-@use 'libs/shared/src/assets/styles/codemirror-theme' as codemirror-theme;
 @use 'libs/shared/src/assets/styles/prism-theme' as prism-theme;
 @use 'libs/shared/src/assets/styles/listing-table' as listing-table;
 @use 'libs/shared/src/components/resizable/resizeable-theme' as resizable;
@@ -56,12 +55,11 @@
     processor-status-table;
 @use 'app/pages/flow-designer/ui/canvas/change-color-dialog/change-color-dialog.component-theme' as change-color-dialog;
 @use 'libs/shared/src/components/map-table/editors/text-editor/text-editor.component-theme' as text-editor;
+@use 'app/ui/common/overlapping-connections-banner/overlapping-connections-banner.component-theme' as
+    overlapping-connections-banner;
 
 // Plus imports for other components in your app.
 @use 'libs/shared/src/assets/fonts/flowfont/flowfont.css';
-@use 'codemirror/lib/codemirror.css';
-@use 'codemirror/addon/fold/foldgutter.css';
-@use 'codemirror/addon/hint/show-hint.css';
 
 @use 'font-awesome';
 @use 'libs/shared/src/assets/themes/material';
@@ -76,7 +74,6 @@
 
 html {
     @include app.generate-material-theme();
-    @include codemirror-theme.generate-codemirror-theme();
     @include prism-theme.generate-prism-theme();
     @include app-component.generate-theme();
     @include listing-table.generate-theme();
@@ -106,10 +103,10 @@ html {
     @include change-color-dialog.generate-theme();
     @include text-editor.generate-theme();
     @include resizable.generate-theme();
+    @include overlapping-connections-banner.generate-theme();
 
     .darkMode {
         @include app.generate-material-theme();
-        @include codemirror-theme.generate-codemirror-theme();
         @include prism-theme.generate-prism-theme();
         @include app-component.generate-theme();
         @include listing-table.generate-theme();
@@ -139,5 +136,6 @@ html {
         @include change-color-dialog.generate-theme();
         @include text-editor.generate-theme();
         @include resizable.generate-theme();
+        @include overlapping-connections-banner.generate-theme();
     }
 }

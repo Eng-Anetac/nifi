@@ -35,8 +35,8 @@ import org.apache.nifi.serialization.record.RecordFieldType;
 import org.apache.nifi.serialization.record.RecordSchema;
 import org.apache.nifi.serialization.record.type.ChoiceDataType;
 import org.apache.nifi.util.EqualsWrapper;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -142,7 +142,8 @@ class TestJsonTreeRowRecordReader {
     }
 
     @Test
-    @Disabled("Intended only for manual testing to determine performance before/after modifications")
+    @EnabledIfSystemProperty(named = "nifi.test.performance", matches = "true",
+            disabledReason = "Intended only for manual testing to determine performance before/after modifications")
     void testPerformanceOnLocalFile() throws Exception {
         final RecordSchema schema = new SimpleRecordSchema(Collections.emptyList());
 
@@ -157,9 +158,9 @@ class TestJsonTreeRowRecordReader {
             for (int i = 0; i < iterations; i++) {
                 try (final InputStream in = new ByteArrayInputStream(data);
                     final JsonTreeRowRecordReader reader = createJsonTreeRowRecordReader(in, schema)) {
-                        while (reader.nextRecord() != null) {
-                            recordCount++;
-                        }
+                    while (reader.nextRecord() != null) {
+                        recordCount++;
+                    }
                 }
             }
             final long nanos = System.nanoTime() - start;
@@ -169,7 +170,8 @@ class TestJsonTreeRowRecordReader {
     }
 
     @Test
-    @Disabled("Intended only for manual testing to determine performance before/after modifications")
+    @EnabledIfSystemProperty(named = "nifi.test.performance", matches = "true",
+            disabledReason = "Intended only for manual testing to determine performance before/after modifications")
     void testPerformanceOnIndividualMessages() throws Exception {
         final RecordSchema schema = new SimpleRecordSchema(Collections.emptyList());
 
@@ -412,7 +414,6 @@ class TestJsonTreeRowRecordReader {
 
             final Object[] fourthRecordValues = reader.nextRecord().getValues();
             assertArrayEquals(new Object[] {4, "Xi Doe", 4820.09, "321 Your Street", "Your City", "NV", "33333", "USA"}, fourthRecordValues);
-
 
             assertNull(reader.nextRecord());
         }
@@ -817,8 +818,6 @@ class TestJsonTreeRowRecordReader {
         assertEquals(List.of("1", "2", "3", "4"), ids);
     }
 
-
-
     @Test
     void testReadUnicodeCharacters() throws Exception {
 
@@ -890,19 +889,57 @@ class TestJsonTreeRowRecordReader {
         ));
 
         List<Object> expected = Arrays.asList(
-            new MapRecord(expectedSchema, new HashMap<>() {{
-                put("integer", 1);
-                put("boolean", true);
-                put("booleanOrString", true);
-            }}),
-            new MapRecord(expectedSchema, new HashMap<>() {{
-                put("integer", 2);
-                put("string", "stringValue2");
-                put("booleanOrString", "booleanOrStringValue2");
-            }})
+            new MapRecord(expectedSchema, Map.of(
+                    "integer", 1,
+                    "boolean", true,
+                    "booleanOrString", true
+            )),
+            new MapRecord(expectedSchema, Map.of(
+                    "integer", 2,
+                    "string", "stringValue2",
+                    "booleanOrString", "booleanOrStringValue2"
+            ))
         );
 
         testReadRecords(jsonPath, expected);
+    }
+
+    @Test
+    void testChoiceOfArrayTypesWithNullElements() throws Exception {
+        final String inputJson = """
+                {"id":1,"changes":{"config": [{"db": {"host": "old"}}, {"db": {"host": "new"}}], "status": [true, false]}}
+                {"id":2,"changes":{"config": [null, 42], "status": [null, {"code": 200}]}}
+                """;
+
+        try (final InputStream in = new ByteArrayInputStream(inputJson.getBytes(StandardCharsets.UTF_8))) {
+            final RecordSchema schema = inferSchema(in, StartingFieldStrategy.ROOT_NODE, null);
+
+            try (final JsonTreeRowRecordReader reader = createJsonTreeRowRecordReader(in, schema)) {
+                final Record record1 = reader.nextRecord();
+                assertNotNull(record1);
+                assertEquals(1, record1.getValue("id"));
+
+                final Record changes1 = (Record) record1.getValue("changes");
+                assertNotNull(changes1);
+                final Object[] config1 = (Object[]) changes1.getValue("config");
+                assertEquals(2, config1.length);
+                assertInstanceOf(Record.class, config1[0]);
+                assertInstanceOf(Record.class, config1[1]);
+
+                final Record record2 = reader.nextRecord();
+                assertNotNull(record2);
+                assertEquals(2, record2.getValue("id"));
+
+                final Record changes2 = (Record) record2.getValue("changes");
+                assertNotNull(changes2);
+                final Object[] config2 = (Object[]) changes2.getValue("config");
+                assertEquals(2, config2.length);
+                assertNull(config2[0]);
+                assertEquals(42, config2[1]);
+
+                assertNull(reader.nextRecord());
+            }
+        }
     }
 
     @Test
@@ -925,23 +962,26 @@ class TestJsonTreeRowRecordReader {
         ));
 
         List<Object> expected = Arrays.asList(
-            new MapRecord(expectedRecordChoiceSchema, new HashMap<>() {{
-                put("record", new MapRecord(expectedRecordSchema1, new HashMap<>() {{
-                    put("integer", 1);
-                    put("boolean", true);
-                }}));
-            }}),
-            new MapRecord(expectedRecordChoiceSchema, new HashMap<>() {{
-                put("record", new MapRecord(expectedRecordSchema2, new HashMap<>() {{
-                    put("integer", 2);
-                    put("string", "stringValue2");
-                }}));
-            }})
+            new MapRecord(expectedRecordChoiceSchema, Map.of(
+                    "record", new MapRecord(expectedRecordSchema1, Map.of(
+                            "integer", 1,
+                            "boolean", true
+                        )
+                    )
+                )
+            ),
+            new MapRecord(expectedRecordChoiceSchema, Map.of(
+                    "record", new MapRecord(expectedRecordSchema2, Map.of(
+                            "integer", 2,
+                            "string", "stringValue2"
+                        )
+                    )
+                )
+            )
         );
 
         testReadRecords(jsonPath, expected);
     }
-
 
     @Test
     void testChoseSuboptimalSchemaWhenDataHasExtraFields() throws Exception {
@@ -1181,10 +1221,10 @@ class TestJsonTreeRowRecordReader {
         ));
 
         List<Object> expected = Collections.singletonList(
-                new MapRecord(expectedRecordSchema, new HashMap<>() {{
-                    put("nestedLevel2Int", 111);
-                    put("nestedLevel2String", "root.level1.level2:string");
-                }})
+                new MapRecord(expectedRecordSchema, Map.of(
+                        "nestedLevel2Int", 111,
+                        "nestedLevel2String", "root.level1.level2:string"
+                ))
         );
 
         testReadRecords(jsonPath, recordSchema, expected, StartingFieldStrategy.NESTED_FIELD,
@@ -1201,7 +1241,6 @@ class TestJsonTreeRowRecordReader {
         Set<String> fieldsToCapture = expectedCapturedFields.keySet();
         BiPredicate<String, String> capturePredicate = (fieldName, fieldValue) -> fieldsToCapture.contains(fieldName);
         String startingFieldName = "accounts";
-
 
         SimpleRecordSchema accountRecordSchema = new SimpleRecordSchema(Arrays.asList(
                 new RecordField("id", RecordFieldType.INT.getDataType()),
@@ -1230,7 +1269,9 @@ class TestJsonTreeRowRecordReader {
                     StartingFieldStrategy.NESTED_FIELD, startingFieldName, SchemaApplicationStrategy.SELECTED_PART,
                     capturePredicate, false, null);
 
-            while (reader.nextRecord() != null);
+            while (reader.nextRecord() != null) {
+                // continue reading
+            }
             Map<String, String> capturedFields = reader.getCapturedFields();
 
             assertEquals(expectedCapturedFields, capturedFields);

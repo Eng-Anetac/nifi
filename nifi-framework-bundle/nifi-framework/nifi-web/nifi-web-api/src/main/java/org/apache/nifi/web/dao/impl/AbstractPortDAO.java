@@ -16,8 +16,8 @@
  */
 package org.apache.nifi.web.dao.impl;
 
-import org.apache.nifi.connectable.Port;
 import org.apache.nifi.components.PortFunction;
+import org.apache.nifi.connectable.Port;
 import org.apache.nifi.connectable.Position;
 import org.apache.nifi.controller.FlowController;
 import org.apache.nifi.controller.ScheduledState;
@@ -47,7 +47,6 @@ public abstract class AbstractPortDAO extends ComponentDAO implements PortDAO {
         final Port port = locatePort(portDTO.getId());
         verifyUpdate(port, portDTO);
     }
-
 
     protected void verifyUpdate(final Port port, final PortDTO portDTO) {
         if (isNotNull(portDTO.getState())) {
@@ -103,7 +102,7 @@ public abstract class AbstractPortDAO extends ComponentDAO implements PortDAO {
     private List<String> validateProposedConfiguration(final Port port, final PortDTO portDTO) {
         List<String> validationErrors = new ArrayList<>();
 
-        if (isNotNull(portDTO.getName()) && portDTO.getName().trim().isEmpty()) {
+        if (isNotNull(portDTO.getName()) && portDTO.getName().isBlank()) {
             validationErrors.add("The name of the port must be specified.");
         }
         if (isNotNull(portDTO.getConcurrentlySchedulableTaskCount()) && portDTO.getConcurrentlySchedulableTaskCount() <= 0) {

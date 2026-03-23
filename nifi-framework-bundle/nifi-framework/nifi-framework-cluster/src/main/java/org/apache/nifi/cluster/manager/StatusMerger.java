@@ -217,7 +217,6 @@ public class StatusMerger {
         }
         target.setProcessorStatusSnapshots(mergedProcessorMap.values());
 
-
         // input ports
         final Map<String, PortStatusSnapshotEntity> mergedInputPortMap = new HashMap<>();
         for (final PortStatusSnapshotEntity status : replaceNull(target.getInputPortStatusSnapshots())) {
@@ -290,7 +289,6 @@ public class StatusMerger {
     private static <T> Collection<T> replaceNull(final Collection<T> collection) {
         return (collection == null) ? Collections.emptyList() : collection;
     }
-
 
     /**
      * Updates the fields that are "pretty printed" based on the raw values currently set. For example,
@@ -498,6 +496,7 @@ public class StatusMerger {
             target.setSourceName(toMerge.getSourceName());
             target.setDestinationId(toMerge.getDestinationId());
             target.setDestinationName(toMerge.getDestinationName());
+            target.setLoadBalanceStatus(toMerge.getLoadBalanceStatus());
         }
 
         target.setFlowFilesIn(target.getFlowFilesIn() + toMerge.getFlowFilesIn());
@@ -582,7 +581,6 @@ public class StatusMerger {
         target.setOutput(prettyPrint(target.getFlowFilesOut(), target.getBytesOut()));
     }
 
-
     public static void merge(final RemoteProcessGroupStatusSnapshotEntity target, RemoteProcessGroupStatusSnapshotEntity toMerge) {
         if (target == null || toMerge == null) {
             return;
@@ -624,7 +622,6 @@ public class StatusMerger {
         target.setSent(prettyPrint(target.getFlowFilesSent(), target.getBytesSent()));
     }
 
-
     public static void merge(final PortStatusSnapshotEntity target, PortStatusSnapshotEntity toMerge) {
         if (target == null || toMerge == null) {
             return;
@@ -664,7 +661,6 @@ public class StatusMerger {
         target.setInput(prettyPrint(target.getFlowFilesIn(), target.getBytesIn()));
         target.setOutput(prettyPrint(target.getFlowFilesOut(), target.getBytesOut()));
     }
-
 
     public static void merge(final SystemDiagnosticsDTO target, final SystemDiagnosticsDTO toMerge, final String nodeId, final String nodeAddress, final Integer nodeApiPort) {
         merge(target.getAggregateSnapshot(), toMerge.getAggregateSnapshot());
@@ -826,7 +822,6 @@ public class StatusMerger {
         return gcDiagnosticsDtos;
     }
 
-
     private static void merge(final List<GarbageCollectionDiagnosticsDTO> toMerge, final Map<String, Map<Date, GCDiagnosticsSnapshotDTO>> metricsByMemoryMgr, final long numMillis) {
         for (final GarbageCollectionDiagnosticsDTO gcDiagnostics : toMerge) {
             final String memoryManagerName = gcDiagnostics.getMemoryManagerName();
@@ -843,7 +838,6 @@ public class StatusMerger {
             }
         }
     }
-
 
     private static Integer add(final Integer a, final Integer b) {
         if (a == null) {
@@ -931,7 +925,6 @@ public class StatusMerger {
         }
     }
 
-
     public static void mergeGarbageCollection(final Set<GarbageCollectionDTO> targetSet, final Set<GarbageCollectionDTO> toMerge) {
         final Map<String, GarbageCollectionDTO> storageById = new HashMap<>();
         for (final GarbageCollectionDTO targetUsage : targetSet) {
@@ -1003,7 +996,6 @@ public class StatusMerger {
         target.setValueCount(target.getValueCount() + toMerge.getValueCount());
         target.setValue(FormatUtils.formatCount(target.getValueCount()));
     }
-
 
     public static int getUtilization(final double used, final double total) {
         return (int) Math.round((used / total) * 100);

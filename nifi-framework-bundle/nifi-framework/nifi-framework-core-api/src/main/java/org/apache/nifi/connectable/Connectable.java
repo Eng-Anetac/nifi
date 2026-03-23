@@ -146,6 +146,7 @@ public interface Connectable extends Triggerable, ComponentAuthorizable, Positio
     /**
      * @return the ProcessGroup to which this <code>Connectable</code> belongs
      */
+    @Override
     ProcessGroup getProcessGroup();
 
     /**
@@ -158,7 +159,7 @@ public interface Connectable extends Triggerable, ComponentAuthorizable, Positio
     /**
      *
      * @param relationship the relationship
-     * @return true indicates flow files transferred to the given relationship
+     * @return true indicates FlowFiles transferred to the given relationship
      * should be terminated if the relationship is not connected to another
      * FlowFileConsumer; false indicates they will not be terminated and the
      * processor will not be valid until specified

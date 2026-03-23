@@ -32,6 +32,7 @@ import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.Validator;
 import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
+import org.apache.nifi.migration.PropertyConfiguration;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
 import org.apache.nifi.processor.Relationship;
@@ -112,8 +113,7 @@ public class PublishAMQP extends AbstractAMQPProcessor<AMQPPublisher> {
             .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
             .build();
     public static final PropertyDescriptor HEADER_SEPARATOR = new PropertyDescriptor.Builder()
-            .name("header.separator")
-            .displayName("Header Separator")
+            .name("Header Separator")
             .description("The character that is used to split key-value for headers. The value must only one character. "
                     + "Otherwise you will get an error message")
             .defaultValue(",")
@@ -132,7 +132,7 @@ public class PublishAMQP extends AbstractAMQPProcessor<AMQPPublisher> {
             .description("All FlowFiles that cannot be routed to the AMQP destination are routed to this relationship")
             .build();
 
-    private final static List<PropertyDescriptor> PROPERTY_DESCRIPTORS = Stream.concat(
+    private static final List<PropertyDescriptor> PROPERTY_DESCRIPTORS = Stream.concat(
             Stream.of(
                     EXCHANGE,
                     ROUTING_KEY,
@@ -143,7 +143,7 @@ public class PublishAMQP extends AbstractAMQPProcessor<AMQPPublisher> {
             getCommonPropertyDescriptors().stream()
     ).toList();
 
-    private final static Set<Relationship> RELATIONSHIPS = Set.of(
+    private static final Set<Relationship> RELATIONSHIPS = Set.of(
             REL_SUCCESS,
             REL_FAILURE
     );
@@ -210,6 +210,12 @@ public class PublishAMQP extends AbstractAMQPProcessor<AMQPPublisher> {
         return new AMQPPublisher(connection, getLogger());
     }
 
+    @Override
+    public void migrateProperties(final PropertyConfiguration config) {
+        super.migrateProperties(config);
+        config.renameProperty("header.separator", HEADER_SEPARATOR.getName());
+    }
+
     /**
      * Extracts contents of the {@link FlowFile} as byte array.
      */
@@ -218,7 +224,6 @@ public class PublishAMQP extends AbstractAMQPProcessor<AMQPPublisher> {
         session.read(flowFile, in -> StreamUtils.fillBuffer(in, messageContent, true));
         return messageContent;
     }
-
 
     /**
      * Reads an attribute from flowFile and pass it to the consumer function
@@ -277,7 +282,7 @@ public class PublishAMQP extends AbstractAMQPProcessor<AMQPPublisher> {
     private Map<String, Object> prepareAMQPHeaders(final FlowFile flowFile, final InputHeaderSource selectedHeaderSource, final Character headerSeparator, final Pattern pattern) {
         final Map<String, Object> headers = new HashMap<>();
         if (InputHeaderSource.FLOWFILE_ATTRIBUTES.equals(selectedHeaderSource)) {
-                headers.putAll(getMatchedAttributes(flowFile.getAttributes(), pattern));
+            headers.putAll(getMatchedAttributes(flowFile.getAttributes(), pattern));
         } else if (InputHeaderSource.AMQP_HEADERS_ATTRIBUTE.equals(selectedHeaderSource)) {
             readAmqpAttribute(flowFile, AMQP_HEADERS_ATTRIBUTE, value -> headers.putAll(validateAMQPHeaderProperty(value, headerSeparator)));
         }

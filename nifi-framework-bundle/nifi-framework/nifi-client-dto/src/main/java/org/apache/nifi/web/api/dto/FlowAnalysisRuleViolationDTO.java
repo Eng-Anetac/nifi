@@ -23,8 +23,6 @@ import jakarta.xml.bind.annotation.XmlType;
  */
 @XmlType(name = "flowAnalysisRuleViolation")
 public class FlowAnalysisRuleViolationDTO {
-    public FlowAnalysisRuleViolationDTO() {
-    }
 
     private String enforcementPolicy;
     private String scope;
@@ -129,7 +127,6 @@ public class FlowAnalysisRuleViolationDTO {
     public void setViolationMessage(String violationMessage) {
         this.violationMessage = violationMessage;
     }
-
 
     /**
      * @return the type of the subject that violated the rule

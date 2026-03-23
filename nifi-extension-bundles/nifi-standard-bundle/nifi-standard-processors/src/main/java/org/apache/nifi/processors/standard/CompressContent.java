@@ -38,6 +38,7 @@ import org.apache.nifi.annotation.behavior.SystemResource;
 import org.apache.nifi.annotation.behavior.SystemResourceConsideration;
 import org.apache.nifi.annotation.behavior.WritesAttribute;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
+import org.apache.nifi.annotation.documentation.DeprecationNotice;
 import org.apache.nifi.annotation.documentation.MultiProcessorUseCase;
 import org.apache.nifi.annotation.documentation.ProcessorConfiguration;
 import org.apache.nifi.annotation.documentation.Tags;
@@ -130,6 +131,7 @@ import java.util.zip.InflaterInputStream;
         )
     }
 )
+@DeprecationNotice(classNames = {"org.apache.nifi.processors.compress.ModifyCompression"})
 public class CompressContent extends AbstractProcessor {
 
     public static final String COMPRESSION_FORMAT_ATTRIBUTE = "use mime.type attribute";
@@ -222,7 +224,6 @@ public class CompressContent extends AbstractProcessor {
         Map.entry("application/zstd", COMPRESSION_FORMAT_ZSTD),
         Map.entry("application/x-brotli", COMPRESSION_FORMAT_BROTLI));
 
-
     @Override
     public Set<Relationship> getRelationships() {
         return RELATIONSHIPS;
@@ -289,8 +290,7 @@ public class CompressContent extends AbstractProcessor {
             case COMPRESSION_FORMAT_LZMA -> ".lzma";
             case COMPRESSION_FORMAT_XZ_LZMA2 -> ".xz";
             case COMPRESSION_FORMAT_BZIP2 -> ".bz2";
-            case COMPRESSION_FORMAT_SNAPPY -> ".snappy";
-            case COMPRESSION_FORMAT_SNAPPY_HADOOP -> ".snappy";
+            case COMPRESSION_FORMAT_SNAPPY, COMPRESSION_FORMAT_SNAPPY_HADOOP -> ".snappy";
             case COMPRESSION_FORMAT_SNAPPY_FRAMED -> ".sz";
             case COMPRESSION_FORMAT_LZ4_FRAMED -> ".lz4";
             case COMPRESSION_FORMAT_ZSTD -> ".zst";
@@ -350,7 +350,7 @@ public class CompressContent extends AbstractProcessor {
                                 break;
                             case COMPRESSION_FORMAT_ZSTD:
                                 final int zstdCompressionLevel = context.getProperty(COMPRESSION_LEVEL).asInteger() * 2;
-                                compressionOut = new ZstdCompressorOutputStream(bufferedOut, zstdCompressionLevel);
+                                compressionOut = ZstdCompressorOutputStream.builder().setOutputStream(bufferedOut).setLevel(zstdCompressionLevel).get();
                                 mimeTypeRef.set("application/zstd");
                                 break;
                             case COMPRESSION_FORMAT_BROTLI: {
@@ -375,7 +375,7 @@ public class CompressContent extends AbstractProcessor {
                             case COMPRESSION_FORMAT_BZIP2 ->
                                 // need this two-arg constructor to support concatenated streams
                                 new BZip2CompressorInputStream(bufferedIn, true);
-                            case COMPRESSION_FORMAT_GZIP -> new GzipCompressorInputStream(bufferedIn, true);
+                            case COMPRESSION_FORMAT_GZIP -> GzipCompressorInputStream.builder().setInputStream(bufferedIn).setDecompressConcatenated(true).get();
                             case COMPRESSION_FORMAT_DEFLATE -> new InflaterInputStream(bufferedIn);
                             case COMPRESSION_FORMAT_SNAPPY -> new SnappyInputStream(bufferedIn);
                             case COMPRESSION_FORMAT_SNAPPY_HADOOP -> throw new Exception("Cannot decompress snappy-hadoop.");

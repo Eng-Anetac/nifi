@@ -302,7 +302,7 @@ public class StandardStatelessFlow implements StatelessDataflow {
 
             // Create executor for dataflow
             final String flowName = dataflowDefinition.getFlowName();
-            final String threadName = (flowName == null || flowName.trim().isEmpty()) ? "Run Dataflow" : "Run Dataflow " + flowName;
+            final String threadName = (flowName == null || flowName.isBlank()) ? "Run Dataflow" : "Run Dataflow " + flowName;
             runDataflowExecutor = Executors.newFixedThreadPool(1, createNamedThreadFactory(threadName, false));
 
             // Periodically log component statuses
@@ -366,7 +366,6 @@ public class StandardStatelessFlow implements StatelessDataflow {
             }
         }
     }
-
 
     private void startReportingTasks() {
         reportingTasks.forEach(this::startReportingTask);
@@ -691,7 +690,6 @@ public class StandardStatelessFlow implements StatelessDataflow {
         return trigger;
     }
 
-
     private void executeDataflow(final BlockingQueue<TriggerResult> resultQueue, final ExecutionProgress executionProgress, final AsynchronousCommitTracker tracker,
                                  final DataflowTriggerContext triggerContext) {
         final long startNanos = System.nanoTime();
@@ -836,7 +834,6 @@ public class StandardStatelessFlow implements StatelessDataflow {
             throw t;
         }
     }
-
 
     @Override
     public boolean isFlowFileQueued() {

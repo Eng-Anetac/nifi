@@ -22,6 +22,7 @@ import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -34,7 +35,6 @@ import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
-import org.testcontainers.shaded.org.apache.commons.lang3.RandomStringUtils;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.BufferedReader;
@@ -52,8 +52,8 @@ import static org.apache.http.auth.AuthScope.ANY;
 public abstract class AbstractElasticsearchITBase {
     // default Elasticsearch version should (ideally) match that in the nifi-elasticsearch-bundle#pom.xml for the integration-tests profile
     protected static final DockerImageName IMAGE = DockerImageName
-            .parse(System.getProperty("elasticsearch.docker.image", "docker.elastic.co/elasticsearch/elasticsearch:9.0.2"));
-    protected static final String ELASTIC_USER_PASSWORD = System.getProperty("elasticsearch.elastic_user.password", RandomStringUtils.randomAlphanumeric(10, 20));
+            .parse(System.getProperty("elasticsearch.docker.image", "docker.elastic.co/elasticsearch/elasticsearch:9.2.4"));
+    protected static final String ELASTIC_USER_PASSWORD = System.getProperty("elasticsearch.elastic_user.password", RandomStringUtils.insecure().nextAlphanumeric(10, 20));
     private static final int PORT = 9200;
     protected static final ElasticsearchContainer ELASTICSEARCH_CONTAINER = new ElasticsearchContainer(IMAGE)
             .withPassword(ELASTIC_USER_PASSWORD)
@@ -70,7 +70,7 @@ public abstract class AbstractElasticsearchITBase {
             .withEnv("http.port", String.valueOf(PORT))
             .withExposedPorts(PORT)
             .withCreateContainerCmdModifier(cmd -> cmd.withHostConfig(
-                    new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(PORT), new ExposedPort(PORT)))
+                new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(PORT), new ExposedPort(PORT)))
             ));
     protected static final String CLIENT_SERVICE_NAME = "Client Service";
     protected static final String INDEX = "messages";
@@ -107,7 +107,7 @@ public abstract class AbstractElasticsearchITBase {
             type = "";
         }
         System.out.printf("%n%n%n%n%n%n%n%n%n%n%n%n%n%n%nTYPE: %s%nIMAGE: %s:%s%n%n%n%n%n%n%n%n%n%n%n%n%n%n%n%n",
-                type, IMAGE.getRepository(), IMAGE.getVersionPart());
+            type, IMAGE.getRepository(), IMAGE.getVersionPart());
 
         setupTestData();
     }
@@ -183,7 +183,7 @@ public abstract class AbstractElasticsearchITBase {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(scriptPath))))) {
             String line = reader.readLine();
             while (line != null) {
-                if (!line.trim().isEmpty() && !line.trim().startsWith("#")) {
+                if (!line.isBlank() && !line.trim().startsWith("#")) {
                     final String verb = line.substring(0, line.indexOf(":"));
                     final String path = line.substring(verb.length() + 1, line.indexOf(":", verb.length() + 1));
                     final int loc = verb.length() + path.length() + 2;
@@ -200,11 +200,11 @@ public abstract class AbstractElasticsearchITBase {
 
     private record SetupAction(String verb, String path, String json) {
         @Override
-            public String toString() {
-                return "SetupAction{" +
-                        "verb='" + verb + '\'' +
-                        ", path='" + path + '\'' +
-                        '}';
-            }
+        public String toString() {
+            return "SetupAction{" +
+                    "verb='" + verb + '\'' +
+                    ", path='" + path + '\'' +
+                    '}';
         }
+    }
 }

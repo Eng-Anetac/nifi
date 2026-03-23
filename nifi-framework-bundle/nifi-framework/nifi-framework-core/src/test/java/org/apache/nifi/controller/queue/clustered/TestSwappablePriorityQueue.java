@@ -122,7 +122,6 @@ public class TestSwappablePriorityQueue {
         }
     }
 
-
     @Test
     public void testOrderingWithCornerCases() {
         final FlowFilePrioritizer iAttributePrioritizer = (o1, o2) -> {
@@ -280,7 +279,6 @@ public class TestSwappablePriorityQueue {
         logger.info(StringUtils.join(attrs, ", "));
     }
 
-
     @Test
     public void testSwapOutFailureLeavesCorrectQueueSize() {
         swapManager.setSwapOutFailureOnNthIteration(1, null);
@@ -312,7 +310,7 @@ public class TestSwappablePriorityQueue {
             assertEquals(i, polled.getSize());
         }
 
-        // We can add flowfiles in reverse order (highest ID first) and we should still get the same order back when polling
+        // We can add FlowFiles in reverse order (highest ID first) and we should still get the same order back when polling
         for (int i = 0; i < 5000; i++) {
             queue.put(new MockFlowFileRecord(5000 - i));
         }
@@ -562,9 +560,9 @@ public class TestSwappablePriorityQueue {
         final Set<FlowFileRecord> exp = new HashSet<>();
 
         // At this point there should be:
-        // 1k flow files in the active queue
-        // 9,001 flow files in the swap queue
-        // 10k flow files swapped to disk
+        // 1k FlowFiles in the active queue
+        // 9,001 FlowFiles in the swap queue
+        // 10k FlowFiles swapped to disk
 
         for (int i = 0; i < 999; i++) { //
             final FlowFileRecord flowFile = queue.poll(exp, 500000);
@@ -674,7 +672,6 @@ public class TestSwappablePriorityQueue {
         assertEquals(2, swapManager.swapInCalledCount);
     }
 
-
     @Test
     @Timeout(5)
     public void testGetActiveFlowFilesReturnsAllActiveFlowFiles() throws InterruptedException {
@@ -687,7 +684,6 @@ public class TestSwappablePriorityQueue {
         assertEquals(9999, active.size());
     }
 
-
     @Test
     @Timeout(5)
     public void testListFlowFilesResultsLimited() throws InterruptedException {
@@ -699,7 +695,6 @@ public class TestSwappablePriorityQueue {
         assertNotNull(activeFlowFiles);
         assertEquals(10000, activeFlowFiles.size());
     }
-
 
     @Test
     public void testOOMEFollowedBySuccessfulSwapIn() {
@@ -782,7 +777,7 @@ public class TestSwappablePriorityQueue {
         assertEquals(9998, queue.getActiveFlowFiles().size());
         assertEquals(1, queue.getFlowFileQueueSize().getSwappedCount());
         assertEquals(0, queue.getFlowFileQueueSize().getSwapFileCount());
-        assert (swapManager.recoverSwapLocations(flowFileQueue, "testGetMinLastQueueDate").isEmpty());
+        assertTrue(swapManager.recoverSwapLocations(flowFileQueue, "testGetMinLastQueueDate").isEmpty());
 
         // Ensure that the min and total are still correct
         flowFileRecords.removeAll(polledRecords);

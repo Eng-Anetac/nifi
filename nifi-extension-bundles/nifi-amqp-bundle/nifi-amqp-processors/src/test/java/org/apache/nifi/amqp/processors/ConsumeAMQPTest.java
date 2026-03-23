@@ -26,6 +26,7 @@ import org.apache.nifi.logging.ComponentLog;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.util.MockFlowFile;
+import org.apache.nifi.util.PropertyMigrationResult;
 import org.apache.nifi.util.TestRunner;
 import org.apache.nifi.util.TestRunners;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeoutException;
 
@@ -130,9 +132,8 @@ public class ConsumeAMQPTest {
 
             runner.assertTransferCount(ConsumeAMQP.REL_SUCCESS, 1);
 
-            final MockFlowFile helloFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).get(0);
+            final MockFlowFile helloFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).getFirst();
             helloFF.assertContentEquals("hello");
-
 
             // A single cumulative ack should be used
             assertTrue(((TestChannel) connection.createChannel()).isAck(0));
@@ -159,7 +160,7 @@ public class ConsumeAMQPTest {
             TestRunner runner = initTestRunner(proc);
 
             runner.run();
-            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).get(0);
+            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).getFirst();
             assertNotNull(successFF);
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_ROUTING_KEY_ATTRIBUTE, "key1");
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_EXCHANGE_ATTRIBUTE, "myExchange");
@@ -190,7 +191,7 @@ public class ConsumeAMQPTest {
             TestRunner runner = initTestRunner(proc);
             runner.setProperty(ConsumeAMQP.HEADER_FORMAT, OutputHeaderFormat.JSON_STRING);
             runner.run();
-            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).get(0);
+            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).getFirst();
             assertNotNull(successFF);
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_ROUTING_KEY_ATTRIBUTE, "key1");
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_EXCHANGE_ATTRIBUTE, "myExchange");
@@ -226,14 +227,12 @@ public class ConsumeAMQPTest {
             runner.setProperty(ConsumeAMQP.HEADER_FORMAT, OutputHeaderFormat.ATTRIBUTES);
             runner.setProperty(ConsumeAMQP.HEADER_KEY_PREFIX, headerPrefix);
             runner.run();
-            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).get(0);
+            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).getFirst();
             assertNotNull(successFF);
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_ROUTING_KEY_ATTRIBUTE, "key1");
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_EXCHANGE_ATTRIBUTE, "myExchange");
             successFF.assertAttributeNotExists(AbstractAMQPProcessor.AMQP_HEADERS_ATTRIBUTE);
-            expectedHeadersMap.forEach((key, value) -> {
-                successFF.assertAttributeEquals(headerPrefix + "." + key, value.toString());
-            } );
+            expectedHeadersMap.forEach((key, value) -> successFF.assertAttributeEquals(headerPrefix + "." + key, value.toString()));
         }
     }
     @Test
@@ -245,7 +244,7 @@ public class ConsumeAMQPTest {
         headersMap.put("foo2", "bar,bar");
         headersMap.put("foo3", "null");
         headersMap.put("foo4", null);
-        final String EXPECTED_RESULT = "{foo1=bar,bar|foo2=bar,bar|foo3=null|foo4}";
+        final String expectedResult = "{foo1=bar,bar|foo2=bar,bar|foo3=null|foo4}";
 
         AMQP.BasicProperties.Builder builderBasicProperties = new AMQP.BasicProperties.Builder();
         builderBasicProperties.headers(headersMap);
@@ -259,12 +258,12 @@ public class ConsumeAMQPTest {
             TestRunner runner = initTestRunner(proc);
             runner.setProperty(ConsumeAMQP.HEADER_SEPARATOR, "|");
             runner.run();
-            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).get(0);
+            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).getFirst();
             assertNotNull(successFF);
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_ROUTING_KEY_ATTRIBUTE, "key1");
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_EXCHANGE_ATTRIBUTE, "myExchange");
             String headers = successFF.getAttribute(AbstractAMQPProcessor.AMQP_HEADERS_ATTRIBUTE);
-            assertEquals(EXPECTED_RESULT, headers);
+            assertEquals(expectedResult, headers);
         }
     }
     @Test
@@ -296,7 +295,7 @@ public class ConsumeAMQPTest {
             TestRunner runner = initTestRunner(proc);
             runner.setProperty(ConsumeAMQP.REMOVE_CURLY_BRACES, "True");
             runner.run();
-            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).get(0);
+            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).getFirst();
             assertNotNull(successFF);
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_ROUTING_KEY_ATTRIBUTE, "key1");
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_EXCHANGE_ATTRIBUTE, "myExchange");
@@ -312,7 +311,7 @@ public class ConsumeAMQPTest {
         final Map<String, Object> headersMap = new HashMap<>();
         headersMap.put("key1", "(bar,bar)");
         headersMap.put("key2", "(bar,bar)");
-        final String EXPECTED_RESULT = "key1=(bar,bar)|key2=(bar,bar)";
+        final String expectedResult = "key1=(bar,bar)|key2=(bar,bar)";
 
         AMQP.BasicProperties.Builder builderBasicProperties = new AMQP.BasicProperties.Builder();
         builderBasicProperties.headers(headersMap);
@@ -328,12 +327,12 @@ public class ConsumeAMQPTest {
             runner.setProperty(ConsumeAMQP.HEADER_SEPARATOR, "|");
 
             runner.run();
-            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).get(0);
+            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).getFirst();
             assertNotNull(successFF);
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_ROUTING_KEY_ATTRIBUTE, "key1");
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_EXCHANGE_ATTRIBUTE, "myExchange");
             String headers = successFF.getAttribute(AbstractAMQPProcessor.AMQP_HEADERS_ATTRIBUTE);
-            assertEquals(EXPECTED_RESULT, headers);
+            assertEquals(expectedResult, headers);
         }
     }
 
@@ -346,11 +345,10 @@ public class ConsumeAMQPTest {
         headersMap.put("key2", "bar2");
         headersMap.put("key3", "");
         headersMap.put("key4", null);
-        final String EXPECTED_RESULT = "{key1=bar,key2=bar2,key3=,key4}";
+        final String expectedResult = "{key1=bar,key2=bar2,key3=,key4}";
 
         AMQP.BasicProperties.Builder builderBasicProperties = new AMQP.BasicProperties.Builder();
         builderBasicProperties.headers(headersMap);
-
 
         final Connection connection = new TestConnection(exchangeToRoutingKeymap, routingMap);
 
@@ -361,13 +359,37 @@ public class ConsumeAMQPTest {
             TestRunner runner = initTestRunner(proc);
 
             runner.run();
-            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).get(0);
+            final MockFlowFile successFF = runner.getFlowFilesForRelationship(ConsumeAMQP.REL_SUCCESS).getFirst();
             assertNotNull(successFF);
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_ROUTING_KEY_ATTRIBUTE, "key1");
             successFF.assertAttributeEquals(ConsumeAMQP.AMQP_EXCHANGE_ATTRIBUTE, "myExchange");
             String headers = successFF.getAttribute(AbstractAMQPProcessor.AMQP_HEADERS_ATTRIBUTE);
-            assertEquals(EXPECTED_RESULT, headers);
+            assertEquals(expectedResult, headers);
         }
+    }
+
+    @Test
+    void testMigration() {
+        final TestRunner runner = initTestRunner(new ConsumeAMQP());
+        final Map<String, String> expectedRenamed = Map.ofEntries(
+                Map.entry("User Name", AbstractAMQPProcessor.USER.getName()),
+                Map.entry("ssl-context-service", AbstractAMQPProcessor.SSL_CONTEXT_SERVICE.getName()),
+                Map.entry("cert-authentication", AbstractAMQPProcessor.CLIENT_CERTIFICATE_AUTHENTICATION_ENABLED.getName()),
+                Map.entry("auto.acknowledge", ConsumeAMQP.AUTO_ACKNOWLEDGE.getName()),
+                Map.entry("batch.size", ConsumeAMQP.BATCH_SIZE.getName()),
+                Map.entry("prefetch.count", ConsumeAMQP.PREFETCH_COUNT.getName()),
+                Map.entry("header.format", ConsumeAMQP.HEADER_FORMAT.getName()),
+                Map.entry("header.key.prefix", ConsumeAMQP.HEADER_KEY_PREFIX.getName()),
+                Map.entry("header.separator", ConsumeAMQP.HEADER_SEPARATOR.getName()),
+                Map.entry("remove.curly.braces", ConsumeAMQP.REMOVE_CURLY_BRACES.getName())
+        );
+
+        final PropertyMigrationResult propertyMigrationResult = runner.migrateProperties();
+        assertEquals(expectedRenamed, propertyMigrationResult.getPropertiesRenamed());
+
+        final Set<String> expectedRemoved = Set.of("ssl-client-auth");
+        assertEquals(expectedRemoved, propertyMigrationResult.getPropertiesRemoved());
+
     }
 
     private TestRunner initTestRunner(ConsumeAMQP proc) {

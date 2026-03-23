@@ -71,7 +71,6 @@ public class ProvenanceDataSource implements ResettableDataSource {
     private Iterator<ProvenanceEventRecord> iterator;
     private long lastId = -1L;
 
-
     public ProvenanceDataSource(final ReportingContext reportingContext) {
         this.reportingContext = reportingContext;
 
@@ -116,7 +115,7 @@ public class ProvenanceDataSource implements ResettableDataSource {
         final String processGroupId = componentMapHolder.getProcessGroupId(provenanceEvent.getComponentId(), provenanceEvent.getComponentType());
         final String groupName = componentMapHolder.getComponentName(processGroupId);
 
-        final ArrayList<Object> rowList = new ArrayList<>();
+        final List<Object> rowList = new ArrayList<>();
         rowList.add(provenanceEvent.getEventId());
         rowList.add(provenanceEvent.getEventType().name());
         rowList.add(provenanceEvent.getEventTime());

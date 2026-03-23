@@ -69,7 +69,6 @@ public class StandardEventAccess extends AbstractEventAccess implements UserAwar
         this.contentRepository = contentRepository;
     }
 
-
     @Override
     public List<Action> getFlowChanges(final int firstActionId, final int maxActions) {
         final History history = auditService.getActions(firstActionId, maxActions);
@@ -105,11 +104,11 @@ public class StandardEventAccess extends AbstractEventAccess implements UserAwar
      * @param user user making request
      * @return the component status
      */
+    @Override
     public ProcessGroupStatus getGroupStatus(final String groupId, final NiFiUser user, final int recursiveStatusDepth) {
         final RepositoryStatusReport repoStatusReport = generateRepositoryStatusReport();
         return getGroupStatus(groupId, repoStatusReport, user, recursiveStatusDepth);
     }
-
 
     /**
      * Returns the status for the components in the specified group with the
@@ -121,6 +120,7 @@ public class StandardEventAccess extends AbstractEventAccess implements UserAwar
      * @param user user making request
      * @return the component status
      */
+    @Override
     public ProcessGroupStatus getGroupStatus(final String groupId, final RepositoryStatusReport statusReport, final NiFiUser user) {
         final ProcessGroup group = flowManager.getGroup(groupId);
 
@@ -136,6 +136,7 @@ public class StandardEventAccess extends AbstractEventAccess implements UserAwar
      * @param user user making request
      * @return the component status
      */
+    @Override
     public ProcessGroupStatus getGroupStatus(final String groupId, final NiFiUser user) {
         final RepositoryStatusReport repoStatusReport = generateRepositoryStatusReport();
         return getGroupStatus(groupId, repoStatusReport, user);
@@ -152,6 +153,7 @@ public class StandardEventAccess extends AbstractEventAccess implements UserAwar
      * @param recursiveStatusDepth the number of levels deep we should recurse and still include the the processors' statuses, the groups' statuses, etc. in the returned ProcessGroupStatus
      * @return the component status
      */
+    @Override
     public ProcessGroupStatus getGroupStatus(final String groupId, final RepositoryStatusReport statusReport, final NiFiUser user, final int recursiveStatusDepth) {
         final ProcessGroup group = flowManager.getGroup(groupId);
 

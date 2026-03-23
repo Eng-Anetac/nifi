@@ -330,11 +330,11 @@ public interface TestRunner {
     void assertAllFlowFiles(Relationship relationship, FlowFileValidator validator);
 
     /**
-     * Asserts that flowfiles on a given relationship have a certain set of attributes.
+     * Asserts that FlowFiles on a given relationship have a certain set of attributes.
      *
-     * @param relationship The relationship on which to check the attributes of flowfiles
+     * @param relationship The relationship on which to check the attributes of FlowFiles
      * @param checkedAttributeNames The names of attributes that should be checked
-     * @param expectedAttributes The expected attributes of all flowfiles
+     * @param expectedAttributes The expected attributes of all FlowFiles
      */
     void assertAttributes(
         Relationship relationship,
@@ -343,10 +343,10 @@ public interface TestRunner {
     );
 
     /**
-     * Asserts that flowfiles on a given relationship have certain contents.
+     * Asserts that FlowFiles on a given relationship have certain contents.
      *
-     * @param relationship The relationship on which to check the contents of flowfiles
-     * @param expectedContent The expected contents of all flowfiles
+     * @param relationship The relationship on which to check the contents of FlowFiles
+     * @param expectedContent The expected contents of all FlowFiles
      */
     void assertContents(Relationship relationship, List<String> expectedContent);
 
@@ -507,7 +507,7 @@ public interface TestRunner {
      * this FlowFile to the Processor's Input Queue
      *
      * @param data source of data
-     * @param attributes to use for flow files
+     * @param attributes to use for FlowFiles
      */
     MockFlowFile enqueue(InputStream data, Map<String, String> attributes);
 
@@ -524,8 +524,8 @@ public interface TestRunner {
      * Returns a List of FlowFiles in the order in which they were transferred
      * to the given relationship
      *
-     * @param relationship to get flowfiles for
-     * @return flowfiles transferred to given relationship
+     * @param relationship to get FlowFiles for
+     * @return FlowFiles transferred to given relationship
      */
     List<MockFlowFile> getFlowFilesForRelationship(String relationship);
 
@@ -533,15 +533,15 @@ public interface TestRunner {
      * Returns a List of FlowFiles in the order in which they were transferred
      * to the given relationship
      *
-     * @param relationship to get flowfiles for
-     * @return flowfiles transferred to given relationship
+     * @param relationship to get FlowFiles for
+     * @return FlowFiles transferred to given relationship
      */
     List<MockFlowFile> getFlowFilesForRelationship(Relationship relationship);
 
     /**
      * Returns a List of FlowFiles in the order in which they were transferred that were penalized
      *
-     * @return flowfiles that were penalized
+     * @return FlowFiles that were penalized
      */
     List<MockFlowFile> getPenalizedFlowFiles();
 
@@ -551,7 +551,7 @@ public interface TestRunner {
     QueueSize getQueueSize();
 
     /**
-     * Allow for clearing the queue from all remaining flow files.
+     * Allow for clearing the queue from all remaining FlowFiles.
      */
     void clearQueue();
 
@@ -561,6 +561,14 @@ public interface TestRunner {
      *         if no counter exists with the specified name
      */
     Long getCounterValue(String name);
+
+    /**
+     * Get list of values recorded for the named Gauge
+     *
+     * @param name Gauge Name
+     * @return List of recorded values or empty when the named Gauge was not used
+     */
+    List<Double> getGaugeValues(String name);
 
     /**
      * @return the number of FlowFiles that have been removed from the system
@@ -1070,6 +1078,27 @@ public interface TestRunner {
     void setEnvironmentVariableValue(String name, String value);
 
     /**
+     * Returns the current value for the given parameter name from the simulated Parameter Context
+     *
+     * @param name the name of the parameter from the Parameter Context whose value should be returned.
+     * @return the current value for the given parameter name from the simulated Parameter Context or <code>null</code> if no value is currently set
+     *
+     * @throws NullPointerException if the name is null
+     */
+    String getParameterContextValue(String name);
+
+    /**
+     * Sets a parameter with the given name and value into the simulated Parameter Context.
+     * This makes available the parameter to the properties of the component being tested through parameter referencing such as <code>#{name}</code>.
+     *
+     * @param parameterName the name of the parameter to set
+     * @param parameterValue the value of the parameter to set
+     *
+     * @throws NullPointerException if the name is null
+     */
+    void setParameterContextValue(final String parameterName, final String parameterValue);
+
+    /**
      * Asserts that all FlowFiles meet all conditions.
      *
      * @param relationshipName relationship name
@@ -1105,14 +1134,14 @@ public interface TestRunner {
      *
      * @param runSchedule Run schedule duration in milliseconds.
      */
-     void setRunSchedule(long runSchedule);
+    void setRunSchedule(long runSchedule);
 
     /**
      * Assert that provenance event was created with the specified event type.
      *
      * @param eventType Provenance event type
      */
-     void assertProvenanceEvent(ProvenanceEventType eventType);
+    void assertProvenanceEvent(ProvenanceEventType eventType);
 
     /**
      * Causes the TestRunner to call the Processor's {@link Processor#migrateProperties(PropertyConfiguration)} method. The effects that are

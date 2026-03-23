@@ -311,13 +311,36 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
                 return;
             }
 
+            // Flush any pending save while processors are still running, preserving their
+            // RUNNING states in flow.json.gz. This must happen before controller.shutdown()
+            // which sets all processor desired states to STOPPED.
+            final SaveHolder pendingSave = saveHolder.getAndSet(null);
+            if (pendingSave != null) {
+                try {
+                    dao.save(controller, pendingSave.shouldArchive);
+                    logger.info("Flushed pending flow save before shutdown");
+                } catch (final Exception e) {
+                    logger.error("Failed to flush pending flow save before shutdown", e);
+                }
+            }
+
             running.set(false);
 
+            // Stop Cluster Coordinator before Node Protocol Sender
             if (clusterCoordinator != null) {
                 try {
                     clusterCoordinator.shutdown();
                 } catch (final Throwable t) {
-                    logger.error("Failed to properly shutdown coordinator", t);
+                    logger.error("Failed to shutdown Cluster Coordinator", t);
+                }
+            }
+
+            // Stop Node Protocol Sender Listener to avoid receiving additional cluster messages while shutting down Controller
+            if (configuredForClustering && senderListener != null) {
+                try {
+                    senderListener.stop();
+                } catch (final IOException ioe) {
+                    logger.warn("Failed to stop Cluster Node Protocol Sender Listener", ioe);
                 }
             }
 
@@ -325,13 +348,9 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
                 controller.shutdown(force);
             }
 
-            if (configuredForClustering && senderListener != null) {
-                try {
-                    senderListener.stop();
-                } catch (final IOException ioe) {
-                    logger.warn("Protocol sender/listener did not stop gracefully", ioe);
-                }
-            }
+            // Clear any save requests triggered during shutdown (e.g. by stopping processors).
+            // These would contain incorrect processor states (STOPPED mapped to ENABLED).
+            saveHolder.set(null);
         } finally {
             writeLock.unlock();
         }
@@ -355,9 +374,6 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
                 logger.warn("Scheduling service did not gracefully shutdown within configured {} second window", gracefulShutdownSeconds);
             }
         }
-
-        // Ensure that our background save reporting task has a chance to run, because we've now shut down the executor, which could cause the save reporting task to get canceled.
-        saveReportingTask.run();
     }
 
     @Override
@@ -396,7 +412,7 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
                         } catch (InterruptedException e) {
                             throw new ProtocolException("Could not complete offload request", e);
                         }
-                    }, "Offload Flow Files from Node");
+                    }, "Offload FlowFiles from Node");
                     t.setDaemon(true);
                     t.start();
 
@@ -568,7 +584,6 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
         return new StandardDataFlow(flowBytes, snippetBytes, authorizerFingerprint, missingComponents);
     }
 
-
     private NodeIdentifier getNodeId() {
         readLock.lock();
         try {
@@ -671,7 +686,7 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
             final EventAccess eventAccess = controller.getEventAccess();
             ProcessGroupStatus controllerStatus;
 
-            // wait for rebalance of flowfiles on all queues
+            // wait for rebalance of FlowFiles on all queues
             while (true) {
                 controllerStatus = eventAccess.getControllerStatus();
                 if (controllerStatus.getQueuedCount() <= 0) {
@@ -1024,6 +1039,16 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
                     }
                     writeLock.lock();
                     try {
+                        // Skip saving during shutdown to preserve RUNNING processor states in flow.json.gz.
+                        // During graceful shutdown, processor desired states are set to STOPPED before this
+                        // save executes. Saving at that point would persist ENABLED states instead of RUNNING,
+                        // which prevents auto-resume of processors on the next startup.
+                        if (!running.get()) {
+                            StandardFlowService.this.saveHolder.set(null);
+                            logger.info("Skipping flow controller save because service is no longer running");
+                            return;
+                        }
+
                         dao.save(controller, holder.shouldArchive);
                         // Nulling it out if it is still set to our current SaveHolder.  Otherwise leave it alone because it means
                         // another save is already pending.

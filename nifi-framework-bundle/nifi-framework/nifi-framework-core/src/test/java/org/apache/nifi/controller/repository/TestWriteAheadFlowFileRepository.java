@@ -47,8 +47,8 @@ import org.apache.nifi.util.file.FileUtils;
 import org.apache.nifi.wali.SequentialAccessWriteAheadLog;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
@@ -104,7 +104,8 @@ public class TestWriteAheadFlowFileRepository {
     }
 
     @Test
-    @Disabled("Intended only for local performance testing before/after making changes")
+    @EnabledIfSystemProperty(named = "nifi.test.performance", matches = "true",
+            disabledReason = "Intended only for local performance testing before/after making changes")
     public void testUpdatePerformance() throws IOException, InterruptedException {
         final FlowFileQueue queue = new FlowFileQueue() {
             private LoadBalanceCompression compression = LoadBalanceCompression.DO_NOT_COMPRESS;
@@ -349,7 +350,6 @@ public class TestWriteAheadFlowFileRepository {
             }
         };
 
-
         final int numPartitions = 16;
         final int numThreads = 8;
         final int totalUpdates = 160_000_000;
@@ -426,7 +426,6 @@ public class TestWriteAheadFlowFileRepository {
 
         file.delete();
     }
-
 
     @Test
     public void testNormalizeSwapLocation() {
@@ -596,7 +595,7 @@ public class TestWriteAheadFlowFileRepository {
         }
 
         // resource claim 1 will have a single claimant count while resource claim 2 will have no claimant counts
-        // because resource claim 2 is referenced only by flowfiles that are swapped out.
+        // because resource claim 2 is referenced only by FlowFiles that are swapped out.
         assertEquals(1, recoveryClaimManager.getClaimantCount(resourceClaim1));
         assertEquals(0, recoveryClaimManager.getClaimantCount(resourceClaim2));
 

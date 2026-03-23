@@ -17,6 +17,7 @@
 package org.apache.nifi.processors.standard;
 
 import org.apache.nifi.util.MockFlowFile;
+import org.apache.nifi.util.PropertyMigrationResult;
 import org.apache.nifi.util.TestRunner;
 import org.apache.nifi.util.TestRunners;
 import org.junit.jupiter.api.Test;
@@ -24,9 +25,68 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class TestValidateCsv {
 
     private final TestRunner runner = TestRunners.newTestRunner(new ValidateCsv());
+
+    @Test
+    public void testNonTerminatedQuoteCharacterForLineByLineValidation() {
+        // This test covers the scenario where a quote character is opened but not closed before the end of the file.
+        // In such a case, there is a risk of loading the entire file into memory, which can lead to OOM errors.
+        // This test is focused on line-by-line validation, where each line is treated independently.
+        runner.setProperty(ValidateCsv.DELIMITER_CHARACTER, ",");
+        runner.setProperty(ValidateCsv.END_OF_LINE_CHARACTER, "\n");
+        runner.setProperty(ValidateCsv.QUOTE_CHARACTER, "\"");
+        runner.setProperty(ValidateCsv.MAX_LINES_PER_ROW, "1");
+        runner.setProperty(ValidateCsv.HEADER, "false");
+        runner.setProperty(ValidateCsv.SCHEMA, "ParseInt(), StrNotNullOrEmpty()");
+        runner.setProperty(ValidateCsv.VALIDATION_STRATEGY, ValidateCsv.VALIDATE_LINES_INDIVIDUALLY);
+
+        runner.enqueue("\"1,foo\n2,bar\n3,baz\n");
+        runner.run();
+
+        runner.assertTransferCount(ValidateCsv.REL_VALID, 1);
+        runner.assertTransferCount(ValidateCsv.REL_INVALID, 1);
+
+        MockFlowFile validFF = runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).getFirst();
+        validFF.assertAttributeEquals("count.valid.lines", "2");
+        validFF.assertAttributeEquals("count.total.lines", "3");
+        validFF.assertContentEquals("2,bar\n3,baz");
+
+        MockFlowFile invalidFF = runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).getFirst();
+        invalidFF.assertAttributeEquals("count.invalid.lines", "1");
+        invalidFF.assertAttributeEquals("count.total.lines", "3");
+        invalidFF.assertAttributeEquals("validation.error.message", "unexpected end of line while reading quoted column on line 1");
+        invalidFF.assertContentEquals("\"1,foo\n");
+    }
+
+    @Test
+    public void testNonTerminatedQuoteCharacterForWholeFileValidation() {
+        // This test covers the scenario where a quote character is opened but not closed before the end of the file.
+        // In such a case, there is a risk of loading the entire file into memory, which can lead to OOM errors.
+        // This test is focused on whole file validation.
+        runner.setProperty(ValidateCsv.DELIMITER_CHARACTER, ",");
+        runner.setProperty(ValidateCsv.END_OF_LINE_CHARACTER, "\n");
+        runner.setProperty(ValidateCsv.QUOTE_CHARACTER, "\"");
+        runner.setProperty(ValidateCsv.MAX_LINES_PER_ROW, "1");
+        runner.setProperty(ValidateCsv.HEADER, "false");
+        runner.setProperty(ValidateCsv.SCHEMA, "ParseInt(), StrNotNullOrEmpty()");
+        runner.setProperty(ValidateCsv.VALIDATION_STRATEGY, ValidateCsv.VALIDATE_WHOLE_FLOWFILE);
+
+        runner.enqueue("\"1,foo\n2,bar\n3,baz\n");
+        runner.run();
+
+        runner.assertTransferCount(ValidateCsv.REL_VALID, 0);
+        runner.assertTransferCount(ValidateCsv.REL_INVALID, 1);
+
+        MockFlowFile invalidFF = runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).getFirst();
+        invalidFF.assertAttributeNotExists("count.invalid.lines");
+        invalidFF.assertAttributeNotExists("count.total.lines");
+        invalidFF.assertAttributeEquals("validation.error.message", "unexpected end of line while reading quoted column on line 1");
+        invalidFF.assertContentEquals("\"1,foo\n2,bar\n3,baz\n");
+    }
 
     @Test
     public void testHeaderAndSplit() {
@@ -42,7 +102,7 @@ public class TestValidateCsv {
         runner.run();
 
         runner.assertTransferCount(ValidateCsv.REL_VALID, 1);
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).get(0).assertContentEquals("Name,Birthdate,Weight\nJohn,22/11/1954,63.2\nBob,01/03/2004,45.0");
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).getFirst().assertContentEquals("Name,Birthdate,Weight\nJohn,22/11/1954,63.2\nBob,01/03/2004,45.0");
         runner.assertTransferCount(ValidateCsv.REL_INVALID, 0);
 
         runner.clearTransferState();
@@ -52,7 +112,7 @@ public class TestValidateCsv {
 
         runner.assertTransferCount(ValidateCsv.REL_VALID, 0);
         runner.assertTransferCount(ValidateCsv.REL_INVALID, 1);
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).get(0).assertContentEquals("Name,Birthdate,Weight\nJohn,22/11/1954,63a2\nBob,01/032004,45.0");
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).getFirst().assertContentEquals("Name,Birthdate,Weight\nJohn,22/11/1954,63a2\nBob,01/032004,45.0");
 
         runner.clearTransferState();
 
@@ -60,9 +120,9 @@ public class TestValidateCsv {
         runner.run();
 
         runner.assertTransferCount(ValidateCsv.REL_VALID, 1);
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).get(0).assertContentEquals("Name,Birthdate,Weight\nBob,01/03/2004,45.0");
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).getFirst().assertContentEquals("Name,Birthdate,Weight\nBob,01/03/2004,45.0");
         runner.assertTransferCount(ValidateCsv.REL_INVALID, 1);
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).get(0).assertContentEquals("Name,Birthdate,Weight\nJohn,22/111954,63.2");
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).getFirst().assertContentEquals("Name,Birthdate,Weight\nJohn,22/111954,63.2");
     }
 
     @Test
@@ -79,7 +139,7 @@ public class TestValidateCsv {
         runner.run();
 
         runner.assertTransferCount(ValidateCsv.REL_VALID, 1);
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).get(0).assertContentEquals("#Name,Birthdate,Weight\nJohn,\"\",63.2\nBob,,45.0");
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).getFirst().assertContentEquals("#Name,Birthdate,Weight\nJohn,\"\",63.2\nBob,,45.0");
         runner.assertTransferCount(ValidateCsv.REL_INVALID, 0);
     }
 
@@ -99,12 +159,12 @@ public class TestValidateCsv {
         runner.assertTransferCount(ValidateCsv.REL_VALID, 1);
         runner.assertTransferCount(ValidateCsv.REL_INVALID, 1);
 
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).get(0).assertContentEquals("John\r\nBob\r\nTom");
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).get(0).assertAttributeEquals("count.total.lines", "5");
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).get(0).assertAttributeEquals("count.valid.lines", "3");
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).get(0).assertContentEquals("Bob\r\nJohn");
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).get(0).assertAttributeEquals("count.invalid.lines", "2");
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).get(0).assertAttributeEquals("count.total.lines", "5");
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).getFirst().assertContentEquals("John\r\nBob\r\nTom");
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).getFirst().assertAttributeEquals("count.total.lines", "5");
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).getFirst().assertAttributeEquals("count.valid.lines", "3");
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).getFirst().assertContentEquals("Bob\r\nJohn");
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).getFirst().assertAttributeEquals("count.invalid.lines", "2");
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).getFirst().assertAttributeEquals("count.total.lines", "5");
     }
 
     @Test
@@ -124,7 +184,7 @@ public class TestValidateCsv {
         runner.enqueue("John,22/111954,abc\r\nBob,01/03/2004,45.0");
         runner.run();
         runner.assertTransferCount(ValidateCsv.REL_INVALID, 1);
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).get(0).assertAttributeEquals("validation.error.message",
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).getFirst().assertAttributeEquals("validation.error.message",
                 "At {line=1, row=1}, '22/111954' could not be parsed as a Date at {column=2}, 'abc' could not be parsed as a Double at {column=3}");
     }
 
@@ -293,7 +353,7 @@ public class TestValidateCsv {
         runner.enqueue("test,test,testapache.org");
         runner.run();
         runner.assertTransferCount(ValidateCsv.REL_INVALID, 1);
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).get(0).assertAttributeEquals("validation.error.message",
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).getFirst().assertAttributeEquals("validation.error.message",
                 "'testapache.org' does not match the regular expression '[a-z0-9\\._]+@[a-z0-9\\.]+' at {line=1, row=1, column=3}");
     }
 
@@ -441,7 +501,7 @@ public class TestValidateCsv {
 
         runner.assertTransferCount(ValidateCsv.REL_VALID, 0);
         runner.assertTransferCount(ValidateCsv.REL_INVALID, 1);
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).get(0).assertContentEquals(row);
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_INVALID).getFirst().assertContentEquals(row);
         runner.clearTransferState();
 
         runner.setProperty(ValidateCsv.SCHEMA, "null,null,null");
@@ -450,7 +510,7 @@ public class TestValidateCsv {
 
         runner.assertTransferCount(ValidateCsv.REL_VALID, 1);
         runner.assertTransferCount(ValidateCsv.REL_INVALID, 0);
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).get(0).assertContentEquals(row);
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).getFirst().assertContentEquals(row);
     }
 
     @Test
@@ -467,7 +527,23 @@ public class TestValidateCsv {
         runner.run();
 
         runner.assertTransferCount(ValidateCsv.REL_VALID, 1);
-        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).get(0).assertContentEquals("Header 1, Header 2, Header 3\n\"Content 1a, Content 1b\", Content 2, Content 3");
+        runner.getFlowFilesForRelationship(ValidateCsv.REL_VALID).getFirst().assertContentEquals("Header 1, Header 2, Header 3\n\"Content 1a, Content 1b\", Content 2, Content 3");
         runner.assertTransferCount(ValidateCsv.REL_INVALID, 0);
+    }
+
+    @Test
+    void testMigrateProperties() {
+        final Map<String, String> expectedRenamed = Map.ofEntries(
+                Map.entry("validate-csv-schema", ValidateCsv.SCHEMA.getName()),
+                Map.entry("validate-csv-header", ValidateCsv.HEADER.getName()),
+                Map.entry("validate-csv-quote", ValidateCsv.QUOTE_CHARACTER.getName()),
+                Map.entry("validate-csv-delimiter", ValidateCsv.DELIMITER_CHARACTER.getName()),
+                Map.entry("validate-csv-eol", ValidateCsv.END_OF_LINE_CHARACTER.getName()),
+                Map.entry("validate-csv-strategy", ValidateCsv.VALIDATION_STRATEGY.getName()),
+                Map.entry("validate-csv-violations", ValidateCsv.INCLUDE_ALL_VIOLATIONS.getName())
+        );
+
+        final PropertyMigrationResult propertyMigrationResult = runner.migrateProperties();
+        assertEquals(expectedRenamed, propertyMigrationResult.getPropertiesRenamed());
     }
 }

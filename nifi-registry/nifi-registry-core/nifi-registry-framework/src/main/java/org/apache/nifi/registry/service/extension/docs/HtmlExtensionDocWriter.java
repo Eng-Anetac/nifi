@@ -34,17 +34,16 @@ import org.apache.nifi.registry.extension.bundle.BundleInfo;
 import org.apache.nifi.registry.extension.component.ExtensionMetadata;
 import org.springframework.stereotype.Service;
 
-import javax.xml.stream.FactoryConfigurationError;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 import static org.apache.nifi.registry.service.extension.docs.DocumentationConstants.CSS_PATH;
 
@@ -86,7 +85,7 @@ public class HtmlExtensionDocWriter implements ExtensionDocWriter {
         xmlStreamWriter.writeStartElement("script");
         xmlStreamWriter.writeAttribute("type", "text/javascript");
         xmlStreamWriter.writeCharacters("window.onload = function(){if(self==top) { " +
-                "document.getElementById('nameHeader').style.display = \"inherit\"; } }" );
+                "document.getElementById('nameHeader').style.display = \"inherit\"; } }");
         xmlStreamWriter.writeEndElement();
     }
 
@@ -147,20 +146,12 @@ public class HtmlExtensionDocWriter implements ExtensionDocWriter {
     private void writeBundleInfo(final ExtensionMetadata extensionMetadata, final XMLStreamWriter xmlStreamWriter) throws XMLStreamException {
         final BundleInfo bundleInfo = extensionMetadata.getBundleInfo();
 
-        final String extenstionType;
-        switch (extensionMetadata.getType()) {
-            case PROCESSOR:
-                extenstionType = "Processor";
-                break;
-            case CONTROLLER_SERVICE:
-                extenstionType = "Controller Service";
-                break;
-            case REPORTING_TASK:
-                extenstionType = "Reporting Task";
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown extension type: " + extensionMetadata.getType());
-        }
+        final String extenstionType = switch (extensionMetadata.getType()) {
+            case PROCESSOR -> "Processor";
+            case CONTROLLER_SERVICE -> "Controller Service";
+            case REPORTING_TASK -> "Reporting Task";
+            default -> throw new IllegalArgumentException("Unknown extension type: " + extensionMetadata.getType());
+        };
 
         xmlStreamWriter.writeStartElement("table");
 
@@ -340,7 +331,7 @@ public class HtmlExtensionDocWriter implements ExtensionDocWriter {
                 xmlStreamWriter.writeEndElement();
                 xmlStreamWriter.writeStartElement("td");
                 xmlStreamWriter.writeAttribute("id", "description");
-                if (property.getDescription() != null && property.getDescription().trim().length() > 0) {
+                if (property.getDescription() != null && !property.getDescription().isBlank()) {
                     xmlStreamWriter.writeCharacters(property.getDescription());
                 } else {
                     xmlStreamWriter.writeCharacters("No Description Provided.");
@@ -353,7 +344,7 @@ public class HtmlExtensionDocWriter implements ExtensionDocWriter {
 
                 if (property.isExpressionLanguageSupported()) {
                     xmlStreamWriter.writeEmptyElement("br");
-                    String text = "Supports Expression Language: true";
+                    StringBuilder text = new StringBuilder("Supports Expression Language: true");
                     final String perFF = " (will be evaluated using flow file attributes and Environment variables)";
                     final String registry = " (will be evaluated using Environment variables only)";
                     final InputRequirement inputRequirement = extension.getInputRequirement();
@@ -361,21 +352,21 @@ public class HtmlExtensionDocWriter implements ExtensionDocWriter {
                     switch (property.getExpressionLanguageScope()) {
                         case FLOWFILE_ATTRIBUTES:
                             if (inputRequirement != null && inputRequirement.equals(InputRequirement.INPUT_FORBIDDEN)) {
-                                text += registry;
+                                text.append(registry);
                             } else {
-                                text += perFF;
+                                text.append(perFF);
                             }
                             break;
                         case ENVIRONMENT:
-                            text += registry;
+                            text.append(registry);
                             break;
                         case NONE:
                             // in case legacy/deprecated method has been used to specify EL support
-                            text += " (undefined scope)";
+                            text.append(" (undefined scope)");
                             break;
                     }
 
-                    writeSimpleElement(xmlStreamWriter, "strong", text);
+                    writeSimpleElement(xmlStreamWriter, "strong", text.toString());
                 }
                 xmlStreamWriter.writeEndElement();
 
@@ -496,9 +487,9 @@ public class HtmlExtensionDocWriter implements ExtensionDocWriter {
                 } else {
                     text = switch (elScope) {
                         case FLOWFILE_ATTRIBUTES ->
-                                "Supports Expression Language: true (will be evaluated using flow file attributes and env/syst variables registry)";
+                            "Supports Expression Language: true (will be evaluated using flow file attributes and env/syst variables registry)";
                         case ENVIRONMENT ->
-                                "Supports Expression Language: true (will be evaluated using env/syst variables registry only)";
+                            "Supports Expression Language: true (will be evaluated using env/syst variables registry only)";
                         default -> "Supports Expression Language: false";
                     };
                 }
@@ -685,7 +676,7 @@ public class HtmlExtensionDocWriter implements ExtensionDocWriter {
      * @throws XMLStreamException thrown if there was a problem writing to the
      * stream
      */
-    protected final static void writeSimpleElement(final XMLStreamWriter writer, final String elementName,
+    protected static final void writeSimpleElement(final XMLStreamWriter writer, final String elementName,
                                                    final String characters) throws XMLStreamException {
         writeSimpleElement(writer, elementName, characters, false);
     }
@@ -701,7 +692,7 @@ public class HtmlExtensionDocWriter implements ExtensionDocWriter {
      * @throws XMLStreamException thrown if there was a problem writing to the
      * stream.
      */
-    protected final static void writeSimpleElement(final XMLStreamWriter writer, final String elementName,
+    protected static final void writeSimpleElement(final XMLStreamWriter writer, final String elementName,
                                                    final String characters, boolean strong) throws XMLStreamException {
         writeSimpleElement(writer, elementName, characters, strong, null);
     }
@@ -719,7 +710,7 @@ public class HtmlExtensionDocWriter implements ExtensionDocWriter {
      * be written.
      * @throws XMLStreamException xse
      */
-    protected final static void writeSimpleElement(final XMLStreamWriter writer, final String elementName,
+    protected static final void writeSimpleElement(final XMLStreamWriter writer, final String elementName,
                                                    final String characters, boolean strong, String id) throws XMLStreamException {
         writer.writeStartElement(elementName);
         if (id != null) {

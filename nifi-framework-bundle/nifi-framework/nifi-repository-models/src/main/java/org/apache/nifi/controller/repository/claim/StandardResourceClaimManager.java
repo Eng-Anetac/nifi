@@ -203,6 +203,7 @@ public class StandardResourceClaimManager implements ResourceClaimManager {
         }
     }
 
+    @Override
     public boolean isDestructable(final ResourceClaim claim) {
         if (claim == null) {
             return false;
@@ -212,7 +213,6 @@ public class StandardResourceClaimManager implements ResourceClaimManager {
             return destructableClaims.contains(claim);
         }
     }
-
 
     private static final class ClaimCount {
         private final ResourceClaim claim;

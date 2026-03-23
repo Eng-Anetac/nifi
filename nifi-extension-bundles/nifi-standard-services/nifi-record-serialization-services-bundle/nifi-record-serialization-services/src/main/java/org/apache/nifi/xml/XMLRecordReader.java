@@ -34,13 +34,6 @@ import org.apache.nifi.util.StringUtils;
 import org.apache.nifi.xml.processing.stream.StandardXMLEventReaderProvider;
 import org.apache.nifi.xml.processing.stream.XMLEventReaderProvider;
 
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.Attribute;
-import javax.xml.stream.events.Characters;
-import javax.xml.stream.events.StartElement;
-import javax.xml.stream.events.XMLEvent;
-import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -51,6 +44,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Attribute;
+import javax.xml.stream.events.Characters;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
+import javax.xml.transform.stream.StreamSource;
 
 public class XMLRecordReader implements RecordReader {
 
@@ -340,16 +340,16 @@ public class XMLRecordReader implements RecordReader {
     }
 
     private void parseAttributesForUnknownField(StartElement startElement, RecordSchema schema, boolean dropUnknown, Map<String, Object> recordValues) {
-        final Iterator iterator = startElement.getAttributes();
+        final Iterator<Attribute> iterator = startElement.getAttributes();
         while (iterator.hasNext()) {
-            final Attribute attribute = (Attribute) iterator.next();
-            final String attributeName = attribute.getName().toString();
+            final Attribute attribute = iterator.next();
+            final String attributeName = attribute.getName().getLocalPart();
             final String fieldName = ((attributePrefix == null) ? attributeName : (attributePrefix + attributeName));
 
             if (dropUnknown) {
                 if (schema != null) {
-                    final Optional<RecordField> field = schema.getField(attributeName);
-                    if (field.isPresent()) {
+                    final boolean allowed = schema.getField(fieldName).isPresent() || schema.getField(attributeName).isPresent();
+                    if (allowed) {
                         recordValues.put(fieldName, attribute.getValue());
                     }
                 }
@@ -474,26 +474,22 @@ public class XMLRecordReader implements RecordReader {
     }
 
     private void parseAttributesForRecord(StartElement startElement, RecordSchema schema, boolean coerceTypes, boolean dropUnknown, Map<String, Object> recordValues) {
-        final Iterator iterator = startElement.getAttributes();
+        final Iterator<Attribute> iterator = startElement.getAttributes();
         while (iterator.hasNext()) {
-            final Attribute attribute = (Attribute) iterator.next();
-            final String attributeName = attribute.getName().toString();
-
+            final Attribute attribute = iterator.next();
+            final String attributeName = attribute.getName().getLocalPart();
             final String targetFieldName = attributePrefix == null ? attributeName : attributePrefix + attributeName;
 
             if (dropUnknown) {
-                final Optional<RecordField> field = schema.getField(attributeName);
-                if (field.isPresent()) {
-
-                    // dropUnknown == true && coerceTypes == true
+                final Optional<RecordField> fieldPrefixed = schema.getField(targetFieldName);
+                final Optional<RecordField> fieldRaw = schema.getField(attributeName);
+                if (fieldPrefixed.isPresent() || fieldRaw.isPresent()) {
                     if (coerceTypes) {
-                        final Object value;
-                        final DataType dataType = field.get().getDataType();
-                        if ((value = parseStringForType(attribute.getValue(), attributeName, dataType)) != null) {
+                        final DataType dataType = fieldPrefixed.map(RecordField::getDataType).orElseGet(() -> fieldRaw.get().getDataType());
+                        final Object value = parseStringForType(attribute.getValue(), targetFieldName, dataType);
+                        if (value != null) {
                             recordValues.put(targetFieldName, value);
                         }
-
-                    // dropUnknown == true && coerceTypes == false
                     } else {
                         recordValues.put(targetFieldName, attribute.getValue());
                     }
@@ -502,10 +498,12 @@ public class XMLRecordReader implements RecordReader {
 
                 // dropUnknown == false && coerceTypes == true
                 if (coerceTypes) {
-                    final Object value;
-                    final Optional<RecordField> field = schema.getField(attributeName);
-                    if (field.isPresent()) {
-                        if ((value = parseStringForType(attribute.getValue(), attributeName, field.get().getDataType())) != null) {
+                    final Optional<RecordField> fieldPrefixed = schema.getField(targetFieldName);
+                    final Optional<RecordField> fieldRaw = schema.getField(attributeName);
+                    if (fieldPrefixed.isPresent() || fieldRaw.isPresent()) {
+                        final DataType dataType = fieldPrefixed.map(RecordField::getDataType).orElseGet(() -> fieldRaw.get().getDataType());
+                        final Object value = parseStringForType(attribute.getValue(), targetFieldName, dataType);
+                        if (value != null) {
                             recordValues.put(targetFieldName, value);
                         }
                     } else {
@@ -541,7 +539,7 @@ public class XMLRecordReader implements RecordReader {
     private Object parseStringForType(String data, String fieldName, DataType dataType) {
         return switch (dataType.getFieldType()) {
             case BOOLEAN, BYTE, CHAR, CHOICE, DECIMAL, DOUBLE, FLOAT, INT, LONG, SHORT, STRING, DATE, TIME, TIMESTAMP ->
-                    DataTypeUtils.convertType(data, dataType, Optional.ofNullable(dateFormat), Optional.ofNullable(timeFormat), Optional.ofNullable(timestampFormat), fieldName);
+                DataTypeUtils.convertType(data, dataType, Optional.ofNullable(dateFormat), Optional.ofNullable(timeFormat), Optional.ofNullable(timestampFormat), fieldName);
             default -> null;
         };
     }

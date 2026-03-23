@@ -59,7 +59,6 @@ import static org.apache.nifi.controller.queue.clustered.protocol.LoadBalancePro
 import static org.apache.nifi.controller.queue.clustered.protocol.LoadBalanceProtocolConstants.SPACE_AVAILABLE;
 import static org.apache.nifi.controller.queue.clustered.protocol.LoadBalanceProtocolConstants.VERSION_ACCEPTED;
 
-
 public class LoadBalanceSession {
     private static final Logger logger = LoggerFactory.getLogger(LoadBalanceSession.class);
     static final int MAX_DATA_FRAME_SIZE = 65535;
@@ -202,7 +201,6 @@ public class LoadBalanceSession {
         return true;
     }
 
-
     private boolean verifyChecksum() throws IOException {
         logger.debug("Verifying Checksum for Peer {}", peerDescription);
 
@@ -234,33 +232,22 @@ public class LoadBalanceSession {
         return true;
     }
 
-
-
     private ByteBuffer getDataFrame() throws IOException {
-        switch (phase) {
-            case RECOMMEND_PROTOCOL_VERSION:
-                return recommendProtocolVersion();
-            case ABORT_PROTOCOL_NEGOTIATION:
-                return abortProtocolNegotiation();
-            case SEND_CONNECTION_ID:
-                return getConnectionId();
-            case CHECK_SPACE:
-                return checkSpace();
-            case GET_NEXT_FLOWFILE:
-                return getNextFlowFile();
-            case SEND_FLOWFILE_DEFINITION:
-            case SEND_FLOWFILE_CONTENTS:
-                return getFlowFileContent();
-            case SEND_CHECKSUM:
-                return getChecksum();
-            case SEND_TRANSACTION_COMPLETE:
-                return getTransactionComplete();
-            default:
+        return switch (phase) {
+            case RECOMMEND_PROTOCOL_VERSION -> recommendProtocolVersion();
+            case ABORT_PROTOCOL_NEGOTIATION -> abortProtocolNegotiation();
+            case SEND_CONNECTION_ID -> getConnectionId();
+            case CHECK_SPACE -> checkSpace();
+            case GET_NEXT_FLOWFILE -> getNextFlowFile();
+            case SEND_FLOWFILE_DEFINITION, SEND_FLOWFILE_CONTENTS -> getFlowFileContent();
+            case SEND_CHECKSUM -> getChecksum();
+            case SEND_TRANSACTION_COMPLETE -> getTransactionComplete();
+            default -> {
                 logger.debug("Phase of {}, returning null ByteBuffer", phase);
-                return null;
-        }
+                yield null;
+            }
+        };
     }
-
 
     private ByteBuffer getTransactionComplete() {
         logger.debug("Sending Transaction Complete Indicator to Peer {}", peerDescription);
@@ -414,7 +401,6 @@ public class LoadBalanceSession {
         return buffer;
     }
 
-
     private ByteBuffer recommendProtocolVersion() {
         logger.debug("Recommending to Peer {} that Protocol Version {} be used", peerDescription, protocolVersion);
 
@@ -551,7 +537,6 @@ public class LoadBalanceSession {
         return buffer;
     }
 
-
     private boolean receiveSpaceAvailableResponse() throws IOException {
         logger.debug("Receiving response from Peer {} to determine whether or not space is available in queue {}", peerDescription, connectionId);
 
@@ -588,8 +573,6 @@ public class LoadBalanceSession {
         return true;
     }
 
-
-
     private enum TransactionPhase {
         RECOMMEND_PROTOCOL_VERSION(SelectionKey.OP_WRITE),
 
@@ -618,7 +601,6 @@ public class LoadBalanceSession {
         SEND_TRANSACTION_COMPLETE(SelectionKey.OP_WRITE),
 
         CONFIRM_TRANSACTION_COMPLETE(SelectionKey.OP_READ);
-
 
         private final int requiredSelectionKey;
 

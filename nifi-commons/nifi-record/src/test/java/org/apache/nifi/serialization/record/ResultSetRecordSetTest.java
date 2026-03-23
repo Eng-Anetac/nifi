@@ -771,16 +771,16 @@ public class ResultSetRecordSetTest {
     }
 
     private static class ResultBigDecimal extends BigDecimal {
-        public static int PRECISION = 3;
-        public static int SCALE = 0;
+        public static final int PRECISION = 3;
+        public static final int SCALE = 0;
         public ResultBigDecimal() {
             super("123");
         }
     }
 
     private static class ArrayTestData {
-        final private String fieldName;
-        final private Object[] testArray;
+        private final String fieldName;
+        private final Object[] testArray;
 
         public ArrayTestData(String fieldName, Object[] testArray) {
             this.fieldName = fieldName;

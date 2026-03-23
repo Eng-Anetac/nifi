@@ -95,6 +95,7 @@ public class LengthDelimitedJournal<T> implements WriteAheadJournal<T> {
         this.maxInHeapSerializationBytes = maxInHeapSerializationBytes;
     }
 
+    @Override
     public void dispose() {
         logger.debug("Deleting Journal {} because it is now encapsulated in the latest Snapshot", journalFile.getName());
         if (!journalFile.delete() && journalFile.exists()) {
@@ -221,7 +222,6 @@ public class LengthDelimitedJournal<T> implements WriteAheadJournal<T> {
         return new SerDeAndVersion(serde, serdeVersion);
     }
 
-
     // Visible/overrideable for testing.
     protected void createOverflowDirectory(final Path path) throws IOException {
         Files.createDirectories(path);
@@ -229,12 +229,12 @@ public class LengthDelimitedJournal<T> implements WriteAheadJournal<T> {
 
     @Override
     public void update(final Collection<T> records, final RecordLookup<T> recordLookup) throws IOException {
-        if (!headerWritten) {
-            throw new IllegalStateException("Cannot update journal file " + journalFile + " because no header has been written yet.");
-        }
-
         if (records.isEmpty()) {
             return;
+        }
+
+        if (!headerWritten) {
+            throw new IllegalStateException("Cannot update journal file " + journalFile + " because no header has been written yet.");
         }
 
         checkState();
@@ -342,7 +342,6 @@ public class LengthDelimitedJournal<T> implements WriteAheadJournal<T> {
             streamPool.returnObject(bados);
         }
     }
-
 
     private void checkState() throws IOException {
         final Throwable cause = this.poisonCause;
@@ -583,7 +582,6 @@ public class LengthDelimitedJournal<T> implements WriteAheadJournal<T> {
 
         return true;
     }
-
 
     @Override
     public synchronized JournalSummary getSummary() {

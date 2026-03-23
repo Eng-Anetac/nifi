@@ -37,6 +37,7 @@ public class DeleteMongoIT extends MongoWriteTestBase {
         collection.insertMany(DOCUMENTS);
     }
 
+    @Override
     @AfterEach
     public void teardown() {
         super.teardown();
@@ -111,7 +112,6 @@ public class DeleteMongoIT extends MongoWriteTestBase {
         runner.clearTransferState();
         runner.enqueue(query);
         runner.run(1, true, true);
-
 
         runner.assertTransferCount(DeleteMongo.REL_FAILURE, 0);
         runner.assertTransferCount(DeleteMongo.REL_SUCCESS, 1);

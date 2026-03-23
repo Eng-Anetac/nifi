@@ -16,19 +16,6 @@
  */
 package org.apache.nifi.lookup;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
@@ -49,6 +36,19 @@ import org.apache.nifi.serialization.record.Record;
 import org.apache.nifi.serialization.record.RecordField;
 import org.apache.nifi.serialization.record.RecordFieldType;
 import org.apache.nifi.serialization.record.RecordSchema;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Tags({"lookup", "cache", "enrich", "join", "csv", "reloadable", "key", "value", "record"})
 @CapabilityDescription(
@@ -83,7 +83,7 @@ public class CSVRecordLookupService extends AbstractCSVLookupService implements 
                     logger.debug("Loading lookup table from file: {}", csvFile);
                 }
 
-                ConcurrentHashMap<String, Record> cache = new ConcurrentHashMap<>();
+                ConcurrentMap<String, Record> cache = new ConcurrentHashMap<>();
                 try (final InputStream is = new FileInputStream(csvFile)) {
                     try (final InputStreamReader reader = new InputStreamReader(is, charset)) {
                         final CSVParser records = csvFormat.builder().setHeader().setSkipHeaderRecord(true).get().parse(reader);

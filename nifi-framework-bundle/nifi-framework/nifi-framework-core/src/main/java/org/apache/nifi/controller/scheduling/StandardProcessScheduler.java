@@ -126,6 +126,15 @@ public final class StandardProcessScheduler implements ProcessScheduler {
         return stateManagerProvider.getStateManager(componentId);
     }
 
+    private StateManager getStateManager(final String componentId, final Class<?> componentClass) {
+        return stateManagerProvider.getStateManager(componentId, componentClass);
+    }
+
+    private StateManager getStateManager(final ProcessorNode procNode) {
+        final Class<?> componentClass = procNode.getProcessor() == null ? null : procNode.getProcessor().getClass();
+        return getStateManager(procNode.getIdentifier(), componentClass);
+    }
+
     public void scheduleFrameworkTask(final Runnable task, final String taskName, final long initialDelay, final long delay, final TimeUnit timeUnit) {
         Thread.ofVirtual()
             .name(taskName)
@@ -163,6 +172,7 @@ public final class StandardProcessScheduler implements ProcessScheduler {
      *
      * @param task the task to perform
      */
+    @Override
     public Future<?> submitFrameworkTask(final Runnable task) {
         final CompletableFuture<?> future = new CompletableFuture<>();
 
@@ -293,13 +303,12 @@ public final class StandardProcessScheduler implements ProcessScheduler {
                     }
                 } catch (final Exception e) {
                     final Throwable cause = e instanceof InvocationTargetException ? e.getCause() : e;
-                    final ComponentLog componentLog = new SimpleProcessLogger(reportingTask.getIdentifier(), reportingTask, new StandardLoggingContext(null));
+                    final ComponentLog componentLog = new SimpleProcessLogger(reportingTask.getIdentifier(), reportingTask, new StandardLoggingContext());
                     componentLog.error("Failed to invoke @OnScheduled method due to {}", cause);
 
                     LOG.error("Failed to invoke the On-Scheduled Lifecycle methods of {} due to {}; administratively yielding this "
                             + "ReportingTask and will attempt to schedule it again after {}",
                             reportingTask, e.toString(), administrativeYieldDuration, e);
-
 
                     try (final NarCloseable ignored = NarCloseable.withComponentNarLoader(flowController.getExtensionManager(), reportingTask.getClass(), reportingTask.getIdentifier())) {
                         ReflectionUtils.quietlyInvokeMethodsWithAnnotation(OnUnscheduled.class, reportingTask, taskNode.getConfigurationContext());
@@ -344,7 +353,7 @@ public final class StandardProcessScheduler implements ProcessScheduler {
                     ReflectionUtils.invokeMethodsWithAnnotation(OnUnscheduled.class, reportingTask, configurationContext);
                 } catch (final Exception e) {
                     final Throwable cause = e instanceof InvocationTargetException ? e.getCause() : e;
-                    final ComponentLog componentLog = new SimpleProcessLogger(reportingTask.getIdentifier(), reportingTask, new StandardLoggingContext(null));
+                    final ComponentLog componentLog = new SimpleProcessLogger(reportingTask.getIdentifier(), reportingTask, new StandardLoggingContext());
                     componentLog.error("Failed to invoke @OnUnscheduled method due to {}", cause);
 
                     LOG.error("Failed to invoke the @OnUnscheduled methods of {} due to {}; administratively yielding this ReportingTask and will attempt to schedule it again after {}",
@@ -381,7 +390,7 @@ public final class StandardProcessScheduler implements ProcessScheduler {
         final LifecycleState lifecycleState = getLifecycleState(requireNonNull(procNode), true, false);
 
         final Supplier<ProcessContext> processContextFactory = () -> new StandardProcessContext(procNode, getControllerServiceProvider(),
-            getStateManager(procNode.getIdentifier()), lifecycleState::isTerminated, flowController);
+            getStateManager(procNode), lifecycleState::isTerminated, flowController);
 
         final boolean scheduleActions = procNode.getProcessGroup().resolveExecutionEngine() != ExecutionEngine.STATELESS;
 
@@ -416,7 +425,7 @@ public final class StandardProcessScheduler implements ProcessScheduler {
         return future;
     }
 
-    @SuppressWarnings("PMD.EmptyCatchBlock")
+    @Override
     public synchronized CompletableFuture<Void> startStatelessGroup(final StatelessGroupNode groupNode) {
         final LifecycleState lifecycleState = getLifecycleState(requireNonNull(groupNode), true, true);
         lifecycleState.setScheduled(true);
@@ -476,7 +485,7 @@ public final class StandardProcessScheduler implements ProcessScheduler {
                 } catch (final InterruptedException e) {
                     Thread.currentThread().interrupt();
                     return;
-                } catch (final TimeoutException e) {
+                } catch (final TimeoutException ignored) {
                     // Controller Services have not yet enabled. Keep waiting.
                     // We do not want to just wait for the Future.get() to return because we want to check if the desired state has changed.
                 } catch (final Exception e) {
@@ -514,7 +523,7 @@ public final class StandardProcessScheduler implements ProcessScheduler {
         final LifecycleState lifecycleState = getLifecycleState(requireNonNull(procNode), true, false);
 
         final Supplier<ProcessContext> processContextFactory = () -> new StandardProcessContext(procNode, getControllerServiceProvider(),
-            getStateManager(procNode.getIdentifier()), lifecycleState::isTerminated, flowController);
+            getStateManager(procNode), lifecycleState::isTerminated, flowController);
 
         final CompletableFuture<Void> future = new CompletableFuture<>();
         final SchedulingAgentCallback callback = new SchedulingAgentCallback() {
@@ -555,7 +564,7 @@ public final class StandardProcessScheduler implements ProcessScheduler {
         final LifecycleState lifecycleState = getLifecycleState(procNode, false, false);
 
         final StandardProcessContext processContext = new StandardProcessContext(procNode, getControllerServiceProvider(),
-            getStateManager(procNode.getIdentifier()), lifecycleState::isTerminated, flowController);
+            getStateManager(procNode), lifecycleState::isTerminated, flowController);
 
         LOG.info("Stopping {}", procNode);
         return procNode.stop(this, this.componentLifeCycleThreadPool, processContext, getSchedulingAgent(procNode), lifecycleState, lifecycleMethods);
@@ -566,7 +575,6 @@ public final class StandardProcessScheduler implements ProcessScheduler {
         final LifecycleState lifecycleState = getLifecycleState(groupNode, false, false);
         return groupNode.stop(this, this.componentLifeCycleThreadPool, getSchedulingAgent(groupNode), lifecycleState);
     }
-
 
     @Override
     public synchronized void terminateProcessor(final ProcessorNode procNode) {
@@ -731,7 +739,8 @@ public final class StandardProcessScheduler implements ProcessScheduler {
         getSchedulingAgent(connectable).unschedule(connectable, state);
 
         if (!state.isScheduled() && state.getActiveThreadCount() == 0 && state.mustCallOnStoppedMethods()) {
-            final ConnectableProcessContext processContext = new ConnectableProcessContext(connectable, getStateManager(connectable.getIdentifier()));
+            final StateManager stateManager = (connectable instanceof ProcessorNode) ? getStateManager((ProcessorNode) connectable) : getStateManager(connectable.getIdentifier());
+            final ConnectableProcessContext processContext = new ConnectableProcessContext(connectable, stateManager);
             try (final NarCloseable ignored = NarCloseable.withComponentNarLoader(flowController.getExtensionManager(), connectable.getClass(), connectable.getIdentifier())) {
                 ReflectionUtils.quietlyInvokeMethodsWithAnnotation(OnStopped.class, connectable, processContext);
             }

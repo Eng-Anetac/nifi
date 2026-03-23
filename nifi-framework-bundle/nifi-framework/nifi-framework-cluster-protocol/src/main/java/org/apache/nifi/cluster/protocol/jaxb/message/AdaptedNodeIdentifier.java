@@ -33,9 +33,6 @@ public class AdaptedNodeIdentifier {
 
     private boolean siteToSiteSecure;
 
-    public AdaptedNodeIdentifier() {
-    }
-
     public String getApiAddress() {
         return apiAddress;
     }
@@ -107,7 +104,6 @@ public class AdaptedNodeIdentifier {
     public void setSiteToSitePort(Integer siteToSitePort) {
         this.siteToSitePort = siteToSitePort;
     }
-
 
     public boolean isSiteToSiteSecure() {
         return siteToSiteSecure;

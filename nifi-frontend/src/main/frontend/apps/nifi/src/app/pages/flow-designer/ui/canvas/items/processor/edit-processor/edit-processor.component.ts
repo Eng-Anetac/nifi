@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { Component, EventEmitter, Inject, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import {
@@ -78,7 +78,7 @@ import {
     ModifiedProperties,
     VerifyPropertiesRequestContext
 } from '../../../../../../../state/property-verification';
-import { TabbedDialog } from '../../../../../../../ui/common/tabbed-dialog/tabbed-dialog.component';
+import { TabbedDialog, TABBED_DIALOG_ID } from '../../../../../../../ui/common/tabbed-dialog/tabbed-dialog.component';
 import { ErrorContextKey } from '../../../../../../../state/error';
 import { ContextErrorBanner } from '../../../../../../../ui/common/context-error-banner/context-error-banner.component';
 import { BulletinsTip } from '../../../../../../../ui/common/tooltips/bulletins-tip/bulletins-tip.component';
@@ -108,9 +108,22 @@ import { ConnectedPosition } from '@angular/cdk/overlay';
         CopyDirective,
         NgClass
     ],
-    styleUrls: ['./edit-processor.component.scss']
+    styleUrls: ['./edit-processor.component.scss'],
+    providers: [
+        {
+            provide: TABBED_DIALOG_ID,
+            useValue: 'edit-processor-selected-index'
+        }
+    ]
 })
 export class EditProcessor extends TabbedDialog {
+    request = inject<EditComponentDialogRequest>(MAT_DIALOG_DATA);
+    private formBuilder = inject(FormBuilder);
+    private client = inject(Client);
+    private canvasUtils = inject(CanvasUtils);
+    private clusterConnectionService = inject(ClusterConnectionService);
+    private nifiCommon = inject(NiFiCommon);
+
     @Input() set processorUpdates(processorUpdates: any | undefined) {
         this.processRunStateUpdates(processorUpdates);
     }
@@ -202,15 +215,9 @@ export class EditProcessor extends TabbedDialog {
     timerDrivenSchedulingPeriod: string;
     runDurationMillis: number;
 
-    constructor(
-        @Inject(MAT_DIALOG_DATA) public request: EditComponentDialogRequest,
-        private formBuilder: FormBuilder,
-        private client: Client,
-        private canvasUtils: CanvasUtils,
-        private clusterConnectionService: ClusterConnectionService,
-        private nifiCommon: NiFiCommon
-    ) {
-        super('edit-processor-selected-index');
+    constructor() {
+        super();
+        const request = this.request;
 
         const processorProperties: any = request.entity.component.config.properties;
         const properties: Property[] = Object.entries(processorProperties).map((entry: any) => {
@@ -274,6 +281,10 @@ export class EditProcessor extends TabbedDialog {
             comments: new FormControl(request.entity.component.config.comments)
         });
 
+        if (!this.supportsParallelProcessing()) {
+            this.editProcessorForm.get('concurrentTasks')?.disable();
+        }
+
         if (this.supportsBatching()) {
             this.editProcessorForm.addControl(
                 'runDuration',
@@ -305,6 +316,10 @@ export class EditProcessor extends TabbedDialog {
             if (this.supportsBatching()) {
                 this.editProcessorForm.get('runDuration')?.enable();
             }
+        }
+
+        if (!this.supportsParallelProcessing()) {
+            this.editProcessorForm.get('concurrentTasks')?.disable();
         }
     }
 
@@ -339,6 +354,17 @@ export class EditProcessor extends TabbedDialog {
 
     supportsBatching(): boolean {
         return this.request.entity.component.supportsBatching == true;
+    }
+
+    supportsParallelProcessing(): boolean {
+        return this.request.entity.component.supportsParallelProcessing === true;
+    }
+
+    concurrentTasksTooltip(): string {
+        if (this.supportsParallelProcessing()) {
+            return 'The number of tasks that should be concurrently scheduled for this processor. Must be an integer greater than 0.';
+        }
+        return 'This processor does not support parallel processing.';
     }
 
     formatType(): string {
@@ -403,6 +429,22 @@ export class EditProcessor extends TabbedDialog {
             .filter((relationship) => relationship.retry)
             .map((relationship) => relationship.name);
 
+        const config: any = {
+            penaltyDuration: this.editProcessorForm.get('penaltyDuration')?.value,
+            yieldDuration: this.editProcessorForm.get('yieldDuration')?.value,
+            bulletinLevel: this.editProcessorForm.get('bulletinLevel')?.value,
+            schedulingStrategy: this.editProcessorForm.get('schedulingStrategy')?.value,
+            schedulingPeriod: this.editProcessorForm.get('schedulingPeriod')?.value,
+            executionNode: this.editProcessorForm.get('executionNode')?.value,
+            autoTerminatedRelationships: autoTerminated,
+            retriedRelationships: retried,
+            comments: this.editProcessorForm.get('comments')?.value
+        };
+
+        if (this.supportsParallelProcessing()) {
+            config.concurrentlySchedulableTaskCount = this.editProcessorForm.get('concurrentTasks')?.value;
+        }
+
         const payload: any = {
             revision: this.client.getRevision({
                 ...this.request.entity,
@@ -412,18 +454,7 @@ export class EditProcessor extends TabbedDialog {
             component: {
                 id: this.request.entity.id,
                 name: this.editProcessorForm.get('name')?.value,
-                config: {
-                    penaltyDuration: this.editProcessorForm.get('penaltyDuration')?.value,
-                    yieldDuration: this.editProcessorForm.get('yieldDuration')?.value,
-                    bulletinLevel: this.editProcessorForm.get('bulletinLevel')?.value,
-                    schedulingStrategy: this.editProcessorForm.get('schedulingStrategy')?.value,
-                    concurrentlySchedulableTaskCount: this.editProcessorForm.get('concurrentTasks')?.value,
-                    schedulingPeriod: this.editProcessorForm.get('schedulingPeriod')?.value,
-                    executionNode: this.editProcessorForm.get('executionNode')?.value,
-                    autoTerminatedRelationships: autoTerminated,
-                    retriedRelationships: retried,
-                    comments: this.editProcessorForm.get('comments')?.value
-                }
+                config
             }
         };
 
@@ -480,7 +511,7 @@ export class EditProcessor extends TabbedDialog {
 
     getMostSevereBulletinLevel(): string | null {
         // determine the most severe of the bulletins
-        const mostSevere = this.canvasUtils.getMostSevereBulletin(this.bulletins);
+        const mostSevere = this.nifiCommon.getMostSevereBulletin(this.bulletins);
         return mostSevere ? mostSevere.bulletin.level.toLowerCase() : null;
     }
 
@@ -542,7 +573,6 @@ export class EditProcessor extends TabbedDialog {
     stop() {
         this.stopComponentRequest.next({
             id: this.request.entity.id,
-            uri: this.request.entity.uri,
             type: ComponentType.Processor,
             revision: this.client.getRevision({
                 ...this.request.entity,
@@ -555,7 +585,6 @@ export class EditProcessor extends TabbedDialog {
     start() {
         this.startComponentRequest.next({
             id: this.request.entity.id,
-            uri: this.request.entity.uri,
             type: ComponentType.Processor,
             revision: this.client.getRevision({
                 ...this.request.entity,
@@ -568,7 +597,6 @@ export class EditProcessor extends TabbedDialog {
     disable() {
         this.disableComponentRequest.next({
             id: this.request.entity.id,
-            uri: this.request.entity.uri,
             type: ComponentType.Processor,
             revision: this.client.getRevision({
                 ...this.request.entity,
@@ -581,7 +609,6 @@ export class EditProcessor extends TabbedDialog {
     enable() {
         this.enableComponentRequest.next({
             id: this.request.entity.id,
-            uri: this.request.entity.uri,
             type: ComponentType.Processor,
             revision: this.client.getRevision({
                 ...this.request.entity,
@@ -609,7 +636,8 @@ export class EditProcessor extends TabbedDialog {
     verifyClicked(entity: any): void {
         this.verify.next({
             entity,
-            properties: this.getModifiedProperties()
+            properties: this.getModifiedProperties(),
+            componentType: ComponentType.Processor
         });
     }
 

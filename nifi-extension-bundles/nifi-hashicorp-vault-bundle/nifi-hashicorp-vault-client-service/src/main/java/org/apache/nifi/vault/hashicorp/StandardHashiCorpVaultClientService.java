@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
 @Tags({"hashicorp", "vault", "client"})
 @CapabilityDescription("A controller service for interacting with HashiCorp Vault.")
 @SupportsSensitiveDynamicProperties
@@ -138,6 +137,13 @@ public class StandardHashiCorpVaultClientService extends AbstractControllerServi
 
     @OnDisabled
     public void onDisabled() {
+        if (communicationService instanceof AutoCloseable autoCloseableCommunicationService) {
+            try {
+                autoCloseableCommunicationService.close();
+            } catch (final Exception e) {
+                getLogger().warn("Error closing HashiCorp Vault communication service", e);
+            }
+        }
         communicationService = null;
     }
 
