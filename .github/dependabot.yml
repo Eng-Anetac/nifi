@@ -4,9 +4,23 @@
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
-updates:
+updates: 
   - package-ecosystem: "maven" 
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 50
+    open-pull-requests-limit: 100
+
+  - package-ecosystem: "npm"
+    directory: "/nifi-registry/nifi-registry-core/nifi-registry-web-ui/src/main"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 100
+    ignore:
+      - dependency-name: "@angular/*"
+
+  - package-ecosystem: "npm"
+    directory: "/nifi-frontend/src/main/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 100
