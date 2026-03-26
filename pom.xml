@@ -155,7 +155,7 @@
         <jackson.annotations.version>2.21</jackson.annotations.version>
         <jackson.bom.version>2.21.0</jackson.bom.version>
         <json.smart.version>2.6.0</json.smart.version>
-        <snakeyaml.version>2.5</snakeyaml.version>
+        <snakeyaml.version>2.6</snakeyaml.version>
 
         <!-- JVM languages and bytecode -->
         <aspectj.version>1.9.25.1</aspectj.version>
