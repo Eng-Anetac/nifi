@@ -102,7 +102,7 @@
         "lint-staged": "12.2.2",
         "mini-css-extract-plugin": "0.12.0",
         "npm-force-resolutions": "^0.0.10",
-        "null-loader": "3.0.0",
+        "null-loader": "4.0.1",
         "optimize-css-assets-webpack-plugin": "6.0.1",
         "sass": "1.32.0",
         "sass-loader": "7.1.0",
