@@ -131,5 +131,8 @@
         "ua-parser-js": "0.7.33",
         "json5": "2.2.3",
         "loader-utils": "2.0.4"
+    },
+    "overrides": {
+        "serialize-javascript": "5.0.1"
     }
 }
