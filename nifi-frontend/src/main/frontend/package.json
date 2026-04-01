@@ -75,7 +75,7 @@
         "@nx/eslint-plugin": "21.6.10",
         "@nx/jest": "21.6.10",
         "@nx/workspace": "22.6.4",
-        "@schematics/angular": "20.3.12",
+        "@schematics/angular": "21.2.6",
         "@types/d3": "^7.4.3",
         "@types/humanize-duration": "^3.27.3",
         "@types/jest": "29.5.13",
