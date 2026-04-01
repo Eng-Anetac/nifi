@@ -73,7 +73,7 @@
         "@nx/angular": "22.6.1",
         "@nx/eslint": "21.6.10",
         "@nx/eslint-plugin": "21.6.10",
-        "@nx/jest": "21.6.10",
+        "@nx/jest": "22.6.4",
         "@nx/workspace": "22.6.4",
         "@schematics/angular": "20.3.12",
         "@types/d3": "^7.4.3",
