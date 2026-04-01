@@ -72,7 +72,7 @@
         "@happy-dom/jest-environment": "^20.0.0",
         "@nx/angular": "22.6.4",
         "@nx/eslint": "21.6.10",
-        "@nx/eslint-plugin": "21.6.10",
+        "@nx/eslint-plugin": "22.6.4",
         "@nx/jest": "22.6.4",
         "@nx/workspace": "22.6.4",
         "@schematics/angular": "21.2.6",
