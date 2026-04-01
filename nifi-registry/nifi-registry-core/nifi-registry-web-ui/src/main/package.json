@@ -72,7 +72,7 @@
         "@babel/preset-env": "7.4.4",
         "@babel/runtime": "7.4.4",
         "@typescript-eslint/eslint-plugin": "8.58.0",
-        "@typescript-eslint/parser": "5.10.0",
+        "@typescript-eslint/parser": "8.58.0",
         "babel-loader": "10.1.1",
         "babel-plugin-istanbul": "5.1.4",
         "babel-polyfill": "6.26.0",
