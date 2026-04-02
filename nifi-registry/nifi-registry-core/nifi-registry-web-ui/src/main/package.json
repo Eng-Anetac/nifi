@@ -71,7 +71,6 @@
         "@babel/core": "7.4.4",
         "@babel/preset-env": "7.4.4",
         "@babel/runtime": "7.4.4",
-        "@types/node": "18.19.130",
         "@typescript-eslint/eslint-plugin": "5.10.0",
         "@typescript-eslint/parser": "5.10.0",
         "babel-loader": "8.0.6",
@@ -126,15 +125,11 @@
         "node": ">=16.13.2",
         "npm": ">=8.1.2"
     },
-    "overrides": {
-        "@types/node": "18.19.130"
-    },
     "resolutions": {
         "glob-parent": "6.0.2",
         "trim-newlines": "3.0.1",
         "ua-parser-js": "0.7.33",
         "json5": "2.2.3",
-        "loader-utils": "2.0.4",
-        "@types/node": "18.19.130"
+        "loader-utils": "2.0.4"
     }
 }
