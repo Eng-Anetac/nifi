@@ -621,7 +621,7 @@ public class TestExecuteStreamCommand {
         runner.setProperty(dynamicProp1, javaFile.toString());
         runner.setProperty(ExecuteStreamCommand.PUT_ATTRIBUTE_MAX_LENGTH, "10");
         runner.setProperty(ExecuteStreamCommand.PUT_OUTPUT_IN_ATTRIBUTE, "outputDest");
-        assertEquals(1, runner.getProcessContext().getAvailableRelationships().size());
+        assertEquals(2, runner.getProcessContext().getAvailableRelationships().size());
         runner.run(1);
         runner.assertTransferCount(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP, 1);
         runner.assertTransferCount(ExecuteStreamCommand.OUTPUT_STREAM_RELATIONSHIP, 0);
