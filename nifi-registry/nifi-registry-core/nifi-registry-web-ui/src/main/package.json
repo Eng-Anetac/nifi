@@ -18,7 +18,6 @@
     "description": "",
     "scripts": {
         "ci": "npm ci --ignore-scripts",
-        "preinstall": "npm --ignore-scripts install npm-force-resolutions && npm-force-resolutions",
         "start": "npm run watch",
         "test": "karma start karma.conf.js --single-run",
         "test:dev": "karma start karma.conf.js",
@@ -71,7 +70,6 @@
         "@babel/core": "7.4.4",
         "@babel/preset-env": "7.4.4",
         "@babel/runtime": "7.29.2",
-        "@jsdevtools/coverage-istanbul-loader": "3.0.5",
         "@typescript-eslint/eslint-plugin": "5.10.0",
         "@typescript-eslint/parser": "5.10.0",
         "babel-loader": "8.0.6",
@@ -88,6 +86,7 @@
         "file-loader": "4.0.0",
         "html-loader": "0.5.5",
         "html-webpack-plugin": "3.2.0",
+        "@jsdevtools/coverage-istanbul-loader": "3.0.5",
         "jasmine": "3.4.0",
         "karma": "6.4.1",
         "karma-chrome-launcher": "2.2.0",
@@ -101,7 +100,6 @@
         "license-webpack-plugin": "2.1.1",
         "lint-staged": "12.2.2",
         "mini-css-extract-plugin": "0.12.0",
-        "npm-force-resolutions": "^0.0.10",
         "null-loader": "3.0.0",
         "optimize-css-assets-webpack-plugin": "6.0.1",
         "sass": "1.32.0",
@@ -125,17 +123,10 @@
         "node": ">=20.0.0",
         "npm": ">=10.0.0"
     },
-    "resolutions": {
+    "overrides": {
         "glob-parent": "6.0.2",
         "trim-newlines": "3.0.1",
         "ua-parser-js": "0.7.33",
-        "json5": "2.2.3",
-        "loader-utils": "2.0.4",
-        "tar": "7.5.11",
-        "brace-expansion": "1.1.13",
-        "serialize-javascript": "7.0.5"
-    },
-    "overrides": {
         "tar": "7.5.11",
         "brace-expansion": "1.1.13",
         "json5": "2.2.3",
