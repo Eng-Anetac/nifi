@@ -590,14 +590,17 @@ public class TestExecuteStreamCommand {
         runner.assertTransferCount(ExecuteStreamCommand.OUTPUT_STREAM_RELATIONSHIP, 0);
         runner.assertTransferCount(ExecuteStreamCommand.NONZERO_STATUS_RELATIONSHIP, 0);
 
-        List<MockFlowFile> flowFiles = runner.getFlowFilesForRelationship(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP);
-        MockFlowFile outputFlowFile = flowFiles.getFirst();
+        List<MockFlowFile> flowFiles = controller.getFlowFilesForRelationship(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP);
+        MockFlowFile outputFlowFile = flowFiles.get(0);
         outputFlowFile.assertContentEquals("small test".getBytes());
         String result = outputFlowFile.getAttribute("outputDest");
         assertTrue(Pattern.compile("Test was a").matcher(result).find());
         assertEquals("0", outputFlowFile.getAttribute("execution.status"));
-        assertEquals(JAVA_COMMAND, outputFlowFile.getAttribute("execution.command"));
-        assertEquals(javaFile.toString(), outputFlowFile.getAttribute("execution.command.args"));
+        assertEquals("java", outputFlowFile.getAttribute("execution.command"));
+        assertEquals("-jar;", outputFlowFile.getAttribute("execution.command.args").substring(0, 5));
+        String attribute = outputFlowFile.getAttribute("execution.command.args");
+        String expected = "src" + File.separator + "test" + File.separator + "resources" + File.separator + "ExecuteCommand" + File.separator + "TestSuccess.jar";
+        assertEquals(expected, attribute.substring(attribute.length() - expected.length()));
     }
 
     @Test
