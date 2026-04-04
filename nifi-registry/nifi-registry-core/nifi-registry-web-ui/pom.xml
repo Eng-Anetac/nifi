@@ -88,6 +88,7 @@
                                         <include>.eslintignore</include>
                                         <include>.eslintrc.js</include>
                                         <include>.stylelintrc.js</include>
+                                        <include>.npmrc</include>
                                     </includes>
                                 </resource>
                             </resources>
