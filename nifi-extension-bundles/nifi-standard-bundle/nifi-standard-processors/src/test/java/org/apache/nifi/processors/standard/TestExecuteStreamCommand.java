@@ -594,14 +594,17 @@ public class TestExecuteStreamCommand {
         controller.assertTransferCount(ExecuteStreamCommand.OUTPUT_STREAM_RELATIONSHIP, 0);
         controller.assertTransferCount(ExecuteStreamCommand.NONZERO_STATUS_RELATIONSHIP, 0);
 
-        List<MockFlowFile> flowFiles = runner.getFlowFilesForRelationship(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP);
-        MockFlowFile outputFlowFile = flowFiles.getFirst();
+        List<MockFlowFile> flowFiles = controller.getFlowFilesForRelationship(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP);
+        MockFlowFile outputFlowFile = flowFiles.get(0);
         outputFlowFile.assertContentEquals("small test".getBytes());
         String result = outputFlowFile.getAttribute("outputDest");
         assertTrue(Pattern.compile("Test was a").matcher(result).find());
         assertEquals("0", outputFlowFile.getAttribute("execution.status"));
-        assertEquals(JAVA_COMMAND, outputFlowFile.getAttribute("execution.command"));
-        assertEquals(javaFile.toString(), outputFlowFile.getAttribute("execution.command.args"));
+        assertEquals("java", outputFlowFile.getAttribute("execution.command"));
+        assertEquals("-jar;", outputFlowFile.getAttribute("execution.command.args").substring(0, 5));
+        String attribute = outputFlowFile.getAttribute("execution.command.args");
+        String expected = "src" + File.separator + "test" + File.separator + "resources" + File.separator + "ExecuteCommand" + File.separator + "TestSuccess.jar";
+        assertEquals(expected, attribute.substring(attribute.length() - expected.length()));
     }
 
     @Test
@@ -615,20 +618,14 @@ public class TestExecuteStreamCommand {
             .name("command.argument.1")
             .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
             .build();
-        runner.setProperty(dynamicProp1, "-jar");
-        PropertyDescriptor dynamicProp2 = new PropertyDescriptor.Builder()
-            .dynamic(true)
-            .name("command.argument.2")
-            .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
-            .build();
-        controller.setProperty(dynamicProp2, jarPath);
-        controller.setProperty(ExecuteStreamCommand.PUT_ATTRIBUTE_MAX_LENGTH, "10");
-        controller.setProperty(ExecuteStreamCommand.PUT_OUTPUT_IN_ATTRIBUTE, "outputDest");
-        assertEquals(2, controller.getProcessContext().getAvailableRelationships().size());
-        controller.run(1);
-        controller.assertTransferCount(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP, 1);
-        controller.assertTransferCount(ExecuteStreamCommand.OUTPUT_STREAM_RELATIONSHIP, 0);
-        controller.assertTransferCount(ExecuteStreamCommand.NONZERO_STATUS_RELATIONSHIP, 0);
+        runner.setProperty(dynamicProp1, javaFile.toString());
+        runner.setProperty(ExecuteStreamCommand.PUT_ATTRIBUTE_MAX_LENGTH, "10");
+        runner.setProperty(ExecuteStreamCommand.PUT_OUTPUT_IN_ATTRIBUTE, "outputDest");
+        assertEquals(1, runner.getProcessContext().getAvailableRelationships().size());
+        runner.run(1);
+        runner.assertTransferCount(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP, 1);
+        runner.assertTransferCount(ExecuteStreamCommand.OUTPUT_STREAM_RELATIONSHIP, 0);
+        runner.assertTransferCount(ExecuteStreamCommand.NONZERO_STATUS_RELATIONSHIP, 0);
 
         List<MockFlowFile> flowFiles = runner.getFlowFilesForRelationship(ExecuteStreamCommand.ORIGINAL_RELATIONSHIP);
         MockFlowFile outputFlowFile = flowFiles.getFirst();
