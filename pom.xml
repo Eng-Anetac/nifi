@@ -175,48 +175,10 @@
         <okio.version>3.17.0</okio.version>
         <org.apache.httpcomponents.httpclient.version>4.5.14</org.apache.httpcomponents.httpclient.version>
         <org.apache.httpcomponents.httpcore.version>4.4.16</org.apache.httpcomponents.httpcore.version>
-        <org.bouncycastle.version>1.82</org.bouncycastle.version>
-        <pmd.version>7.17.0</pmd.version>
-        <testcontainers.version>1.21.3</testcontainers.version>
-        <org.slf4j.version>2.0.17</org.slf4j.version>
-        <com.jayway.jsonpath.version>2.9.0</com.jayway.jsonpath.version>
-        <derby.version>10.17.1.0</derby.version>
-        <jetty.version>12.0.27</jetty.version>
-        <jackson.bom.version>2.20.0</jackson.bom.version>
-        <jackson.annotations.version>2.20</jackson.annotations.version>
-        <avro.version>1.12.0</avro.version>
-        <jaxb.runtime.version>4.0.5</jaxb.runtime.version>
-        <javax.annotation-api.version>1.3.2</javax.annotation-api.version>
-        <jakarta.xml.bind-api.version>4.0.4</jakarta.xml.bind-api.version>
-        <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
-        <json.smart.version>2.6.0</json.smart.version>
-        <groovy.version>5.0.1</groovy.version>
-        <surefire.version>3.5.1</surefire.version>
-        <hadoop.version>3.4.2</hadoop.version>
-        <ozone.version>1.4.1</ozone.version>
-        <gcs.version>2.1.5</gcs.version>
-        <aspectj.version>1.9.24</aspectj.version>
-        <jersey.bom.version>3.1.11</jersey.bom.version>
-        <log4j2.version>2.25.2</log4j2.version>
-        <logback.version>1.5.21</logback.version>
-        <mockito.version>5.20.0</mockito.version>
-        <junit.version>5.13.4</junit.version>
-        <netty.3.version>3.10.6.Final</netty.3.version>
-        <snakeyaml.version>2.5</snakeyaml.version>
-        <netty.4.version>4.2.6.Final</netty.4.version>
-        <servlet-api.version>6.1.0</servlet-api.version>
-        <spring.version>6.2.11</spring.version>
-        <spring.security.version>6.5.5</spring.security.version>
-        <swagger.annotations.version>2.2.37</swagger.annotations.version>
-        <caffeine.version>3.2.2</caffeine.version>
-        <hapi.version>2.6.0</hapi.version>
-        <commons.dbcp2.version>2.13.0</commons.dbcp2.version>
-        <prometheus.version>0.16.0</prometheus.version>
-        <velocity-engine-core.version>2.4.1</velocity-engine-core.version>
-        <simple-syslog-5424.version>0.0.19</simple-syslog-5424.version>
-        <org.apache.sshd.version>2.17.1</org.apache.sshd.version>
+        
 
-        <!-- Security -->
+        <!-- Security and SSH -->
+        <org.apache.sshd.version>2.17.1</org.apache.sshd.version>
         <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
         <nimbus-oauth2-oidc.version>11.37</nimbus-oauth2-oidc.version>
         <org.bouncycastle.version>1.83</org.bouncycastle.version>
