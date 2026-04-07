@@ -111,11 +111,11 @@
             <groupId>org.apache.nifi.registry</groupId>
             <artifactId>nifi-registry-provider-api</artifactId>
         </dependency>
-        <dependency>
+        <!--dependency>
             <groupId>org.apache.nifi.registry</groupId>
             <artifactId>nifi-registry-web-ui</artifactId>
             <type>war</type>
-        </dependency>
+        </dependency-->
         <dependency>
             <groupId>org.apache.nifi.registry</groupId>
             <artifactId>nifi-registry-web-api</artifactId>

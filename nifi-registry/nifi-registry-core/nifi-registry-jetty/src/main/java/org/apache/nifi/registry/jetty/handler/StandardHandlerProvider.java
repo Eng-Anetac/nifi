@@ -103,9 +103,10 @@ public class StandardHandlerProvider implements HandlerProvider {
         // Add Header Writer Handler before others
         handlers.addHandler(new HeaderWriterHandler());
 
-        final WebAppContext userInterfaceContext = getWebAppContext(libDirectory, workDirectory, ClassLoader.getSystemClassLoader(), UI_FILE_PATTERN, UI_CONTEXT_PATH);
-        userInterfaceContext.setInitParameter(OIDC_SUPPORTED_PARAMETER, Boolean.toString(properties.isOidcEnabled()));
-        handlers.addHandler(userInterfaceContext);
+        // Disable UI due to old version of Angular 11
+        // final WebAppContext userInterfaceContext = getWebAppContext(libDirectory, workDirectory, ClassLoader.getSystemClassLoader(), UI_FILE_PATTERN, UI_CONTEXT_PATH);
+        // userInterfaceContext.setInitParameter(OIDC_SUPPORTED_PARAMETER, Boolean.toString(properties.isOidcEnabled()));
+        // handlers.addHandler(userInterfaceContext);
 
         final ClassLoader apiClassLoader = getApiClassLoader(properties.getDatabaseDriverDirectory());
         final WebAppContext apiContext = getWebAppContext(libDirectory, workDirectory, apiClassLoader, API_FILE_PATTERN, API_CONTEXT_PATH);
