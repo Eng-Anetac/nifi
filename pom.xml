@@ -137,7 +137,7 @@
         <org.apache.commons.text.version>1.15.0</org.apache.commons.text.version>
 
         <!-- Big data platforms -->
-        <hadoop.version>3.4.3</hadoop.version>
+        <hadoop.version>3.5.0</hadoop.version>
         <ozone.version>1.4.1</ozone.version>
 
         <!-- Kubernetes -->
