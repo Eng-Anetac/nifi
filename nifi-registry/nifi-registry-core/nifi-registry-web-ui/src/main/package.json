@@ -61,7 +61,7 @@
         "querystring": "0.2.1",
         "reset-css": "5.0.2",
         "roboto-fontface": "0.10.0",
-        "rxjs": "6.6.7",
+        "rxjs": "7.8.2",
         "sass": "1.99.0",
         "tslib": "1.8.0",
         "zone.js": "0.16.1"
