@@ -76,7 +76,7 @@
         "babel-loader": "10.1.1",
         "babel-plugin-istanbul": "5.1.4",
         "babel-polyfill": "6.26.0",
-        "cache-loader": "4.0.1",
+        "cache-loader": "4.1.0",
         "compression-webpack-plugin": "6.1.1",
         "css-loader": "5.2.7",
         "dtsgenerator": "2.0.8",
