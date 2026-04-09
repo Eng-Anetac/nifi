@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const TerserJSPlugin = require('terser-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
