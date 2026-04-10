@@ -16,11 +16,11 @@
  */
 package org.apache.nifi.box.controllerservices;
 
-import com.box.sdk.BoxAPIConnection;
-import com.box.sdk.BoxAPIException;
-import com.box.sdk.BoxAPIResponseException;
-import com.box.sdk.BoxConfig;
-import com.box.sdk.BoxDeveloperEditionAPIConnection;
+import com.box.sdkgen.box.jwtauth.BoxJWTAuth;
+import com.box.sdkgen.box.jwtauth.JWTConfig;
+import com.box.sdkgen.client.BoxClient;
+import com.box.sdkgen.networking.proxyconfig.ProxyConfig;
+import com.box.sdkgen.networking.timeoutconfig.TimeoutConfig;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.annotation.lifecycle.OnEnabled;
@@ -43,11 +43,9 @@ import org.apache.nifi.processor.util.StandardValidators;
 import org.apache.nifi.proxy.ProxyConfiguration;
 import org.apache.nifi.proxy.ProxySpec;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.net.Proxy;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -124,7 +122,7 @@ public class JsonConfigBasedBoxClientService extends AbstractControllerService i
         ProxyConfiguration.createProxyConfigPropertyDescriptor(PROXY_SPECS)
     );
 
-    private volatile BoxAPIConnection boxAPIConnection;
+    private volatile BoxClient boxClient;
 
     @Override
     public final List<PropertyDescriptor> getSupportedPropertyDescriptors() {
@@ -136,7 +134,7 @@ public class JsonConfigBasedBoxClientService extends AbstractControllerService i
 
         final List<ConfigVerificationResult> results = new ArrayList<>();
         try {
-            createBoxApiConnection(configurationContext);
+            createBoxClient(configurationContext);
             results.add(
                     new ConfigVerificationResult.Builder()
                             .verificationStepName("Authentication")
@@ -160,7 +158,7 @@ public class JsonConfigBasedBoxClientService extends AbstractControllerService i
 
     @OnEnabled
     public void onEnabled(final ConfigurationContext context) {
-        boxAPIConnection = createBoxApiConnection(context);
+        boxClient = createBoxClient(context);
     }
 
     @Override
@@ -193,62 +191,51 @@ public class JsonConfigBasedBoxClientService extends AbstractControllerService i
     }
 
     @Override
-    public BoxAPIConnection getBoxApiConnection() {
-        return boxAPIConnection;
+    public BoxClient getBoxClient() {
+        return boxClient;
     }
 
-    private BoxAPIConnection createBoxApiConnection(ConfigurationContext context) {
+    private BoxClient createBoxClient(ConfigurationContext context) {
         final ProxyConfiguration proxyConfiguration = ProxyConfiguration.getConfiguration(context);
 
-        final BoxConfig boxConfig;
+        final JWTConfig jwtConfig;
         if (context.getProperty(APP_CONFIG_FILE).isSet()) {
-            String appConfigFile = context.getProperty(APP_CONFIG_FILE).evaluateAttributeExpressions().getValue();
-            try (
-                Reader reader = new FileReader(appConfigFile)
-            ) {
-                boxConfig = BoxConfig.readFrom(reader);
-            } catch (FileNotFoundException e) {
-                throw new ProcessException("Couldn't find Box config file", e);
-            } catch (IOException e) {
-                throw new ProcessException("Couldn't read Box config file", e);
-            }
+            final String appConfigFile = context.getProperty(APP_CONFIG_FILE).evaluateAttributeExpressions().getValue();
+            jwtConfig = JWTConfig.fromConfigFile(appConfigFile);
         } else {
-            final String appConfig = context.getProperty(APP_CONFIG_JSON).evaluateAttributeExpressions().getValue();
-            boxConfig = BoxConfig.readFrom(appConfig);
+            final String appConfigJson = context.getProperty(APP_CONFIG_JSON).evaluateAttributeExpressions().getValue();
+            jwtConfig = JWTConfig.fromConfigJsonString(appConfigJson);
         }
 
-        final BoxAPIConnection api;
-        try {
-            api = BoxDeveloperEditionAPIConnection.getAppEnterpriseConnection(boxConfig);
-        } catch (final BoxAPIResponseException e) {
-            if (boxConfig.getEnterpriseId().equals("0")) {
-                throw new BoxAPIException("Box API integration is not enabled for account, the account's enterprise ID cannot be 0", e);
-            } else {
-                throw e;
-            }
-        }
+        BoxJWTAuth auth = new BoxJWTAuth(jwtConfig);
 
         final BoxAppActor appActor = context.getProperty(APP_ACTOR).asAllowableValue(BoxAppActor.class);
         switch (appActor) {
-            case SERVICE_ACCOUNT -> api.asSelf();
+            case SERVICE_ACCOUNT -> { /* default enterprise subject, no change needed */ }
             case IMPERSONATED_USER -> {
                 final String accountId = context.getProperty(ACCOUNT_ID).evaluateAttributeExpressions().getValue();
-                api.asUser(accountId);
+                auth = auth.withUserSubject(accountId);
             }
         }
+
+        BoxClient client = new BoxClient(auth);
 
         if (!Proxy.Type.DIRECT.equals(proxyConfiguration.getProxyType())) {
-            api.setProxy(proxyConfiguration.createProxy());
-
+            final String proxyUrl = "http://" + proxyConfiguration.getProxyServerHost() + ":" + proxyConfiguration.getProxyServerPort();
+            final ProxyConfig proxyConfig = new ProxyConfig(proxyUrl);
             if (proxyConfiguration.hasCredential()) {
-                api.setProxyBasicAuthentication(proxyConfiguration.getProxyUserName(), proxyConfiguration.getProxyUserPassword());
+                proxyConfig.username = proxyConfiguration.getProxyUserName();
+                proxyConfig.password = proxyConfiguration.getProxyUserPassword();
             }
+            client = client.withProxy(proxyConfig);
         }
 
-        api.setConnectTimeout(context.getProperty(CONNECT_TIMEOUT).asTimePeriod(MILLISECONDS).intValue());
-        api.setReadTimeout(context.getProperty(READ_TIMEOUT).asTimePeriod(MILLISECONDS).intValue());
+        final TimeoutConfig timeoutConfig = new TimeoutConfig();
+        timeoutConfig.connectionTimeoutMs = context.getProperty(CONNECT_TIMEOUT).asTimePeriod(MILLISECONDS);
+        timeoutConfig.readTimeoutMs = context.getProperty(READ_TIMEOUT).asTimePeriod(MILLISECONDS);
+        client = client.withTimeouts(timeoutConfig);
 
-        return api;
+        return client;
     }
 
     @Override

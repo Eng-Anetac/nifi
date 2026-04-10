@@ -16,12 +16,13 @@
  */
 package org.apache.nifi.processors.box;
 
-import com.box.sdk.BoxFile;
-import com.box.sdk.BoxFolder;
-import com.box.sdk.BoxItem;
+import com.box.sdkgen.schemas.filefull.FileFull;
+import com.box.sdkgen.schemas.folderfull.FolderFull;
+import com.box.sdkgen.schemas.foldermini.FolderMini;
 import org.apache.nifi.flowfile.attributes.CoreAttributes;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static java.lang.String.valueOf;
@@ -31,26 +32,26 @@ public final class BoxFileUtils {
 
     public static final String BOX_URL = "https://app.box.com/file/";
 
-    public static String getParentIds(final BoxItem.Info info) {
-        return info.getPathCollection().stream()
-                .map(BoxItem.Info::getID)
-                .collect(joining(","));
-    }
-    public static String getParentPath(BoxItem.Info info) {
-        return "/" + info.getPathCollection().stream()
-                .filter(pathItemInfo -> !pathItemInfo.getID().equals("0"))
-                .map(BoxItem.Info::getName)
-                .collect(joining("/"));
+    public static String getParentIds(final FileFull info) {
+        return getParentIdsFromEntries(info.getPathCollection().getEntries());
     }
 
-    public static String getFolderPath(BoxFolder.Info folderInfo) {
+    public static String getParentPath(final FileFull info) {
+        return getParentPathFromEntries(info.getPathCollection().getEntries());
+    }
+
+    public static String getParentPath(final FolderFull info) {
+        return getParentPathFromEntries(info.getPathCollection().getEntries());
+    }
+
+    public static String getFolderPath(FolderFull folderInfo) {
         final String parentFolderPath = getParentPath(folderInfo);
         return "/".equals(parentFolderPath) ? parentFolderPath + folderInfo.getName() : parentFolderPath + "/" + folderInfo.getName();
     }
 
-    public static Map<String, String> createAttributeMap(BoxFile.Info fileInfo) {
+    public static Map<String, String> createAttributeMap(FileFull fileInfo) {
         final Map<String, String> attributes = new LinkedHashMap<>();
-        attributes.put(BoxFileAttributes.ID, fileInfo.getID());
+        attributes.put(BoxFileAttributes.ID, fileInfo.getId());
         attributes.put(CoreAttributes.FILENAME.key(), fileInfo.getName());
         attributes.put(CoreAttributes.PATH.key(), getParentPath(fileInfo));
         attributes.put(BoxFileAttributes.TIMESTAMP, valueOf(fileInfo.getModifiedAt()));
@@ -58,4 +59,16 @@ public final class BoxFileUtils {
         return attributes;
     }
 
+    private static String getParentIdsFromEntries(final List<FolderMini> entries) {
+        return entries.stream()
+                .map(FolderMini::getId)
+                .collect(joining(","));
+    }
+
+    private static String getParentPathFromEntries(final List<FolderMini> entries) {
+        return "/" + entries.stream()
+                .filter(entry -> !"0".equals(entry.getId()))
+                .map(FolderMini::getName)
+                .collect(joining("/"));
+    }
 }
