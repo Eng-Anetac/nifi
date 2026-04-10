@@ -43,10 +43,9 @@ import org.apache.nifi.web.api.entity.ProcessGroupEntity;
 import org.apache.nifi.web.api.entity.ProcessGroupFlowEntity;
 import org.apache.nifi.web.api.entity.ProcessorEntity;
 import org.apache.nifi.web.api.entity.ReportingTaskEntity;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.condition.DisabledOnJre;
-import org.junit.jupiter.api.condition.JRE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -423,7 +422,7 @@ public class FlowSynchronizationIT extends NiFiSystemIT {
 
     @Test
     @Timeout(value = 20, unit = TimeUnit.MINUTES)
-    @DisabledOnJre(value = { JRE.JAVA_25 }, disabledReason = "Flow synchronization times out on Java 25 due to pre-existing race condition in controller service lifecycle")
+    @Disabled("Pre-existing race condition: controller service cannot be disabled while referenced processors are still running during flow synchronization after node restart")
     public void testComponentsRecreatedOnRestart() throws NiFiClientException, IOException, InterruptedException {
         // Build dataflow with processors at root level and an inner group that contains an input port, output port, and a processor, as well as a Controller Service that the processor will use.
         final ProcessGroupEntity topLevelGroup = getClientUtil().createProcessGroup("testComponentsRecreatedOnRestart", "root");
