@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.util.concurrent.TimeUnit;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -419,7 +420,7 @@ public class FlowSynchronizationIT extends NiFiSystemIT {
 
 
     @Test
-    @Timeout(10) // 10 minutes timeout for this system test
+    @Timeout(value = 10, unit = TimeUnit.MINUTES)
     public void testComponentsRecreatedOnRestart() throws NiFiClientException, IOException, InterruptedException {
         // Build dataflow with processors at root level and an inner group that contains an input port, output port, and a processor, as well as a Controller Service that the processor will use.
         final ProcessGroupEntity topLevelGroup = getClientUtil().createProcessGroup("testComponentsRecreatedOnRestart", "root");
