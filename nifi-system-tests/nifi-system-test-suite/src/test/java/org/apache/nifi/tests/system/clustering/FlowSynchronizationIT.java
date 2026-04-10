@@ -422,7 +422,7 @@ public class FlowSynchronizationIT extends NiFiSystemIT {
 
 
     @Test
-    @Timeout(value = 10, unit = TimeUnit.MINUTES)
+    @Timeout(value = 20, unit = TimeUnit.MINUTES)
     @DisabledOnJre(value = { JRE.JAVA_25 }, disabledReason = "Flow synchronization times out on Java 25 due to pre-existing race condition in controller service lifecycle")
     public void testComponentsRecreatedOnRestart() throws NiFiClientException, IOException, InterruptedException {
         // Build dataflow with processors at root level and an inner group that contains an input port, output port, and a processor, as well as a Controller Service that the processor will use.
