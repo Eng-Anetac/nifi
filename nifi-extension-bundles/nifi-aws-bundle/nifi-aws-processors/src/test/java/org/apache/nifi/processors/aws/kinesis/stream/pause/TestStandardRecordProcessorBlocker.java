@@ -162,9 +162,9 @@ public class TestStandardRecordProcessorBlocker {
     }
 
     private static class TestThreadInspector {
-        private static final Duration BUSY_WAIT_MAX_DURATION = Duration.ofSeconds(5);
-        private boolean blockAwaited = false;
-        private boolean blockExited = false;
+        private static final Duration BUSY_WAIT_MAX_DURATION = Duration.ofSeconds(10);
+        private volatile boolean blockAwaited = false;
+        private volatile boolean blockExited = false;
 
         public void onBlockAwaited() {
             blockAwaited = true;
