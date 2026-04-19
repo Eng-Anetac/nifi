@@ -71,7 +71,7 @@
         "@angular/compiler-cli": "20.3.18",
         "@happy-dom/jest-environment": "^20.8.9",
         "@nx/angular": "21.6.10",
-        "@nx/eslint": "21.6.10",
+        "@nx/eslint": "22.6.5",
         "@nx/eslint-plugin": "21.6.10",
         "@nx/jest": "21.6.10",
         "@nx/workspace": "21.6.10",
