@@ -52,7 +52,7 @@
         "@angular/platform-browser": "11.2.14",
         "@angular/platform-browser-dynamic": "11.2.14",
         "@angular/router": "11.2.14",
-        "@covalent/core": "3.1.2",
+        "@covalent/core": "11.19.4",
         "@nifi-fds/core": "0.3.0",
         "angular2-moment": "1.9.0",
         "font-awesome": "4.7.0",
