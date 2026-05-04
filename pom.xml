@@ -153,7 +153,7 @@
         <com.jayway.jsonpath.version>3.0.0</com.jayway.jsonpath.version>
         <gson.version>2.13.2</gson.version>
         <jackson.annotations.version>2.21</jackson.annotations.version>
-        <jackson.bom.version>2.21.0</jackson.bom.version>
+        <jackson.bom.version>2.21.3</jackson.bom.version>
         <json.smart.version>2.6.0</json.smart.version>
         <snakeyaml.version>2.6</snakeyaml.version>
 
