@@ -98,7 +98,7 @@
         "karma-spec-reporter": "0.0.36",
         "karma-webpack": "5.0.1",
         "license-webpack-plugin": "4.0.2",
-        "lint-staged": "16.4.0",
+        "lint-staged": "17.0.5",
         "mini-css-extract-plugin": "0.12.0",
         "null-loader": "4.0.1",
         "optimize-css-assets-webpack-plugin": "6.0.1",
