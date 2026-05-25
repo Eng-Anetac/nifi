@@ -62,7 +62,7 @@
         "reset-css": "5.0.2",
         "roboto-fontface": "0.10.0",
         "rxjs": "7.8.2",
-        "sass": "1.99.0",
+        "sass": "1.100.0",
         "tslib": "2.8.1",
         "zone.js": "0.16.1"
     },
@@ -102,7 +102,7 @@
         "mini-css-extract-plugin": "0.12.0",
         "null-loader": "4.0.1",
         "optimize-css-assets-webpack-plugin": "6.0.1",
-        "sass": "1.99.0",
+        "sass": "1.100.0",
         "sass-loader": "7.1.0",
         "style-loader": "4.0.0",
         "stylelint": "15.10.1",
