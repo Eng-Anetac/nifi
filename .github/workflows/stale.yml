@@ -15,8 +15,8 @@
 # limitations under the License.
 name: pull-request-review
 
-on:
-  # Run every day at midnight 00:00
+# on:
+#   # Run every day at midnight 00:00
 
 
 permissions:
