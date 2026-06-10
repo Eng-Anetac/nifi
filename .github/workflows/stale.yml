@@ -17,6 +17,8 @@ name: pull-request-review
 
 on:
   # Run every day at midnight 00:00
+  # Not using scheduled runs to mark PRs as stale
+  workflow_dispatch:
 
 
 permissions:
