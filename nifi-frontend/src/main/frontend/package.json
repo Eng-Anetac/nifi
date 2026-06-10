@@ -128,15 +128,7 @@
         "@nx/jest": {
             "minimatch": "9.0.9"
         },
-        "@nx/angular": {
-            "picomatch": "4.0.4"
-        },
-        "@nx/js": {
-            "picomatch": "4.0.4"
-        },
-        "@nx/workspace": {
-            "picomatch": "4.0.4"
-        }
+        "picomatch": "^4.0.4"
     },
     "browser": {
         "fs": false,
