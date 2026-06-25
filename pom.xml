@@ -153,7 +153,7 @@
         <com.jayway.jsonpath.version>3.0.0</com.jayway.jsonpath.version>
         <gson.version>2.13.2</gson.version>
         <jackson.annotations.version>2.21</jackson.annotations.version>
-        <jackson.bom.version>2.21.0</jackson.bom.version>
+        <jackson.bom.version>2.21.4</jackson.bom.version>
         <json.smart.version>2.6.0</json.smart.version>
         <snakeyaml.version>2.6</snakeyaml.version>
 
@@ -197,7 +197,7 @@
         <jersey.bom.version>4.0.2</jersey.bom.version>
         <jetty.version>12.1.8</jetty.version>
         <servlet-api.version>6.1.0</servlet-api.version>
-        <spring.security.version>7.0.4</spring.security.version>
+        <spring.security.version>7.0.5</spring.security.version>
         <spring.version>7.0.6</spring.version>
         <swagger.annotations.version>2.2.48</swagger.annotations.version>
 
