@@ -167,7 +167,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>2.21.4</version>
+                <version>2.21.5</version>
             </dependency>
             <dependency>
                 <groupId>io.krakens</groupId>
@@ -183,7 +183,7 @@
             <dependency>
                 <groupId>org.apache.calcite</groupId>
                 <artifactId>calcite-core</artifactId>
-                <version>1.41.0</version>
+                <version>1.42.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>log4j</groupId>
