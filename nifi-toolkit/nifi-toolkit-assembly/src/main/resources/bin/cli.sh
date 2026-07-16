@@ -119,7 +119,8 @@ run() {
    export NIFI_TOOLKIT_HOME="$NIFI_TOOLKIT_HOME"
 
    umask 0077
-   exec "${JAVA}" -cp "${CLASSPATH}" ${JAVA_OPTS} org.apache.nifi.toolkit.cli.CLIMain "$@"
+   # Suppress the warning about illegal reflective access operations with Java 24+
+   exec "${JAVA}" --enable-native-access=ALL-UNNAMED -cp "${CLASSPATH}" ${JAVA_OPTS} org.apache.nifi.toolkit.cli.CLIMain "$@"
 }
 
 
