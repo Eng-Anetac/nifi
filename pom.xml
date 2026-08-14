@@ -180,7 +180,7 @@
 
         <!-- Security -->
         <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
-        <nimbus-oauth2-oidc.version>11.34</nimbus-oauth2-oidc.version>
+        <nimbus-oauth2-oidc.version>11.38.2</nimbus-oauth2-oidc.version>
         <org.bouncycastle.version>1.83</org.bouncycastle.version>
 
         <!-- Utilities -->
