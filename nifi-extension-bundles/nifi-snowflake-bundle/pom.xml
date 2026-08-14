@@ -27,7 +27,7 @@
         <grpc.version>1.80.0</grpc.version>
         <!-- Check Ingest SDK and JDBC compatibility when upgrading -->
         <snowflake-ingest-sdk.version>4.4.2-unshaded</snowflake-ingest-sdk.version>
-        <snowflake-jdbc-thin.version>3.28.0</snowflake-jdbc-thin.version>
+        <snowflake-jdbc-thin.version>4.3.2</snowflake-jdbc-thin.version>
     </properties>
 
     <modules>
