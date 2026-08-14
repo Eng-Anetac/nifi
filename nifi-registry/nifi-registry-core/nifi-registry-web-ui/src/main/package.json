@@ -74,7 +74,7 @@
         "@typescript-eslint/eslint-plugin": "5.10.0",
         "@typescript-eslint/parser": "5.10.0",
         "babel-loader": "8.0.6",
-        "babel-plugin-istanbul": "5.1.4",
+        "babel-plugin-istanbul": "8.0.0",
         "babel-polyfill": "6.26.0",
         "cache-loader": "4.0.1",
         "compression-webpack-plugin": "6.1.1",
