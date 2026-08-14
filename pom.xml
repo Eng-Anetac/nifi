@@ -164,7 +164,7 @@
         <kotlin.version>2.3.20</kotlin.version>
 
         <!-- Logging and observability -->
-        <log4j2.version>2.25.3</log4j2.version>
+        <log4j2.version>2.26.1</log4j2.version>
         <logback.version>1.5.32</logback.version>
         <org.slf4j.version>2.0.17</org.slf4j.version>
         <prometheus.version>0.16.0</prometheus.version>
