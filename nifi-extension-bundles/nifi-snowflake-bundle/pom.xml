@@ -21,7 +21,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <parquet.version>1.17.0</parquet.version>
+        <parquet.version>1.18.0</parquet.version>
         <guava.version>33.5.0-jre</guava.version>
         <protobuf.version>4.34.0</protobuf.version>
         <grpc.version>1.80.0</grpc.version>
