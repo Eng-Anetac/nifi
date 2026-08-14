@@ -39,7 +39,7 @@
         "@lezer/highlight": "^1.2.0",
         "@lezer/lr": "^1.4.0",
         "@ngrx/effects": "20.0.1",
-        "@ngrx/operators": "20.0.1",
+        "@ngrx/operators": "21.1.1",
         "@ngrx/router-store": "20.0.1",
         "@ngrx/store": "20.0.1",
         "@ngrx/store-devtools": "20.0.1",
