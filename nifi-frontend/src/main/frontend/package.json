@@ -51,7 +51,7 @@
         "immer": "10.0.3",
         "js-beautify": "^1.15.1",
         "marked": "^15.0.0",
-        "ngx-markdown": "^20.1.0",
+        "ngx-markdown": "^22.0.0",
         "ngx-skeleton-loader": "^10.0.0",
         "prismjs": "^1.30.0",
         "rxjs": "~7.8.1",
