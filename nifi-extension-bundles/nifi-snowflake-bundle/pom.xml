@@ -26,7 +26,7 @@
         <protobuf.version>4.34.0</protobuf.version>
         <grpc.version>1.80.0</grpc.version>
         <!-- Check Ingest SDK and JDBC compatibility when upgrading -->
-        <snowflake-ingest-sdk.version>4.4.2-unshaded</snowflake-ingest-sdk.version>
+        <snowflake-ingest-sdk.version>4.4.3-unshaded</snowflake-ingest-sdk.version>
         <snowflake-jdbc-thin.version>3.28.0</snowflake-jdbc-thin.version>
     </properties>
 
