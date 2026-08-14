@@ -131,7 +131,7 @@
         <org.apache.commons.compress.version>1.28.0</org.apache.commons.compress.version>
         <org.apache.commons.configuration.version>2.13.0</org.apache.commons.configuration.version>
         <org.apache.commons.csv.version>1.14.1</org.apache.commons.csv.version>
-        <org.apache.commons.io.version>2.21.0</org.apache.commons.io.version>
+        <org.apache.commons.io.version>2.22.0</org.apache.commons.io.version>
         <org.apache.commons.lang3.version>3.20.0</org.apache.commons.lang3.version>
         <org.apache.commons.net.version>3.13.0</org.apache.commons.net.version>
         <org.apache.commons.text.version>1.15.0</org.apache.commons.text.version>
