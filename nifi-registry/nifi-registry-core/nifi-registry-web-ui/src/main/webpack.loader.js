@@ -56,8 +56,7 @@ module.exports = {
                 loader: path.resolve(__dirname, 'angular-url-loader')
             },
             {
-                // Instrument TS files with istanbul-lib-instrument for subsequent code coverage reporting
-                loader: 'istanbul-instrumenter-loader',
+                loader: '@jsdevtools/coverage-istanbul-loader',
                 options: { esModules: true }
             },
             {
