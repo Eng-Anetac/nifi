@@ -1185,7 +1185,7 @@
             <artifactId>nifi-snmp-processors</artifactId>
             <version>2.11.0-ANETAC</version>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-snowflake-processors</artifactId>
             <version>2.11.0-ANETAC</version>
@@ -1199,7 +1199,7 @@
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-snowflake-services-api</artifactId>
             <version>2.11.0-ANETAC</version>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-splunk-processors</artifactId>

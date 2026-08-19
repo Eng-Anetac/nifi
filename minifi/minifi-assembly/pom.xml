@@ -360,13 +360,13 @@ limitations under the License.
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-aws-nar</artifactId>
-            <version>2.6.0-SNAPSHOT</version>
+            <version>2.11.0-ANETAC</version>
             <type>nar</type>
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-aws-service-api-nar</artifactId>
-            <version>2.6.0-SNAPSHOT</version>
+            <version>2.11.0-ANETAC</version>
             <type>nar</type>
         </dependency>
 
@@ -399,7 +399,14 @@ limitations under the License.
                             <dependency>
                                 <groupId>ant-contrib</groupId>
                                 <artifactId>ant-contrib</artifactId>
-                                <version>20020829</version>
+                                <version>1.0b3</version>
+                                <exclusions>
+                                    <!-- antrun supplies org.apache.ant:ant; the legacy ant:ant:1.5 is unresolvable -->
+                                    <exclusion>
+                                        <groupId>ant</groupId>
+                                        <artifactId>ant</artifactId>
+                                    </exclusion>
+                                </exclusions>
                             </dependency>
                         </dependencies>
                         <executions>
