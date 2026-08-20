@@ -299,30 +299,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-kafka-service-api-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-kafka-3-service-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-kafka-service-aws-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-kafka-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-confluent-platform-nar</artifactId>
             <version>2.11.0-ANETAC</version>
             <type>nar</type>
@@ -377,31 +353,7 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-mongodb-client-service-api-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-mongodb-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-mongodb-services-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-enrich-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-geohash-nar</artifactId>
             <version>2.11.0-ANETAC</version>
             <type>nar</type>
         </dependency>
@@ -473,24 +425,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-elasticsearch-client-service-api-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-elasticsearch-client-service-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-elasticsearch-restapi-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-email-nar</artifactId>
             <version>2.11.0-ANETAC</version>
             <type>nar</type>
@@ -557,18 +491,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-evtx-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-slack-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-smb-nar</artifactId>
             <version>2.11.0-ANETAC</version>
             <type>nar</type>
@@ -606,12 +528,6 @@ language governing permissions and limitations under the License. -->
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-websocket-processors-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-workday-processors-nar</artifactId>
             <version>2.11.0-ANETAC</version>
             <type>nar</type>
         </dependency>
@@ -671,18 +587,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-hazelcast-services-api-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-hazelcast-services-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-kerberos-user-service-nar</artifactId>
             <version>2.11.0-ANETAC</version>
             <type>nar</type>
@@ -702,24 +606,6 @@ language governing permissions and limitations under the License. -->
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-record-sink-service-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-hashicorp-vault-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-hashicorp-vault-client-service-api-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-salesforce-nar</artifactId>
             <version>2.11.0-ANETAC</version>
             <type>nar</type>
         </dependency>
@@ -749,55 +635,7 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-hubspot-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-zendesk-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-zendesk-services-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-dropbox-processors-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-dropbox-services-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-dropbox-services-api-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-airtable-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-flow-registry-client-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-shopify-nar</artifactId>
             <version>2.11.0-ANETAC</version>
             <type>nar</type>
         </dependency>
@@ -857,66 +695,6 @@ language governing permissions and limitations under the License. -->
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-gitlab-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-atlassian-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-iceberg-aws-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-iceberg-azure-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-iceberg-gcs-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-iceberg-parquet-writer-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-iceberg-processors-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-iceberg-rest-catalog-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-iceberg-service-api-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-iceberg-shared-nar</artifactId>
-            <version>2.11.0-ANETAC</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-kafka-to-s3-nar</artifactId>
             <version>2.11.0-ANETAC</version>
             <type>nar</type>
@@ -928,6 +706,241 @@ language governing permissions and limitations under the License. -->
         </dependency>
     </dependencies>
     <profiles>
+        <profile>
+            <id>include-default-extensions</id>
+            <!-- This profile handles the inclusion of the extension bundles that are not part of the
+                 slimmed down default convenience binary. -->
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <property>
+                    <name>allProfiles</name>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-kafka-service-api-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-kafka-3-service-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-kafka-service-aws-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-kafka-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-mongodb-client-service-api-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-mongodb-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-mongodb-services-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-geohash-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-elasticsearch-client-service-api-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-elasticsearch-client-service-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-elasticsearch-restapi-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-evtx-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-slack-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-workday-processors-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-hazelcast-services-api-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-hazelcast-services-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-hashicorp-vault-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-hashicorp-vault-client-service-api-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-salesforce-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-hubspot-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-zendesk-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-zendesk-services-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-dropbox-processors-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-dropbox-services-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-dropbox-services-api-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-airtable-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-shopify-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-gitlab-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-atlassian-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-iceberg-aws-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-iceberg-azure-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-iceberg-gcs-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-iceberg-parquet-writer-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-iceberg-processors-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-iceberg-rest-catalog-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-iceberg-service-api-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-iceberg-shared-nar</artifactId>
+                    <version>2.11.0-ANETAC</version>
+                    <type>nar</type>
+                </dependency>
+            </dependencies>
+        </profile>
         <profile>
             <id>include-graph</id>
             <activation>

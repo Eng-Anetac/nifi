@@ -30,6 +30,7 @@
         <!-- when changing the Azure SDK version, also update msal4j to the version that is required by azure-identity -->
         <msal4j.version>1.23.1</msal4j.version>
         <qpid.proton.version>0.34.1</qpid.proton.version>
+        <micrometer.version>1.15.12</micrometer.version>
     </properties>
 
     <modules>
@@ -101,6 +102,28 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-codec-classes-quic</artifactId>
                 <version>${netty.4.version}</version>
+            </dependency>
+            <!--
+                Override Micrometer from azure-cosmos, which pins 1.15.1. All three modules must be
+                managed together: Micrometer requires matching versions across its own artifacts, and
+                azure-cosmos brings commons and observation in transitively through micrometer-core.
+                Note that azure-cosmos declares a bannedDependencies rule of [1.15.1] for
+                micrometer-core, so this override intentionally diverges from the version it tests against.
+            -->
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-core</artifactId>
+                <version>${micrometer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-commons</artifactId>
+                <version>${micrometer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-observation</artifactId>
+                <version>${micrometer.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
