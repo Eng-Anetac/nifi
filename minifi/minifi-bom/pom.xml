@@ -26,6 +26,10 @@
     <packaging>pom</packaging>
     <description>Apache NiFi MiNiFi Java Bill of Materials</description>
 
+    <properties>
+        <!-- Pin versions -->
+        <org.apache.httpcomponents.client5.version>5.6.3</org.apache.httpcomponents.client5.version>
+    </properties>
     <dependencyManagement>
         <dependencies>
             <!-- MiNiFi Specific -->
