@@ -176,11 +176,13 @@
         <simple-syslog-5424.version>0.0.19</simple-syslog-5424.version>
 
         <!-- Networking and transport -->
-        <netty.4.version>4.2.16.Final</netty.4.version>
+        <netty.4.version>4.2.17.Final</netty.4.version>
         <okhttp.version>5.4.0</okhttp.version>
         <okio.version>3.18.1</okio.version>
         <org.apache.httpcomponents.httpclient.version>4.5.14</org.apache.httpcomponents.httpclient.version>
         <org.apache.httpcomponents.httpcore.version>4.4.16</org.apache.httpcomponents.httpcore.version>
+        <org.apache.httpcomponents.core5.version>5.4.3</org.apache.httpcomponents.core5.version>
+        <org.apache.httpcomponents.client5.version>5.6.3</org.apache.httpcomponents.client5.version>
         <org.apache.sshd.version>2.19.0</org.apache.sshd.version>
 
         <!-- Security -->
@@ -346,6 +348,31 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore</artifactId>
                 <version>${org.apache.httpcomponents.httpcore.version}</version>
+            </dependency>
+            <!--
+                Align HttpComponents Core 5, which arrives only transitively and otherwise resolves to
+                several different versions across bundles. Both artifacts must be managed together:
+                httpcore5-h2 depends on httpcore5 and the two are released as a matched pair.
+            -->
+            <dependency>
+                <groupId>org.apache.httpcomponents.core5</groupId>
+                <artifactId>httpcore5</artifactId>
+                <version>${org.apache.httpcomponents.core5.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents.core5</groupId>
+                <artifactId>httpcore5-h2</artifactId>
+                <version>${org.apache.httpcomponents.core5.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents.client5</groupId>
+                <artifactId>httpclient5</artifactId>
+                <version>${org.apache.httpcomponents.client5.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents.client5</groupId>
+                <artifactId>httpclient5-cache</artifactId>
+                <version>${org.apache.httpcomponents.client5.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
