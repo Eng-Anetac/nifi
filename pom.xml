@@ -148,7 +148,7 @@
         <hsqldb.version>2.7.4</hsqldb.version>
 
         <!-- Data formats and serialization -->
-        <avro.version>1.12.1</avro.version>
+        <avro.version>1.12.2</avro.version>
         <com.github.luben.zstd-jni.version>1.5.7-7</com.github.luben.zstd-jni.version>
         <com.jayway.jsonpath.version>3.0.0</com.jayway.jsonpath.version>
         <gson.version>2.13.2</gson.version>
