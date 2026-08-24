@@ -207,7 +207,7 @@
         <pmd.version>7.23.0</pmd.version>
         <checkstyle.version>13.4.0</checkstyle.version>
         <testcontainers.version>2.0.4</testcontainers.version>
-        <jacoco.version>0.8.14</jacoco.version>
+        <jacoco.version>0.8.15</jacoco.version>
     </properties>
     <dependencyManagement>
         <dependencies>
