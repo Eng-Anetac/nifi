@@ -138,7 +138,7 @@
 
         <!-- Big data platforms -->
         <hadoop.version>3.5.0</hadoop.version>
-        <ozone.version>1.4.1</ozone.version>
+        <ozone.version>2.2.0</ozone.version>
 
         <!-- Kubernetes -->
         <io.fabric8.kubernetes.client.version>7.6.1</io.fabric8.kubernetes.client.version>
