@@ -181,7 +181,7 @@
         <org.apache.sshd.version>2.17.1</org.apache.sshd.version>
         <nimbus-jose-jwt.version>10.9</nimbus-jose-jwt.version>
         <nimbus-oauth2-oidc.version>11.37</nimbus-oauth2-oidc.version>
-        <org.bouncycastle.version>1.84</org.bouncycastle.version>
+        <org.bouncycastle.version>1.85</org.bouncycastle.version>
 
         <!-- Utilities -->
         <caffeine.version>3.2.3</caffeine.version>
