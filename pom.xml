@@ -198,7 +198,7 @@
         <jetty.version>12.1.8</jetty.version>
         <servlet-api.version>6.1.0</servlet-api.version>
         <spring.security.version>7.0.5</spring.security.version>
-        <spring.version>7.0.6</spring.version>
+        <spring.version>7.0.9</spring.version>
         <swagger.annotations.version>2.2.48</swagger.annotations.version>
 
         <!-- Testing and quality -->
